@@ -13,7 +13,7 @@ def _create_engine():
     db_name = env.get("DB_NAME", "postgres")
     db_driver = env.get("DB_DRIVER", "postgresql+psycopg2")
 
-    db_url = f"{db_driver}://{user}:{password}@{host}:{port}/{db_name}"
+    db_url = env.get("DB_URL", f"{db_driver}://{user}:{password}@{host}:{port}/{db_name}")
 
     engine = create_engine(db_url, pool_pre_ping=True, pool_size=10, max_overflow=0, pool_recycle=3600)
 
