@@ -1,10 +1,10 @@
-name: Check PRs on <SERVICE> service
+name: Check PRs on Sports service
 
 on:
   pull_request:
     branches: [ "develop", "main" ]
     paths:
-      - "projects/<SERVICE>/**"
+      - "projects/sports/**"
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry && poetry config virtualenvs.create false
           poetry install
-          cd projects/<SERVICE> && poetry install
+          cd projects/sports && poetry install
 
       - name: Run lint
         run: |
@@ -32,11 +32,11 @@ jobs:
 
       - name: Run unit tests and coverage
         run: |
-          cd projects/<SERVICE>
+          cd projects/sports
           poetry run coverage run -m pytest tests/unit
           poetry run coverage report -m --fail-under=75
 
       - name: Run integration tests
         run: |
-          cd projects/<SERVICE>
+          cd projects/sports
           poetry run pytest tests/integration

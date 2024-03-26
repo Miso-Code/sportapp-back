@@ -1,0 +1,14 @@
+[run]
+branch = True
+omit =
+    **/__init__.py
+    app/config/settings.py
+source =
+    app/config
+    app/exceptions
+    app/models
+    app/routes
+    app/services
+
+[html]
+directory = coverage_html_report

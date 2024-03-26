@@ -5,6 +5,7 @@ on:
     branches: [ "develop", "main" ]
     paths:
       - "projects/users/**"
+    types: [opened, synchronize, reopened]
 
 jobs:
   lint-tests-coverage:
@@ -29,8 +30,13 @@ jobs:
         run: |
           poetry run pre-commit run --all-files
 
-      - name: Run tests and coverage
+      - name: Run unit tests and coverage
         run: |
           cd projects/users
-          poetry run coverage run -m pytest
+          poetry run coverage run -m pytest tests/unit
           poetry run coverage report -m --fail-under=75
+
+      - name: Run integration tests
+        run: |
+          cd projects/users
+          poetry run pytest tests/integration
