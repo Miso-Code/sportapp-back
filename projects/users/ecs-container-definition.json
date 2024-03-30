@@ -10,7 +10,7 @@
     ],
     "image": "887664210442.dkr.ecr.us-east-1.amazonaws.com/mock",
     "essential": true,
-    "name": "mock-service",
+    "name": "users-service",
     "secrets": [
       {
         "valueFrom": "arn:aws:secretsmanager:us-east-1:887664210442:secret:DB_CREDENTIALS-BT2TLE:name::",
@@ -44,7 +44,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "/ecs/mock-service",
+        "awslogs-group": "/ecs/users-service",
         "awslogs-region": "us-east-1",
         "awslogs-create-group": "true",
         "awslogs-stream-prefix": "ecs"
