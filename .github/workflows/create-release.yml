@@ -20,7 +20,7 @@ jobs:
       - name: Resolve bump strategy
         id: bump_strategy
         env:
-          BUMP_STRATEGY: ${{ github.event.inputs.BUMP_STRATEGY }}
+          BUMP_STRATEGY: "${{ github.event.inputs.BUMP_STRATEGY }}"
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             ## Validate input
