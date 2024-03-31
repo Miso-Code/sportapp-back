@@ -1,4 +1,4 @@
-resource "aws_lb_target_group" "target-group" {
+resource "aws_lb_target_group" "target_group" {
   name        = var.target_group_name
   port        = var.target_group_port
   protocol    = var.target_group_protocol

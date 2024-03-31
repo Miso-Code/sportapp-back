@@ -57,7 +57,9 @@ resource "aws_lambda_function" "function" {
   role = aws_iam_role.lambda.arn
 
   environment {
-    SECRET_NAME = "LABDA_AUTHORIZER_SECRET"
+    variables = {
+      SECRET_NAME = "LABDA_AUTHORIZER_SECRET"
+    }
   }
 }
 

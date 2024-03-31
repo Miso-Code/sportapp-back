@@ -1,9 +1,8 @@
-# bin/bash
+#!/bin/bash
 AWS_REGION="us-east-1"
 AWS_ACCOUNT_ID="887664210442"
 GCP_PROJECT_ID="sportapp-417820"
 GCP_PROJECT_REGION="us-central1"
-#!/bin/bash
 
 # Parse command-line arguments
 while getopts "c:s:" opt; do
@@ -80,17 +79,17 @@ for folder_name in "${SERVICES_ARRAY[@]}"; do
         echo "Building and pushing $folder_name"
 
         # Build Docker image
-        docker build -t $folder_name $folder_name
+        docker build -t "$folder_name" "$folder_name"
 
         # Tag Docker image
         if [ "$CLOUD_PROVIDER" == "aws" ]; then
-            docker tag $folder_name:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest
+            docker tag "$folder_name:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest"
             # Push Docker image to AWS ECR
-            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest
+            docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest"
         elif [ "$CLOUD_PROVIDER" == "gcp" ]; then
-            docker tag $folder_name:latest $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$folder_name:latest
+            docker tag "$folder_name:latest" "$GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$folder_name:latest"
             # Push Docker image to GCP Artifact Registry
-            docker push $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$folder_name:latest
+            docker push "$GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$folder_name:latest"
         fi
     else
         echo "Skipping $folder_name: No Dockerfile found" >&2

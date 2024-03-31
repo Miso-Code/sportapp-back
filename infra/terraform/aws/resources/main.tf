@@ -21,7 +21,7 @@ module "vpc" {
 module "subnet_1" {
   source            = "../modules/vpc/subnet"
   vpc_id            = module.vpc.id
-  subnet_name       = "sportapp-subnet"
+  subnet_name       = "sportapp-subnet-1"
   subnet_cidr_block = cidrsubnet(module.vpc.cidr_block, 8, 1)
   availability_zone = "us-east-1a"
   depends_on        = [module.vpc]
@@ -30,7 +30,7 @@ module "subnet_1" {
 module "subnet_2" {
   source            = "../modules/vpc/subnet"
   vpc_id            = module.vpc.id
-  subnet_name       = "sportapp-subnet"
+  subnet_name       = "sportapp-subnet-2"
   subnet_cidr_block = cidrsubnet(module.vpc.cidr_block, 8, 2)
   availability_zone = "us-east-1b"
   depends_on        = [module.vpc]
@@ -39,7 +39,7 @@ module "subnet_2" {
 module "subnet_3" {
   source            = "../modules/vpc/subnet"
   vpc_id            = module.vpc.id
-  subnet_name       = "sportapp-subnet"
+  subnet_name       = "sportapp-subnet-3"
   subnet_cidr_block = cidrsubnet(module.vpc.cidr_block, 8, 3)
   availability_zone = "us-east-1c"
   depends_on        = [module.vpc]
