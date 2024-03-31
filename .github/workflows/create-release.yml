@@ -1,0 +1,91 @@
+name: Create Github Release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      BUMP_STRATEGY:
+        description: "Bump strategy (major, minor, patch)"
+        required: true
+
+jobs:
+  release:
+    name: Create Github Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve bump strategy
+        id: bump_strategy
+        env:
+          BUMP_STRATEGY: ${{ github.event.inputs.BUMP_STRATEGY }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ## Validate input
+            if [[ "$BUMP_STRATEGY" != "major" && "$BUMP_STRATEGY" != "minor" && "$BUMP_STRATEGY" != "patch" ]]; then
+              echo "Invalid bump strategy '$BUMP_STRATEGY'."
+              exit 1
+            fi
+            # echo "{name}={value}" >> $GITHUB_OUTPUT
+            echo "strategy=$BUMP_STRATEGY" >> $GITHUB_OUTPUT
+          else
+            if [[ "${{ github.event.head_commit.message }}" == *"[MAJOR]"* ]]; then
+              echo "strategy=major" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.event.head_commit.message }}" == *"[MINOR]"* ]]; then
+              echo "strategy=minor" >> $GITHUB_OUTPUT
+            else
+              echo "strategy=patch" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          default_bump: ${{ steps.bump_strategy.outputs.strategy }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v4.2.0
+        with:
+          fromTag: ${{ steps.get_latest_tag.outputs.tag }}
+          toTag: ${{ steps.tag_version.outputs.new_tag }}
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
+              "categories": [
+                {
+                  "title": "## 🚀 Features",
+                  "labels": ["feature"]
+                },
+                {
+                  "title": "## 🐞 BugFixes",
+                  "labels": ["bugfix"]
+                },
+                {
+                  "title": "## 🔨 Refactors",
+                  "labels": ["refactor"]
+                },
+                {
+                  "title": "## 💬 Other",
+                  "labels": ["other"]
+                }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
