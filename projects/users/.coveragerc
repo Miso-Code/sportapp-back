@@ -1,0 +1,17 @@
+[run]
+branch = True
+omit =
+    **/__init__.py
+    app/config/settings.py
+    app/utils/user_cache.py
+source =
+    app/config
+    app/exceptions
+    app/models
+    app/routes
+    app/services
+    app/tasks
+    app/utils
+
+[html]
+directory = coverage_html_report
