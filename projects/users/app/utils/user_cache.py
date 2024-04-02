@@ -1,5 +1,5 @@
 from typing import List, Dict
-from ..models.schemas.schema import UserCreate
+from app.models.schemas.schema import UserCreate
 
 
 class UserCache:

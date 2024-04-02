@@ -16,7 +16,7 @@ def generate_random_users_additional_information(faker, count):
 
 def generate_random_user_additional_information(faker):
     return UserAdditionalInformation(
-        identification_type=faker.enum(UserIdentificationType).value,
+        identification_type=faker.enum(UserIdentificationType),
         identification_number=faker.numerify(text="############"),
         gender=faker.enum(Gender),
         country_of_birth=faker.country(),

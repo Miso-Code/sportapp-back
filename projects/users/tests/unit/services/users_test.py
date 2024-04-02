@@ -9,7 +9,7 @@ from app.exceptions.exceptions import NotFoundError
 from app.models.users import User
 from app.models.mappers.mapper import DataClassMapper
 
-from ...utils.users_util import generate_random_user_create_data, generate_random_user_additional_information
+from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information
 
 fake = Faker()
 

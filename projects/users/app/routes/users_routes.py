@@ -1,14 +1,15 @@
 import asyncio
+import uuid
 
 from fastapi import Depends, APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sse_starlette import EventSourceResponse
 
-from ..config.db import get_db
-from ..models.schemas.schema import UserCreate, UserAdditionalInformation
-from ..services.users import UsersService
-from ..utils.user_cache import UserCache
+from app.config.db import get_db
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation
+from app.services.users import UsersService
+from app.utils.user_cache import UserCache
 
 router = APIRouter(
     prefix="/users",
@@ -38,6 +39,6 @@ async def register_user(user: UserCreate):
 
 
 @router.patch("/{user_id}/complete-registration")
-async def complete_user_registration(user_id: str, user_additional_information: UserAdditionalInformation, db: Session = Depends(get_db)):
+async def complete_user_registration(user_id: uuid.UUID, user_additional_information: UserAdditionalInformation, db: Session = Depends(get_db)):
     complete_user_registration_response = UsersService(db).complete_user_registration(user_id, user_additional_information)
     return JSONResponse(content=complete_user_registration_response, status_code=200)

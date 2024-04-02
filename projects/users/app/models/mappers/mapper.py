@@ -15,4 +15,4 @@ class DataClassMapper:
                 return obj.value
             return obj
 
-        return {k: custom_encoder(v) for k, v in asdict(instance).items() if v is not None}
+        return {k: custom_encoder(v) for k, v in asdict(instance).items() if v is not None and k != "hashed_password"}

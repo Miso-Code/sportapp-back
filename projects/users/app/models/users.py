@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 
 from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, Boolean
-from ..config.db import base
+from app.config.db import base
 
 
 class UserIdentificationType(enum.Enum):

@@ -1,15 +1,19 @@
 import asyncio
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .routes import users_routes
-from .exceptions.exceptions import NotFoundError, InvalidValueError
-from .config.db import engine, base
-from .tasks.sync_db import sync_users
+from app.routes import users_routes
+from app.exceptions.exceptions import NotFoundError, InvalidValueError
+from app.config.db import engine, base, session_local
+from app.tasks.sync_db import sync_users
+from app.utils.utils import sleep
 
+load_dotenv()
 app = FastAPI()
+
 base.metadata.create_all(bind=engine)
 
 app.include_router(users_routes.router)
@@ -17,7 +21,7 @@ app.include_router(users_routes.router)
 
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(sync_users())
+    asyncio.create_task(sync_users(db=session_local(), sleep=sleep))
 
 
 @app.exception_handler(NotFoundError)

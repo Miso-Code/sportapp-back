@@ -2,9 +2,9 @@ import re
 from typing import Optional
 
 from pydantic import BaseModel, model_validator, field_validator
-from ..users import UserIdentificationType, Gender
-from ...config.settings import Config
-from ...exceptions.exceptions import InvalidValueError
+from app.models.users import UserIdentificationType, Gender
+from app.config.settings import Config
+from app.exceptions.exceptions import InvalidValueError
 
 
 class UserCreate(BaseModel):
