@@ -1,34 +1,33 @@
 import unittest
-
-import faker
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, UserSubscriptionType
+from faker import Faker
+
+fake = Faker()
 
 
 class TestUser(unittest.TestCase):
-    fake = faker.Faker("en_US")
-
     def test_user_creation(self):
-        user_id = self.fake.uuid4()
-        first_name = self.fake.first_name()
-        last_name = self.fake.last_name()
-        email = self.fake.email()
-        hashed_password = self.fake.password()
-        identification_type = self.fake.enum(UserIdentificationType)
-        identification_number = self.fake.random_number()
-        gender = self.fake.enum(Gender)
-        country_of_birth = self.fake.country()
-        city_of_birth = self.fake.city()
-        country_of_residence = self.fake.country()
-        city_of_residence = self.fake.city()
-        residence_age = self.fake.random_number()
-        birth_date = self.fake.date_of_birth(minimum_age=15)
-        weight = self.fake.pyfloat(left_digits=2, right_digits=2, positive=True)
-        height = self.fake.pyfloat(left_digits=3, right_digits=2, positive=True)
-        training_years = self.fake.random_number()
-        training_hours_per_week = self.fake.random_number()
-        available_training_hours_per_week = self.fake.random_number()
-        food_preference = self.fake.enum(FoodPreference)
-        subscription_type = self.fake.enum(UserSubscriptionType)
+        user_id = fake.uuid4()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        email = fake.email()
+        hashed_password = fake.password()
+        identification_type = fake.enum(UserIdentificationType)
+        identification_number = fake.random_number()
+        gender = fake.enum(Gender)
+        country_of_birth = fake.country()
+        city_of_birth = fake.city()
+        country_of_residence = fake.country()
+        city_of_residence = fake.city()
+        residence_age = fake.random_number()
+        birth_date = fake.date_of_birth(minimum_age=15)
+        weight = fake.pyfloat(left_digits=2, right_digits=2, positive=True)
+        height = fake.pyfloat(left_digits=3, right_digits=2, positive=True)
+        training_years = fake.random_number()
+        training_hours_per_week = fake.random_number()
+        available_training_hours_per_week = fake.random_number()
+        food_preference = fake.enum(FoodPreference)
+        subscription_type = fake.enum(UserSubscriptionType)
 
         user = User(
             user_id=user_id,

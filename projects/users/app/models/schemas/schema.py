@@ -2,8 +2,9 @@ import re
 from typing import Optional
 
 from pydantic import BaseModel, model_validator, field_validator
-
-PASSWORD_REGEX = r"((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,64})"
+from ..users import UserIdentificationType, Gender
+from ...config.settings import Config
+from ...exceptions.exceptions import InvalidValueError
 
 
 class UserCreate(BaseModel):
@@ -15,10 +16,29 @@ class UserCreate(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value):
-        if not re.match(PASSWORD_REGEX, value):
-            raise ValueError(
+        if not re.match(Config.PASSWORD_REGEX, value):
+            raise InvalidValueError(
                 "Password must be between 8 and 64 characters long and contain at least one digit, one lowercase " "letter, one uppercase letter, and one special character",
             )
+        return value
+
+
+class UserAdditionalInformation(BaseModel):
+    identification_type: UserIdentificationType
+    identification_number: str
+    gender: Gender
+    country_of_birth: str
+    city_of_birth: str
+    country_of_residence: str
+    city_of_residence: str
+    residence_age: int
+    birth_date: str
+
+    @field_validator("birth_date")
+    @classmethod
+    def validate_birth_date(cls, value):
+        if not re.match(Config.BIRTH_DATE_REGEX, value):
+            raise InvalidValueError("Birth date must be in the format YYYY-MM-DD")
         return value
 
 
@@ -35,10 +55,8 @@ class UserCredentials(BaseModel):
 
         if refresh_token is not None:
             if any((email, password)):
-                raise ValueError("Cannot provide refresh_token along with email and password")
-        elif all((email, password)):
-            return values
-        else:
-            raise ValueError("Either provide refresh_token or both email and password")
+                raise InvalidValueError("Cannot provide refresh_token along with email and password")
+        elif not all((email, password)):
+            raise InvalidValueError("Either provide refresh_token or both email and password")
 
         return values

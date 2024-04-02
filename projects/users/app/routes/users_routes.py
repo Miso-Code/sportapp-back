@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sse_starlette import EventSourceResponse
 
 from ..config.db import get_db
-from ..models.schemas.schema import UserCreate, UserCredentials
+from ..models.schemas.schema import UserCreate, UserAdditionalInformation
 from ..services.users import UsersService
 from ..utils.user_cache import UserCache
 
@@ -38,6 +38,6 @@ async def register_user(user: UserCreate):
 
 
 @router.patch("/{user_id}/complete-registration")
-async def complete_user_registration(user_id: str, db: Session = Depends(get_db)):
-    user_created_response = UsersService(db).complete_user_registration(user_id)
-    return JSONResponse(content=user_created_response, status_code=200)
+async def complete_user_registration(user_id: str, user_additional_information: UserAdditionalInformation, db: Session = Depends(get_db)):
+    complete_user_registration_response = UsersService(db).complete_user_registration(user_id, user_additional_information)
+    return JSONResponse(content=complete_user_registration_response, status_code=200)

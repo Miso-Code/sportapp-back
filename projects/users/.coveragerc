@@ -8,6 +8,7 @@ source =
     app/config
     app/exceptions
     app/models
+    app/models/mappers
     app/routes
     app/services
     app/tasks

@@ -4,3 +4,7 @@ class NotFoundError(Exception):
 
 class EntityExistsError(Exception):
     pass
+
+
+class InvalidValueError(Exception):
+    pass
