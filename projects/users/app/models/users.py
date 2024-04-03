@@ -1,8 +1,9 @@
 import enum
 from dataclasses import dataclass
+from datetime import date
 from uuid import uuid4
 
-from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, Boolean
+from sqlalchemy import Column, Uuid, Enum, String, Integer, Float
 from app.config.db import base
 
 

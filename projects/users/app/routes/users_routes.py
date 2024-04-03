@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post("")
 async def register_user(user: UserCreate):
     UserCache.users.append(user)
 

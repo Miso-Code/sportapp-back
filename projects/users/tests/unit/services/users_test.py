@@ -37,8 +37,8 @@ class TestUsersService(unittest.TestCase):
         self.mock_db.bulk_save_objects.return_value = None
         self.mock_db.commit.return_value = None
         self.users_service.create_users(users_data)
-        mock_gensalt.return_value = b"123"
-        mock_hashpw.return_value = b"123"
+        mock_gensalt.return_value = b"somesalt"
+        mock_hashpw.side_effect = lambda password, salt: b"hashed" + password
 
         self.assertEqual(mock_gensalt.call_count, 3)
         self.assertEqual(mock_hashpw.call_count, 3)

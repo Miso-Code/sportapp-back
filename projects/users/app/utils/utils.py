@@ -1,5 +1,5 @@
 import asyncio
 
 
-async def sleep(seconds):
+async def async_sleep(seconds):
     return await asyncio.sleep(seconds)

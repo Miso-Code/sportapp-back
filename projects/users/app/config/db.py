@@ -15,15 +15,19 @@ def _create_engine():
 
     db_url = env.get("DATABASE_URL", f"{db_driver}://{user}:{password}@{host}:{port}/{db_name}")
 
-    if db_driver == "test":
-        db_url = "sqlite:///:memory:"
-        new_engine = create_engine(db_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
-    else:
-        new_engine = create_engine(db_url)
+    try:
+        if db_driver == "test":
+            db_url = "sqlite:///:memory:"
+            new_engine = create_engine(db_url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        else:
+            new_engine = create_engine(db_url)
 
-    new_session_local = sessionmaker(autocommit=False, autoflush=False, bind=new_engine)
+        new_session_local = sessionmaker(autocommit=False, autoflush=False, bind=new_engine)
 
-    return new_engine, new_session_local
+        return new_engine, new_session_local
+    except Exception as e:
+        print(f"Error creating engine: {e}")
+        raise e
 
 
 def get_db():

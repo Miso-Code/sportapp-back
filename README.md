@@ -1,4 +1,4 @@
-# SportApp
+# SportApp Backend
 
 Repositorio para el Backend de la aplicación SportApp. Este es un monorepo que contiene todos los microservicios
 necesarios para el correcto funcionamiento de la aplicación.
@@ -13,14 +13,14 @@ El repositorio está dividido en las siguientes carpetas:
     - `terraform`: Contiene los archivos necesarios para desplegar la infraestructura en AWS.
         - `aws`: Contiene los archivos necesarios para desplegar la infraestructura en AWS.
             - `modules`: Contiene módulos de Terraform reutilizables.
-            - `resources`: Contiene los recuros básicos de la infraestructura (VPC, subnets, DBs, etc.)
+            - `resources`: Contiene los recursos básicos de la infraestructura (VPC, subnets, DBs, etc.)
             - `services`: Contiene los servicios de AWS necesarios para la aplicación.
         - `gcp`: Contiene los archivos necesarios para desplegar la infraestructura en GCP.
             - `modules`: Contiene módulos de Terraform reutilizables.
             - `resources`: Contiene los recuros básicos de la infraestructura (VPC, subnets, DBs, etc.)
             - `services`: Contiene los servicios de GCP necesarios para la aplicación.
     - `scripts`: Contiene scripts para automatizar tareas de despliegue.
-- `projects`: Contiene los microservicios de la aplicación.}
+- `projects`: Contiene los microservicios de la aplicación.
     - `<microservicio>`: Contiene el código fuente de un microservicio.
         - `app`: Contiene el código fuente del microservicio.
         - `tests`: Contiene los tests del microservicio.

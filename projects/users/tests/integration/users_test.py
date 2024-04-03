@@ -14,6 +14,13 @@ from main import app
 from app.config.db import base, get_db
 from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information
 
+
+class Constants:
+    USERS_BASE_PATH = "/users"
+    TEXT_EVENT_STREAM = "text/event-stream"
+    APPLICATION_JSON = "application/json"
+
+
 fake = faker.Faker()
 
 # use an in-memory SQLite for testing
@@ -59,10 +66,10 @@ async def test_register_user(test_db):
     async with TestClient(app) as client:
         user_data = generate_random_user_create_data(fake)
 
-        response = await client.post("/users/", json=user_data.__dict__)
+        response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
 
         assert response.status_code == 200
-        assert "text/event-stream" in response.headers["content-type"]
+        assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
         assert "User created" in response.text
 
 
@@ -71,16 +78,16 @@ async def test_register_user_repeated_user(test_db):
     async with TestClient(app) as client:
         user_data = generate_random_user_create_data(fake)
 
-        response = await client.post("/users/", json=user_data.__dict__)
+        response = await client.post(f"{Constants.USERS_BASE_PATH}", json=user_data.__dict__)
 
         assert response.status_code == 200
-        assert "text/event-stream" in response.headers["content-type"]
+        assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
         assert "User created" in response.text
 
-        response = await client.post("/users/", json=user_data.__dict__)
+        response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
 
         assert response.status_code == 200
-        assert "text/event-stream" in response.headers["content-type"]
+        assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
         assert "User already exists" in response.text
 
 
@@ -90,11 +97,11 @@ async def test_register_user_with_invalid_password(test_db):
         user_data = generate_random_user_create_data(fake)
         user_data.password = "not_strong"
 
-        response = await client.post("/users/", json=user_data.__dict__)
+        response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
         response_json = response.json()
 
         assert response.status_code == 400
-        assert "application/json" in response.headers["content-type"]
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert (
             "Password must be between 8 and 64 characters long and contain at least one digit, one lowercase "
             "letter, one uppercase letter, and one special character" in response_json["message"]
@@ -125,11 +132,11 @@ async def test_complete_user_registration(test_db):
             "birth_date": additional_info.birth_date,
         }
 
-        response = await client.patch(f"/users/{user_id}/complete-registration", json=additional_info_json)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/{user_id}/complete-registration", json=additional_info_json)
         response_json = response.json()
 
         assert response.status_code == 200
-        assert "application/json" in response.headers["content-type"]
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert response_json["identification_type"] == additional_info.identification_type.value
         assert response_json["identification_number"] == additional_info.identification_number
         assert response_json["gender"] == additional_info.gender.value

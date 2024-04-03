@@ -8,7 +8,7 @@ from app.exceptions.exceptions import NotFoundError
 
 def _get_password_hash(password):
     pwd_bytes = password.encode("utf-8")
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=12)
     hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
     return hashed_password
 

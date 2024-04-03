@@ -29,11 +29,14 @@ class TestUserCreate(unittest.TestCase):
         password = fake.word()
 
         user_data = {"first_name": first_name, "last_name": last_name, "email": email, "password": password}
+        password_requirements = (
+            "Password must be between 8 and 64 characters long and contain at least " "one digit, one lowercase letter, one uppercase letter, and one special " "character"
+        )
         with self.assertRaises(InvalidValueError) as context:
             UserCreate(**user_data)
         self.assertEqual(
             str(context.exception),
-            "Password must be between 8 and 64 characters long and contain at least one digit, " "one lowercase letter, one uppercase letter, and one special character",
+            password_requirements,
         )
 
 
@@ -82,7 +85,7 @@ class TestUserAdditionalInformation(unittest.TestCase):
         country_of_residence = fake.country()
         city_of_residence = fake.city()
         residence_age = fake.random_int(min=1, max=100)
-        birth_date = fake.date_of_birth(minimum_age=18).strftime("%d-%m-%Y")
+        birth_date = "invalid-date-format"
 
         user_data = {
             "identification_type": identification_type,

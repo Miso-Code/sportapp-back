@@ -9,7 +9,7 @@ from app.routes import users_routes
 from app.exceptions.exceptions import NotFoundError, InvalidValueError
 from app.config.db import engine, base, session_local
 from app.tasks.sync_db import sync_users
-from app.utils.utils import sleep
+from app.utils.utils import async_sleep
 
 load_dotenv()
 app = FastAPI()
@@ -21,7 +21,11 @@ app.include_router(users_routes.router)
 
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(sync_users(db=session_local(), sleep=sleep))
+    try:
+        asyncio.create_task(sync_users(db=session_local(), sleep=async_sleep))
+    except Exception as e:
+        print(f"Error creating task: {e}")
+        raise e
 
 
 @app.exception_handler(NotFoundError)

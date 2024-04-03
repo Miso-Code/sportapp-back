@@ -1,3 +1,4 @@
+import datetime
 import re
 from typing import Optional
 
@@ -17,9 +18,10 @@ class UserCreate(BaseModel):
     @classmethod
     def validate_password(cls, value):
         if not re.match(Config.PASSWORD_REGEX, value):
-            raise InvalidValueError(
-                "Password must be between 8 and 64 characters long and contain at least one digit, one lowercase " "letter, one uppercase letter, and one special character",
+            password_requirements = (
+                "Password must be between 8 and 64 characters long and contain at least " "one digit, one lowercase letter, one uppercase letter, and one special " "character"
             )
+            raise InvalidValueError(password_requirements)
         return value
 
 

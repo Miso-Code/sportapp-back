@@ -12,9 +12,9 @@ class TestUser(unittest.TestCase):
         last_name = fake.last_name()
         email = fake.email()
         hashed_password = fake.password()
-        identification_type = fake.enum(UserIdentificationType)
+        identification_type = UserIdentificationType(fake.random_element(elements=[e.value for e in UserIdentificationType]))
         identification_number = fake.random_number()
-        gender = fake.enum(Gender)
+        gender = Gender(fake.random_element(elements=[e.value for e in Gender]))
         country_of_birth = fake.country()
         city_of_birth = fake.city()
         country_of_residence = fake.country()
@@ -26,8 +26,8 @@ class TestUser(unittest.TestCase):
         training_years = fake.random_number()
         training_hours_per_week = fake.random_number()
         available_training_hours_per_week = fake.random_number()
-        food_preference = fake.enum(FoodPreference)
-        subscription_type = fake.enum(UserSubscriptionType)
+        food_preference = FoodPreference(fake.random_element(elements=[e.value for e in FoodPreference]))
+        subscription_type = UserSubscriptionType(fake.random_element(elements=[e.value for e in UserSubscriptionType]))
 
         user = User(
             user_id=user_id,
