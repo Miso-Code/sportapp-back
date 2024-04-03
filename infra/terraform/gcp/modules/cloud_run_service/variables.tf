@@ -45,3 +45,8 @@ variable "env" {
   description = "A map of environment variables to be made available to the container"
   type        = map(string)
 }
+
+variable "jwt_secret_id" {
+  description = "The ID of the secret containing the JWT secret"
+  type        = string
+}

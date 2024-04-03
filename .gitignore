@@ -45,4 +45,5 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+**/*.coverage
 **/coverage_html_report

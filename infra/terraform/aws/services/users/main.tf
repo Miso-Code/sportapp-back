@@ -52,21 +52,6 @@ module "users-service" {
 }
 
 // Login and Register Service API Gateway endpoints
-module "users-login-resource" {
-  source        = "../../modules/api_gateway/resource"
-  api_id        = data.terraform_remote_state.resources.outputs.api_gateway_id
-  api_parent_id = data.terraform_remote_state.resources.outputs.api_gateway_root_resource_id
-  api_path      = "login"
-}
-
-module "users-login-endpoint" {
-  source          = "../../modules/api_gateway/endpoint"
-  api_gateway_id  = data.terraform_remote_state.resources.outputs.api_gateway_id
-  http_method     = "POST"
-  integration_uri = "http://${data.terraform_remote_state.resources.outputs.elb_dns_name}/users/login"
-  resource_id     = module.users-login-resource.resource_id
-}
-
 module "users-register-resource" {
   source        = "../../modules/api_gateway/resource"
   api_id        = data.terraform_remote_state.resources.outputs.api_gateway_id
@@ -98,7 +83,6 @@ module "users-deployment" {
   api_gateway_id       = data.terraform_remote_state.resources.outputs.api_gateway_id
 
   depends_on = [
-    module.users-login-endpoint,
     module.users-register-endpoint
   ]
 }

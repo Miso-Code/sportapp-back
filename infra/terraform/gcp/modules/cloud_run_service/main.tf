@@ -26,6 +26,15 @@ resource "google_cloud_run_v2_service" "run_service" {
         name  = "DB_URL"
         value = var.env.db_url
       }
+      env {
+        name = "JWT_SECRET_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = var.jwt_secret_id
+            version = "latest"
+          }
+        }
+      }
       resources {
         limits = {
           cpu    = var.cpu_limit

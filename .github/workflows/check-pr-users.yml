@@ -1,10 +1,10 @@
-name: Check PRs on <SERVICE> service
+name: Check PRs on Users service
 
 on:
   pull_request:
     branches: [ "develop", "main" ]
     paths:
-      - "projects/<SERVICE>/**"
+      - "projects/users/**"
 
 jobs:
   lint-tests-coverage:
@@ -23,14 +23,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry && poetry config virtualenvs.create false
           poetry install
-          cd projects/<SERVICE> && poetry install
+          cd projects/users && poetry install
 
       - name: Run lint
         run: |
-          poetry run pre-commit run
+          poetry run pre-commit run --all-files
 
       - name: Run tests and coverage
         run: |
-          poetry run coverage run --source=projects/<SERVICE> -m pytest -cov-fail-under=75 projects/<SERVICE>/tests
-          poetry run coverage report -m --fail-under=75 --data-file=.coverage.<SERVICE>
-          poetry run coverage html --data-file=.coverage.<SERVICE>
+          cd projects/users
+          poetry run coverage run -m pytest
+          poetry run coverage report -m --fail-under=75
