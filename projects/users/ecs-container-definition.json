@@ -8,7 +8,7 @@
         "appProtocol": "http"
       }
     ],
-    "image": "887664210442.dkr.ecr.us-east-1.amazonaws.com/mock",
+    "image": "887664210442.dkr.ecr.us-east-1.amazonaws.com/users",
     "essential": true,
     "name": "users-service",
     "environment": [
