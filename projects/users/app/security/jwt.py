@@ -4,6 +4,8 @@ from typing import Dict
 from jose import jwt, JWTError
 from app.exceptions.exceptions import InvalidCredentialsError
 
+INVALID_EXPIRED_MESSAGE = "Invalid or expired refresh token"
+
 
 class JWTManager:
     def __init__(self, secret_key: str, algorithm: str, access_token_expiry_minutes: int, refresh_token_expiry_minutes: int):
@@ -24,12 +26,12 @@ class JWTManager:
         try:
             payload = self._decode_token(token)
         except JWTError:
-            raise InvalidCredentialsError("Invalid or expired refresh token")
+            raise InvalidCredentialsError(INVALID_EXPIRED_MESSAGE)
         if not payload or "expiry" not in payload:
-            raise InvalidCredentialsError("Invalid or expired refresh token")
+            raise InvalidCredentialsError(INVALID_EXPIRED_MESSAGE)
 
         if datetime.now(timezone.utc).timestamp() > payload["expiry"]:
-            raise InvalidCredentialsError("Invalid or expired refresh token")
+            raise InvalidCredentialsError(INVALID_EXPIRED_MESSAGE)
 
         return self.generate_tokens(payload)
 

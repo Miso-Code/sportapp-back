@@ -17,8 +17,11 @@ def fake_encode_function(payload, secret, algorithm):
     return json.dumps({"payload": payload, "secret": secret, "algorithm": algorithm})
 
 
-def fake_decode_function(token, secret, algorithm):
+def fake_decode_function(token, _, _2):
     return json.loads(token)
+
+
+INVALID_EXPIRED_MESSAGE = "Invalid or expired refresh token"
 
 
 class TestJWTManager(unittest.TestCase):
@@ -77,7 +80,7 @@ class TestJWTManager(unittest.TestCase):
 
         with self.assertRaises(InvalidCredentialsError) as context:
             self.jwt_manager.refresh_token(token=fake_token)
-        self.assertEqual(str(context.exception), "Invalid or expired refresh token")
+        self.assertEqual(str(context.exception), INVALID_EXPIRED_MESSAGE)
 
     @patch("jose.jwt.decode")
     def test_refresh_token_invalid(self, mock_decode):
@@ -86,7 +89,7 @@ class TestJWTManager(unittest.TestCase):
 
         with self.assertRaises(InvalidCredentialsError) as context:
             self.jwt_manager.refresh_token(token=fake_token)
-        self.assertEqual(str(context.exception), "Invalid or expired refresh token")
+        self.assertEqual(str(context.exception), INVALID_EXPIRED_MESSAGE)
 
     @patch("jose.jwt.decode")
     def test_refresh_token_no_expiry(self, mock_decode):
@@ -96,4 +99,4 @@ class TestJWTManager(unittest.TestCase):
 
         with self.assertRaises(InvalidCredentialsError) as context:
             self.jwt_manager.refresh_token(token=fake_token)
-        self.assertEqual(str(context.exception), "Invalid or expired refresh token")
+        self.assertEqual(str(context.exception), INVALID_EXPIRED_MESSAGE)

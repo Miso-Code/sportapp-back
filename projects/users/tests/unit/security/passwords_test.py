@@ -13,7 +13,7 @@ def fake_encode_function(payload, secret, algorithm):
     return json.dumps({"payload": payload, "secret": secret, "algorithm": algorithm})
 
 
-def fake_decode_function(token, secret, algorithm):
+def fake_decode_function(token, _, _2):
     return json.loads(token)
 
 

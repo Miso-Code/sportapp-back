@@ -38,7 +38,3 @@ class TestMockSleep(unittest.IsolatedAsyncioTestCase):
         asyncio.sleep = mocked_sleep
         await async_sleep(duration)
         mocked_sleep.assert_called_once_with(duration)
-
-    # Ensure to restore the original asyncio.sleep after the test
-    def tearDown(self):
-        asyncio.sleep = asyncio.sleep  # Restore original asyncio.sleep
