@@ -3,7 +3,12 @@ variable "authorizer_name" {
   type        = string
 }
 
-variable "api_gateway_id" {
-  description = "The ID of the API Gateway"
+variable "authorizer_scope" {
+  description = "The scope of the authorizer"
+  type        = string
+}
+
+variable "lambda_role_arn" {
+  description = "The ARN of the Lambda role"
   type        = string
 }

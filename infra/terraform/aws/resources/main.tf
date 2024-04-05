@@ -94,14 +94,56 @@ module "application_load_balancer_listener" {
 module "api_gateway" {
   source          = "../modules/api_gateway/api"
   api_description = "Sportapp API Gateway"
-  api_name        = "sportapp-api"
+  api_name        = "sportapp-gateway"
 }
 
-#module "api_gateway_authorizer" {
-#  source                = "../modules/api_gateway/authorizer"
-#  api_gateway_id        = module.api_gateway.gateway_id
-#  authorizer_name       = "sportapp-authorizer"
-#}
+# API Gateway authorizer configuration
+
+module "authorizer_role" {
+  source = "../modules/api_gateway/authorizer_role"
+}
+
+module "api_gateway_free_plan_authorizer" {
+  source = "../modules/api_gateway/authorizer"
+
+  authorizer_name  = "FreePlanAuthorizer"
+  authorizer_scope = "free"
+  lambda_role_arn  = module.authorizer_role.role_arn
+}
+
+module "api_gateway_intermediate_plan_authorizer" {
+  source = "../modules/api_gateway/authorizer"
+
+  authorizer_name  = "IntermediatePlanAuthorizer"
+  authorizer_scope = "intermediate"
+  lambda_role_arn  = module.authorizer_role.role_arn
+}
+
+module "api_gateway_premium_plan_authorizer" {
+  source = "../modules/api_gateway/authorizer"
+
+  authorizer_name  = "PremiumPlanAuthorizer"
+  authorizer_scope = "premium"
+  lambda_role_arn  = module.authorizer_role.role_arn
+}
+
+module "api_gateway_business_partner_authorizer" {
+  source = "../modules/api_gateway/authorizer"
+
+  authorizer_name  = "BusinessPartnerAuthorizer"
+  authorizer_scope = "business_partner"
+  lambda_role_arn  = module.authorizer_role.role_arn
+}
+
+module "sports-get-all-route" {
+  source                   = "../modules/api_gateway/route"
+  api_id                   = module.api_gateway.gateway_id
+  route_integration_method = "GET"
+  route_integration_uri    = "https://webhook.site/472aeab7-db0a-4291-bd00-3675ae239c9b"
+  route_method             = "GET"
+  route_path               = "/bhenao"
+  depends_on               = [module.api_gateway_free_plan_authorizer]
+}
 
 # ECS configuration
 

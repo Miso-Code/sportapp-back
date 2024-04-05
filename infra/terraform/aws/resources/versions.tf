@@ -5,14 +5,14 @@ terraform {
     organization = "MisoTeam"
 
     workspaces {
-      name = "gcp-resources"
+      name = "aws-resources"
     }
   }
 
   required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "4.51.0"
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 5.0.0"
     }
   }
 }

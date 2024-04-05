@@ -5,7 +5,7 @@ terraform {
     organization = "MisoTeam"
 
     workspaces {
-      name = "gcp-resources"
+      name = "gcp-services"
     }
   }
 

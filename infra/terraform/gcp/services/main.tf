@@ -1,6 +1,6 @@
 provider "google" {
-  project     = "sportapp-417820"
-  region      = "us-central1"
+  project = "sportapp-417820"
+  region  = "us-central1"
 }
 
 data "google_secret_manager_secret_version" "db_username" {
@@ -20,9 +20,12 @@ data "google_service_account" "develop_service_account" {
 }
 
 data "terraform_remote_state" "resources" {
-  backend = "local"
+  backend = "remote"
   config  = {
-    path = "../resources/terraform.tfstate"
+    organization = "MisoTeam"
+    workspaces   = {
+      name = "resources"
+    }
   }
 }
 
