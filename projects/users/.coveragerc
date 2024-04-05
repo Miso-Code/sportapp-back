@@ -10,6 +10,7 @@ source =
     app/models
     app/models/mappers
     app/routes
+    app/security
     app/services
     app/tasks
     app/utils

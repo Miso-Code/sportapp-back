@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 from faker import Faker
 
-from app.models.schemas.schema import UserAdditionalInformation, UserCreate
+from app.models.schemas.schema import UserAdditionalInformation, UserCreate, UserCredentials
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
 from app.models.users import UserIdentificationType, Gender
@@ -129,3 +129,51 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_body, user_data)
+
+    @patch("app.services.users.UsersService.authenticate_user")
+    async def test_login_user_email_password(self, authenticate_user_mock):
+        email = fake.email()
+        password = f"{fake.password()}A123!"
+
+        user_data = {"email": email, "password": password}
+        user_credentials = UserCredentials(**user_data)
+
+        db = MagicMock()
+
+        token_data = {
+            "access_token": fake.sha256(),
+            "access_token_expires_minutes": fake.random_int(min=1, max=60),
+            "refresh_token": fake.sha256(),
+            "refresh_token_expires_minutes": fake.random_int(min=1, max=60),
+        }
+        authenticate_user_mock.return_value = token_data
+
+        response = await users_routes.login_user(user_credentials, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        authenticate_user_mock.assert_called_once_with(user_credentials)
+        self.assertEqual(response_body, token_data)
+
+    @patch("app.services.users.UsersService.authenticate_user")
+    async def test_login_user_refresh_token(self, authenticate_user_mock):
+        token = fake.sha256()
+        user_data = {"refresh_token": token}
+        user_credentials = UserCredentials(**user_data)
+
+        db = MagicMock()
+
+        token_data = {
+            "access_token": fake.sha256(),
+            "access_token_expires_minutes": fake.random_int(min=1, max=60),
+            "refresh_token": fake.sha256(),
+            "refresh_token_expires_minutes": fake.random_int(min=1, max=60),
+        }
+        authenticate_user_mock.return_value = token_data
+
+        response = await users_routes.login_user(user_credentials, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        authenticate_user_mock.assert_called_once_with(user_credentials)
+        self.assertEqual(response_body, token_data)

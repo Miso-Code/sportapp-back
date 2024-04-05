@@ -1,5 +1,5 @@
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, UserSubscriptionType
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 
 
 def generate_random_users_create_data(faker, count):
@@ -12,6 +12,13 @@ def generate_random_users(faker, count):
 
 def generate_random_users_additional_information(faker, count):
     return [generate_random_user_additional_information(faker) for _ in range(count)]
+
+
+def generate_random_user_login_data(faker, token=False):
+    if token:
+        return UserCredentials(refresh_token=faker.uuid4())
+    else:
+        return UserCredentials(email=faker.email(), password=f"{faker.password()}A123!", refresh_token=None)
 
 
 def generate_random_user_additional_information(faker):

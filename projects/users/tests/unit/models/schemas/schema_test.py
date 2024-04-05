@@ -141,3 +141,11 @@ class TestUserCredentials(unittest.TestCase):
         with self.assertRaises(InvalidValueError) as context:
             UserCredentials()
         self.assertEqual(str(context.exception), "Either provide refresh_token or both email and password")
+
+    def test_invalid_credentials_email(self):
+        email = fake.word()
+        password = fake.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True)
+
+        with self.assertRaises(InvalidValueError) as context:
+            UserCredentials(email=email, password=password)
+        self.assertEqual(str(context.exception), "Invalid email address")

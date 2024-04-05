@@ -21,7 +21,10 @@ class JWTManager:
         }
 
     def refresh_token(self, token: str) -> Dict[str, str]:
-        payload = self._decode_token(token)
+        try:
+            payload = self._decode_token(token)
+        except JWTError:
+            raise InvalidCredentialsError("Invalid or expired refresh token")
         if not payload or "expiry" not in payload:
             raise InvalidCredentialsError("Invalid or expired refresh token")
 
@@ -36,4 +39,4 @@ class JWTManager:
         return jwt.encode(payload_with_exp, self._secret, self._algorithm)
 
     def _decode_token(self, token: str) -> Dict:
-        return jwt.decode(token, self._secret, algorithms=[self._algorithm])
+        return jwt.decode(token, self._secret, self._algorithm)
