@@ -53,3 +53,7 @@ terraform.rc
 # Env files
 *.env*
 **/*.vars
+
+#Python
+**/__pycache__/
+**/*.pyc
