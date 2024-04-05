@@ -49,6 +49,13 @@ class UserCredentials(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
 
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        if value is not None and not re.match(Config.EMAIL_REGEX, value):
+            raise InvalidValueError("Invalid email address")
+        return value
+
     @model_validator(mode="before")
     def validate_credentials(cls, values):
         refresh_token = values.get("refresh_token")

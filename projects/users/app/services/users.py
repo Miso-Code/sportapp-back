@@ -1,34 +1,35 @@
 import bcrypt
+from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.config.settings import Config
+from app.security.jwt import JWTManager
 from app.models.users import User
 from app.models.mappers.mapper import DataClassMapper
-from app.exceptions.exceptions import NotFoundError
+from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 
 
 def _get_password_hash(password):
     pwd_bytes = password.encode("utf-8")
     salt = bcrypt.gensalt(rounds=12)
     hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
-    return hashed_password
+    return hashed_password.decode("utf-8")
 
 
-def _create_user_object(user_create):
-    user = User()
-    user.email = user_create.email
-    user.first_name = user_create.first_name
-    user.last_name = user_create.last_name
-    user.hashed_password = _get_password_hash(user_create.password)
-    return user
+def _verify_password(password, hashed_password):
+    password_bytes = password.encode("utf-8")
+    hashed_password_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password=password_bytes, hashed_password=hashed_password_bytes)
 
 
 class UsersService:
     def __init__(self, db: Session):
         self.db = db
+        self.jwt_manager = JWTManager(Config.JWT_SECRET_KEY, Config.JWT_ALGORITHM, Config.ACCESS_TOKEN_EXPIRE_MINUTES, Config.REFRESH_TOKEN_EXPIRE_MINUTES)
         self.mapper = DataClassMapper(User)
 
     def create_users(self, users_create):
-        users = [_create_user_object(user_create) for user_create in users_create]
+        users = [self._create_user_object(user_create) for user_create in users_create]
         self.db.bulk_save_objects(users)
         self.db.commit()
 
@@ -50,3 +51,33 @@ class UsersService:
         self.db.commit()
 
         return self.mapper.to_dict(user)
+
+    def authenticate_user(self, user_credentials):
+        if user_credentials.refresh_token:
+            return self._process_refresh_token_login(user_credentials.refresh_token)
+        else:
+            return self._process_email_password_login(user_credentials.email, user_credentials.password)
+
+    def _create_user_object(self, user_create):
+        user = User()
+        user.email = user_create.email
+        user.first_name = user_create.first_name
+        user.last_name = user_create.last_name
+        user.hashed_password = _get_password_hash(user_create.password)
+        return user
+
+    def _process_email_password_login(self, email, password):
+        user = self.db.query(User).filter(User.email == email).first()
+        if not user:
+            raise InvalidCredentialsError("Invalid email or password")
+
+        if not _verify_password(password, user.hashed_password):
+            raise InvalidCredentialsError("Invalid email or password")
+
+        return self.jwt_manager.generate_tokens({"user_id": str(user.user_id)})
+
+    def _process_refresh_token_login(self, refresh_token):
+        try:
+            return self.jwt_manager.refresh_token(refresh_token)
+        except JWTError:
+            raise InvalidCredentialsError("Invalid or expired refresh token")

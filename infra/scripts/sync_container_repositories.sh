@@ -42,7 +42,7 @@ if [ "$CLOUD_PROVIDER" == "gcp" ]; then
 fi
 
 # Define allowed folder names
-ALLOWED_FOLDERS=("adverse_incidents" "adverse_incidents_provider" "alerts" "nutritional_plan" "sport_session" "users")
+ALLOWED_FOLDERS=("adverse_incidents" "adverse_incidents_provider" "alerts" "nutritional_plan" "sport_session" "users" "sports")
 
 # Function to check if a folder name is allowed
 is_allowed_folder() {
@@ -83,7 +83,7 @@ for folder_name in "${SERVICES_ARRAY[@]}"; do
 
         # Tag Docker image
         if [ "$CLOUD_PROVIDER" == "aws" ]; then
-            docker tag "$folder_name:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest"
+            docker tag "$folder_name:latest" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest"
             # Push Docker image to AWS ECR
             docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$folder_name:latest"
         elif [ "$CLOUD_PROVIDER" == "gcp" ]; then

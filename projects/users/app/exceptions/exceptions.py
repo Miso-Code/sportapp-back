@@ -8,3 +8,7 @@ class EntityExistsError(Exception):
 
 class InvalidValueError(Exception):
     pass
+
+
+class InvalidCredentialsError(Exception):
+    pass

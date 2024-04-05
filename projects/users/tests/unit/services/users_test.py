@@ -21,7 +21,7 @@ class TestUsersService(unittest.TestCase):
         self.mock_db = MagicMock(spec=Session)
         self.users_service = UsersService(db=self.mock_db)
         self.users_service.mapper = self.mock_mapper
-        self.users_service.jwt = self.mock_jwt
+        self.users_service.jwt_manager = self.mock_jwt
 
     @patch("bcrypt.hashpw")
     @patch("bcrypt.gensalt")
