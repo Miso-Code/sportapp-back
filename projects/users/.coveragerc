@@ -5,15 +5,10 @@ omit =
     app/config/settings.py
     app/utils/user_cache.py
 source =
-    app/config
-    app/exceptions
-    app/models
-    app/models/mappers
-    app/routes
-    app/security
-    app/services
-    app/tasks
-    app/utils
+    app
 
 [html]
 directory = coverage_html_report
+
+[xml]
+output = coverage.xml

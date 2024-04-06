@@ -5,7 +5,7 @@ on:
     branches: [ "develop", "main" ]
     paths:
       - "projects/users/**"
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
   lint-tests-coverage:
@@ -35,8 +35,24 @@ jobs:
           cd projects/users
           poetry run coverage run -m pytest tests/unit
           poetry run coverage report -m --fail-under=75
+          poetry run coverage xml
+          pwd
+          cat coverage.xml
+
+      - name: fix code coverage paths
+        run: |
+          sed -i 's/\/home\/runner\/work\/sportapp-back\/sportapp-back\//\/github\/workspace\//g' projects/users/coverage.xml
+          cat projects/users/coverage.xml
 
       - name: Run integration tests
         run: |
           cd projects/users
           poetry run pytest tests/integration
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: projects/users
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
