@@ -37,6 +37,8 @@ class UsersService:
             user["hashed_password"] = _get_password_hash(user["password"])
             del user["password"]
             values_to_insert.append(user)
+        if not values_to_insert:
+            return []
         insert_statement = insert(User).values(values_to_insert).returning(User.user_id, User.first_name, User.last_name, User.email)
         created_users = self.db.execute(insert_statement).fetchall()
         self.db.commit()
