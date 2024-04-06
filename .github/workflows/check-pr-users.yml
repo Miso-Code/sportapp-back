@@ -36,13 +36,10 @@ jobs:
           poetry run coverage run -m pytest tests/unit
           poetry run coverage report -m --fail-under=75
           poetry run coverage xml
-          pwd
-          cat coverage.xml
 
       - name: fix code coverage paths
         run: |
           sed -i 's/\/home\/runner\/work\/sportapp-back\/sportapp-back\//\/github\/workspace\//g' projects/users/coverage.xml
-          cat projects/users/coverage.xml
 
       - name: Run integration tests
         run: |
