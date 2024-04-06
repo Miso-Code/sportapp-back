@@ -29,12 +29,19 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
         user_create = UserCreate(**user_data)
 
+        user_data["user_id"] = fake.uuid4()
         UserCache.users_success_by_email_map = {email: user_data}
         response = await users_routes.register_user(user_create)
         async_gen = response.body_iterator
 
         async for data in async_gen:
-            self.assertEqual(data.strip(), "User created")
+            json_data = json.loads(data.strip())
+            self.assertEqual(json_data["status"], "success")
+            self.assertEqual(json_data["message"], "User created")
+            self.assertEqual(json_data["data"]["id"], user_data["user_id"])
+            self.assertEqual(json_data["data"]["email"], email)
+            self.assertEqual(json_data["data"]["first_name"], first_name)
+            self.assertEqual(json_data["data"]["last_name"], last_name)
             break
 
         self.assertEqual(len(UserCache.users), 1)
@@ -58,8 +65,12 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         response = await users_routes.register_user(user_create)
         async_gen = response.body_iterator
 
+        error_response = {"status": "error", "message": "User already exists"}
+
         async for data in async_gen:
-            self.assertEqual(data.strip(), "User already exists")
+            json_data = json.loads(data.strip())
+            self.assertEqual(json_data["status"], error_response["status"])
+            self.assertEqual(json_data["message"], error_response["message"])
             break
 
         self.assertEqual(len(UserCache.users), 1)
@@ -83,8 +94,12 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         async_gen = response.body_iterator
         max_loops = 3
 
+        processing_response = {"status": "processing", "message": "Processing..."}
+
         async for data in async_gen:
-            self.assertEqual(data.strip(), "Processing...")
+            json_data = json.loads(data.strip())
+            self.assertEqual(json_data["status"], processing_response["status"])
+            self.assertEqual(json_data["message"], processing_response["message"])
             max_loops -= 1
             if max_loops == 0:
                 break

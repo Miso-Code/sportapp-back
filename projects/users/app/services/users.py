@@ -1,10 +1,12 @@
 import bcrypt
 from jose import JWTError
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
 from app.security.jwt import JWTManager
 from app.models.users import User
+from app.models.schemas.schema import UserCreate
 from app.models.mappers.mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 
@@ -29,9 +31,16 @@ class UsersService:
         self.mapper = DataClassMapper(User)
 
     def create_users(self, users_create):
-        users = [self._create_user_object(user_create) for user_create in users_create]
-        self.db.bulk_save_objects(users)
+        values_to_insert = []
+        for user_create in users_create:
+            user = user_create.model_dump()
+            user["hashed_password"] = _get_password_hash(user["password"])
+            del user["password"]
+            values_to_insert.append(user)
+        insert_statement = insert(User).values(values_to_insert).returning(User.user_id, User.first_name, User.last_name, User.email)
+        created_users = self.db.execute(insert_statement).fetchall()
         self.db.commit()
+        return [self._create_user_dict(user) for user in created_users]
 
     def complete_user_registration(self, user_id, user_additional_information):
         user = self.db.query(User).filter(User.user_id == user_id).first()
@@ -58,13 +67,8 @@ class UsersService:
         else:
             return self._process_email_password_login(user_credentials.email, user_credentials.password)
 
-    def _create_user_object(self, user_create):
-        user = User()
-        user.email = user_create.email
-        user.first_name = user_create.first_name
-        user.last_name = user_create.last_name
-        user.hashed_password = _get_password_hash(user_create.password)
-        return user
+    def _create_user_dict(self, user_data):
+        return {"user_id": str(user_data[0]), "first_name": user_data[1], "last_name": user_data[2], "email": user_data[3]}
 
     def _process_email_password_login(self, email, password):
         user = self.db.query(User).filter(User.email == email).first()

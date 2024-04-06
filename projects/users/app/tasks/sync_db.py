@@ -13,7 +13,7 @@ async def sync_users(db, sleep):
                 UserCache.users_with_errors_by_email_map[user.email] = user
 
             users_to_save = [user for user in process_users if user.email not in [repeated_user.email for repeated_user in repeated_users]]
-            UsersService(db).create_users(users_to_save)
+            users_created = UsersService(db).create_users(users_to_save)
             UserCache.users = UserCache.users[Config.TOTAL_USERS_BY_RUN :]
-            UserCache.users_success_by_email_map.update({user.email: user for user in users_to_save})
+            UserCache.users_success_by_email_map.update({user["email"]: user for user in users_created})
         await sleep(1)

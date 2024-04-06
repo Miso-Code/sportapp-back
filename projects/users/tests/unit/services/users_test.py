@@ -35,9 +35,15 @@ class TestUsersService(unittest.TestCase):
 
         users_data = [user_1, user_2, user_3]
 
-        users_data_dict = [user_1.dict(), user_2.dict(), user_3.dict()]
-        self.mock_mapper.to_dict.side_effect = users_data_dict
-        self.mock_db.bulk_save_objects.return_value = None
+        users_created_fetch_all = [
+            [user_1.first_name, user_1.last_name, user_1.email, "hashed" + user_1.password],
+            [user_2.first_name, user_2.last_name, user_2.email, "hashed" + user_2.password],
+            [user_3.first_name, user_3.last_name, user_3.email, "hashed" + user_3.password],
+        ]
+
+        execute_mock = MagicMock()
+        self.mock_db.execute.return_value = execute_mock
+        execute_mock.fetchall.return_value = users_created_fetch_all
         self.mock_db.commit.return_value = None
         self.users_service.create_users(users_data)
         mock_gensalt.return_value = b"somesalt"
@@ -45,7 +51,8 @@ class TestUsersService(unittest.TestCase):
 
         self.assertEqual(mock_gensalt.call_count, 3)
         self.assertEqual(mock_hashpw.call_count, 3)
-        self.assertEqual(self.mock_db.bulk_save_objects.call_count, 1)
+        self.assertEqual(self.mock_db.execute.call_count, 1)
+        self.assertEqual(execute_mock.fetchall.call_count, 1)
         self.assertEqual(self.mock_db.commit.call_count, 1)
 
     def test_complete_user_registration(self):

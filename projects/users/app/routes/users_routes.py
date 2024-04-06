@@ -1,4 +1,5 @@
 import asyncio
+import json
 import uuid
 
 from fastapi import Depends, APIRouter
@@ -26,13 +27,26 @@ async def register_user(user: UserCreate):
         while True:
             if user.email in UserCache.users_with_errors_by_email_map:
                 del UserCache.users_with_errors_by_email_map[user.email]
-                yield "User already exists"
+                response = {"status": "error", "message": "User already exists"}
+                yield json.dumps(response)
                 break
             elif user.email in UserCache.users_success_by_email_map:
+                user_created = UserCache.users_success_by_email_map[user.email]
                 del UserCache.users_success_by_email_map[user.email]
-                yield "User created"
+                response = {
+                    "status": "success",
+                    "message": "User created",
+                    "data": {
+                        "id": user_created["user_id"],
+                        "email": user_created["email"],
+                        "first_name": user_created["first_name"],
+                        "last_name": user_created["last_name"],
+                    },
+                }
+                yield json.dumps(response)
                 break
-            yield "Processing..."
+            response = {"status": "processing", "message": "Processing..."}
+            yield json.dumps(response)
             await asyncio.sleep(1)
 
     return EventSourceResponse(event_generator(user))

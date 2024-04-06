@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import faker
+
+from app.models.users import User
 from app.tasks import sync_db
 from app.utils.user_cache import UserCache
 from app.config.settings import Config
@@ -37,7 +39,22 @@ class TestSyncDb(unittest.IsolatedAsyncioTestCase):
         self.mock_db.query.return_value = mock_query
         mock_query.filter.return_value = mock_filter
         mock_filter.all.return_value = []
-        mock_create_users.return_value = None
+
+        fake_created_users = [
+            {
+                "email": self.user_1.email,
+                "first_name": self.user_1.first_name,
+                "last_name": self.user_1.last_name,
+                "user_id": fake.uuid4(),
+            },
+            {
+                "email": self.user_2.email,
+                "first_name": self.user_2.first_name,
+                "last_name": self.user_2.last_name,
+                "user_id": fake.uuid4(),
+            },
+        ]
+        mock_create_users.return_value = fake_created_users
         Config.TOTAL_USERS_BY_RUN = 2
         await sync_db.sync_users(self.mock_db, modified_sleep)
 
@@ -60,7 +77,13 @@ class TestSyncDb(unittest.IsolatedAsyncioTestCase):
         self.mock_db.query.return_value = mock_query
         mock_query.filter.return_value = mock_filter
         mock_filter.all.return_value = [self.user_1, self.user_2]
-        mock_create_users.return_value = None
+        fake_created_user = {
+            "email": self.user_3.email,
+            "first_name": self.user_3.first_name,
+            "last_name": self.user_3.last_name,
+            "user_id": fake.uuid4(),
+        }
+        mock_create_users.return_value = [fake_created_user]
         Config.TOTAL_USERS_BY_RUN = 3
         await sync_db.sync_users(self.mock_db, modified_sleep)
 

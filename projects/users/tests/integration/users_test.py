@@ -1,6 +1,7 @@
 import os
 import unittest
 import uuid
+import json
 from asyncio import get_event_loop
 
 import faker
@@ -48,6 +49,14 @@ base.metadata.create_all(bind=test_engine)
 app.dependency_overrides[get_db] = override_get_db
 
 
+def is_json(myjson):
+    try:
+        json.loads(myjson)
+    except ValueError as e:
+        return False
+    return True
+
+
 @pytest.fixture(scope="module")
 def event_loop():
     loop = get_event_loop()
@@ -67,28 +76,44 @@ async def test_register_user(test_db):
         user_data = generate_random_user_create_data(fake)
 
         response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
-
         assert response.status_code == 200
         assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
-        assert "User created" in response.text
+
+        sse_responses = response.text.split("\r\n\r\n")
+        processing_response = {"status": "processing", "message": "Processing..."}
+
+        assert json.dumps(processing_response) in sse_responses[0]
+        assert '"status": "success"' in sse_responses[1]
+        assert '"message": "User created"' in sse_responses[1]
+        assert '"data":' in sse_responses[1]
+        assert '"id":' in sse_responses[1]
+        assert f'"first_name": "{user_data.first_name}"' in sse_responses[1]
+        assert f'"last_name": "{user_data.last_name}"' in sse_responses[1]
+        assert f'"email": "{user_data.email}"' in sse_responses[1]
 
 
 @pytest.mark.asyncio
 async def test_register_user_repeated_user(test_db):
     async with TestClient(app) as client:
         user_data = generate_random_user_create_data(fake)
+        processing_response = {"status": "processing", "message": "Processing..."}
 
         response = await client.post(f"{Constants.USERS_BASE_PATH}", json=user_data.__dict__)
+        sse_responses = response.text.split("\r\n\r\n")
 
         assert response.status_code == 200
         assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
-        assert "User created" in response.text
+        assert json.dumps(processing_response) in sse_responses[0]
+        assert '"message": "User created"' in sse_responses[1]
 
         response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
+        sse_responses = response.text.split("\r\n\r\n")
+        user_exists_response = {"status": "error", "message": "User already exists"}
 
         assert response.status_code == 200
         assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
-        assert "User already exists" in response.text
+        assert json.dumps(processing_response) in sse_responses[0]
+        assert json.dumps(user_exists_response) in sse_responses[1]
 
 
 @pytest.mark.asyncio
