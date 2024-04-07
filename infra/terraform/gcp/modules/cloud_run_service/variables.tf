@@ -46,7 +46,8 @@ variable "env" {
   type        = map(string)
 }
 
-variable "jwt_secret_id" {
-  description = "The ID of the secret containing the JWT secret"
-  type        = string
+variable "secrets" {
+  description = "Map of secret names to versions, to inject from Secret Manager"
+  type        = map(string)
+  default = {}
 }
