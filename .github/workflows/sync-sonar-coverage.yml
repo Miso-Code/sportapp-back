@@ -1,0 +1,72 @@
+name: Check PRs on Users service
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+
+jobs:
+
+  get-branch:
+    runs-on: ubuntu-latest
+    env:
+      REF_NAME: ${{ github.ref_name }}
+    outputs:
+      branch: ${{ steps.tag.outputs.tag }}
+    steps:
+      - id: tag
+        run: |
+          echo "branch=$REF_NAME" >> $GITHUB_OUTPUT
+
+  update-sonarcloud-coverage-report:
+    needs: get-branch
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ "authorizer", "sports", "users" ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry && poetry config virtualenvs.create false
+          poetry install
+          cd projects/$SERVICE && poetry install
+
+      - name: Run unit tests and coverage
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          cd projects/$SERVICE
+          poetry run coverage run -m pytest
+          poetry run coverage report -m --fail-under=75
+          poetry run coverage xml
+
+      - name: fix code coverage paths
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          sed -i 's/\/home\/runner\/work\/sportapp-back\/sportapp-back\//\/github\/workspace\//g' projects/$SERVICE/coverage.xml
+
+      - name: Add branch name to properties file
+        env:
+          SERVICE: ${{ matrix.service }}
+          BRANCH: ${{ needs.get-branch.outputs.branch }}
+        run: |
+          echo "sonar.branch.name=$BRANCH" >> projects/$SERVICE/sonar-project.properties
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: projects/${{ matrix.service }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
