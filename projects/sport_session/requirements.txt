@@ -1,7 +1,0 @@
-fastapi
-pydantic
-pydantic_core
-SQLAlchemy
-urllib3
-uvicorn
-psycopg2-binary
