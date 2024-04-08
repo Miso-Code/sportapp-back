@@ -10,7 +10,6 @@ from app.models.schemas.profiles_schema import UserPersonalProfile
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 from app.models.users import User
-from app.models.mappers.user_mapper import DataClassMapper
 
 from tests.utils.users_util import (
     generate_random_user_create_data,

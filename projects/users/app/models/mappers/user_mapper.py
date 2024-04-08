@@ -2,8 +2,6 @@ import enum
 from dataclasses import asdict
 from uuid import UUID
 
-from app.models.schemas.profiles_schema import UserPersonalProfile
-
 
 class DataClassMapper:
     @staticmethod

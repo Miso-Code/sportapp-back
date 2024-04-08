@@ -2,10 +2,7 @@ import unittest
 from faker import Faker
 
 from app.models.schemas.profiles_schema import UserPersonalProfile
-from app.models.schemas.schema import UserCreate, UserCredentials, UserAdditionalInformation
 from app.models.users import UserIdentificationType, Gender
-
-from app.exceptions.exceptions import InvalidValueError
 
 fake = Faker()
 
