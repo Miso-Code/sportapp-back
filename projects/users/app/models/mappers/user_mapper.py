@@ -4,10 +4,8 @@ from uuid import UUID
 
 
 class DataClassMapper:
-    def __init__(self, data_class):
-        self.data_class = data_class
-
-    def to_dict(self, instance):
+    @staticmethod
+    def to_dict(instance):
         def custom_encoder(obj):
             if isinstance(obj, UUID):
                 return str(obj)
@@ -16,3 +14,8 @@ class DataClassMapper:
             return obj
 
         return {k: custom_encoder(v) for k, v in asdict(instance).items() if v is not None and k != "hashed_password"}
+
+    @staticmethod
+    def to_subclass_dict(user, subclass):
+        instance = subclass(*[getattr(user, field) for field in subclass.__dataclass_fields__])
+        return DataClassMapper.to_dict(instance)

@@ -1,4 +1,4 @@
-name: Check PRs on Users service
+name: Sync SonarCloud Coverage information
 
 on:
   push:

@@ -1,3 +1,4 @@
+from app.models.schemas.profiles_schema import UserPersonalProfile
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, UserSubscriptionType
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 
@@ -39,27 +40,44 @@ def generate_random_user_create_data(faker):
     return UserCreate(first_name=faker.first_name(), last_name=faker.last_name(), email=faker.email(), password=f"{faker.password()}A123!")
 
 
+def generate_random_user_personal_profile(faker):
+    user = generate_random_user(faker)
+    return UserPersonalProfile(
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        identification_type=UserIdentificationType(user.identification_type),
+        identification_number=user.identification_number,
+        gender=Gender(user.gender),
+        country_of_birth=user.country_of_birth,
+        city_of_birth=user.city_of_birth,
+        country_of_residence=user.country_of_residence,
+        city_of_residence=user.city_of_residence,
+        residence_age=user.residence_age,
+        birth_date=user.birth_date,
+    )
+
+
 def generate_random_user(faker):
     return User(
-        user_id=faker.fake.uuid4(),
-        first_name=faker.fake.first_name(),
-        last_name=faker.fake.last_name(),
-        email=faker.fake.email(),
-        hashed_password=faker.fake.password(),
-        identification_type=faker.fake.random_element(elements=UserIdentificationType),
-        identification_number=faker.fake.random_number(),
-        gender=faker.fake.random_element(elements=Gender),
-        country_of_birth=faker.fake.country(),
-        city_of_birth=faker.fake.city(),
-        country_of_residence=faker.fake.country(),
-        city_of_residence=faker.fake.city(),
-        residence_age=faker.fake.random_number(),
-        birth_date=faker.fake.date_of_birth(minimum_age=15).isoformat(),
-        weight=faker.fake.pyfloat(left_digits=2, right_digits=2, positive=True),
-        height=faker.fake.pyfloat(left_digits=3, right_digits=2, positive=True),
-        training_years=faker.fake.random_number(),
-        training_hours_per_week=faker.fake.random_number(),
-        available_training_hours_per_week=faker.fake.random_number(),
-        food_preference=faker.fake.random_element(elements=FoodPreference),
-        subscription_type=faker.fake.random_element(elements=UserSubscriptionType),
+        first_name=faker.first_name(),
+        last_name=faker.last_name(),
+        email=faker.email(),
+        hashed_password=faker.password(),
+        identification_type=faker.enum(UserIdentificationType),
+        identification_number=faker.random_number(),
+        gender=faker.enum(Gender),
+        country_of_birth=faker.country(),
+        city_of_birth=faker.city(),
+        country_of_residence=faker.country(),
+        city_of_residence=faker.city(),
+        residence_age=faker.random_number(),
+        birth_date=faker.date_of_birth(minimum_age=15).isoformat(),
+        weight=faker.pyfloat(left_digits=2, right_digits=2, positive=True),
+        height=faker.pyfloat(left_digits=3, right_digits=2, positive=True),
+        training_years=faker.random_number(),
+        training_hours_per_week=faker.random_number(),
+        available_training_hours_per_week=faker.random_number(),
+        food_preference=faker.random_element(elements=FoodPreference),
+        subscription_type=faker.random_element(elements=UserSubscriptionType),
     )

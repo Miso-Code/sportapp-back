@@ -14,7 +14,7 @@ from app.models.users import User
 from app.security.passwords import PasswordManager
 from main import app
 from app.config.db import base, get_db
-from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information
+from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user
 
 
 class Constants:
@@ -303,3 +303,46 @@ async def test_authenticate_user_refresh_token_expired(test_db):
         assert second_login_response.status_code == HTTPStatus.UNAUTHORIZED
         assert Constants.APPLICATION_JSON in second_login_response.headers["content-type"]
         assert second_login_response_json["message"] == "Invalid or expired refresh token"
+
+
+@pytest.mark.asyncio
+async def test_get_user_personal_profile(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/personal")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["email"] == user_created.email
+        assert response_json["first_name"] == user_created.first_name
+        assert response_json["last_name"] == user_created.last_name
+        assert response_json["identification_type"] == user_created.identification_type.value
+        assert response_json["identification_number"] == user_created.identification_number
+        assert response_json["gender"] == user_created.gender.value
+        assert response_json["country_of_birth"] == user_created.country_of_birth
+        assert response_json["city_of_birth"] == user_created.city_of_birth
+        assert response_json["country_of_residence"] == user_created.country_of_residence
+        assert response_json["city_of_residence"] == user_created.city_of_residence
+        assert response_json["residence_age"] == user_created.residence_age
+        assert response_json["birth_date"] == user_created.birth_date
+
+        assert getattr(response_json, "hashed_password", None) is None
+        assert getattr(response_json, "weight", None) is None
+        assert getattr(response_json, "height", None) is None
+
+
+@pytest.mark.asyncio
+async def test_get_user_personal_profile_not_found(test_db):
+    async with TestClient(app) as client:
+        fake_id = fake.uuid4()
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/personal")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["message"] == f"User with id {fake_id} not found"
