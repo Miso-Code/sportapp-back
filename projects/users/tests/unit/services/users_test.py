@@ -6,13 +6,19 @@ from faker import Faker
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from app.models.schemas.schema import UserCredentials
+from app.models.schemas.profiles_schema import UserPersonalProfile
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 from app.models.users import User
-from app.models.mappers.mapper import DataClassMapper
+from app.models.mappers.user_mapper import DataClassMapper
 
-from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user_login_data
+from tests.utils.users_util import (
+    generate_random_user_create_data,
+    generate_random_user_additional_information,
+    generate_random_user_login_data,
+    generate_random_user,
+    generate_random_user_personal_profile,
+)
 
 fake = Faker()
 
@@ -20,10 +26,8 @@ fake = Faker()
 class TestUsersService(unittest.TestCase):
     def setUp(self):
         self.mock_jwt = MagicMock()
-        self.mock_mapper = MagicMock(spec=DataClassMapper)
         self.mock_db = MagicMock(spec=Session)
         self.users_service = UsersService(db=self.mock_db)
-        self.users_service.mapper = self.mock_mapper
         self.users_service.jwt_manager = self.mock_jwt
 
     @patch("bcrypt.hashpw")
@@ -55,7 +59,8 @@ class TestUsersService(unittest.TestCase):
         self.assertEqual(execute_mock.fetchall.call_count, 1)
         self.assertEqual(self.mock_db.commit.call_count, 1)
 
-    def test_complete_user_registration(self):
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_dict")
+    def test_complete_user_registration(self, mock_to_dict):
         user_create_data = generate_random_user_create_data(fake)
         user_additional_info = generate_random_user_additional_information(fake)
         user_id = fake.uuid4()
@@ -76,16 +81,17 @@ class TestUsersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = mock_first
 
-        self.mock_mapper.to_dict.return_value = user.__dict__
+        mock_to_dict.to_dict.return_value = user.__dict__
         self.mock_db.commit.return_value = None
 
         self.users_service.complete_user_registration(user_id=user_id, user_additional_information=user_additional_info)
 
-        self.assertEqual(self.mock_mapper.to_dict.call_count, 1)
+        mock_to_dict.assert_called_once_with(mock_first)
         self.assertEqual(self.mock_db.query.call_count, 1)
         self.assertEqual(self.mock_db.commit.call_count, 1)
 
-    def test_complete_user_registration_non_existing_user(self):
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_dict")
+    def test_complete_user_registration_non_existing_user(self, mock_to_dict):
         user_create_data = generate_random_user_create_data(fake)
         user_additional_info = generate_random_user_additional_information(fake)
         user_id = fake.uuid4()
@@ -105,7 +111,7 @@ class TestUsersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        self.mock_mapper.to_dict.return_value = user.__dict__
+        mock_to_dict.to_dict.return_value = user.__dict__
         self.mock_db.commit.return_value = None
 
         with self.assertRaises(NotFoundError) as context:
@@ -192,3 +198,26 @@ class TestUsersService(unittest.TestCase):
         with self.assertRaises(InvalidCredentialsError) as context:
             self.users_service.authenticate_user(user_credentials)
         self.assertEqual(str(context.exception), "Invalid or expired refresh token")
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
+    def test_get_user_personal_profile(self, mock_to_subclass_dict):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_personal_profile = generate_random_user_personal_profile(fake)
+        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_to_subclass_dict.return_value = user_personal_profile
+
+        response = self.users_service.get_user_personal_information(user_id)
+
+        self.assertEqual(response, user_personal_profile)
+        mock_to_subclass_dict.assert_called_once_with(user, UserPersonalProfile)
+        self.mock_db.query.assert_called_once_with(User)
+        self.mock_db.query.return_value.filter.assert_called_once()
+
+    def test_get_user_personal_profile_user_not_found(self):
+        user_id = fake.uuid4()
+        self.mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.get_user_personal_information(user_id)
+        self.assertEqual(str(context.exception), f"User with id {user_id} not found")

@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 from faker import Faker
 
-from app.models.mappers.mapper import DataClassMapper
+from app.models.mappers.user_mapper import DataClassMapper
+from app.models.users import Gender
 
 fake = Faker()
 
@@ -17,26 +18,60 @@ class UserIdentificationType(enum.Enum):
 
 
 @dataclass
-class FakeDataClass:
+class FakeUserClass:
     id: UUID
-    name: str
-    type: UserIdentificationType
-    age: int
+    email: str
+    first_name: str
+    last_name: str
+    id_type: UserIdentificationType
+    gender: Gender
+
+
+@dataclass
+class FakeUserProfileClass:
+    id_type: UserIdentificationType
+    gender: Gender
 
 
 class TestDataClassMapper(unittest.TestCase):
-    def setUp(self):
-        self.mapper = DataClassMapper(FakeDataClass)
-
     def test_to_dict(self):
         # Generate random data using Faker
-        instance = FakeDataClass(id=uuid4(), name=fake.name(), type=UserIdentificationType.CEDULA_CIUDADANIA, age=fake.random_int(min=18, max=100))
+        user_instance = FakeUserClass(
+            id=uuid4(),
+            email=fake.email(),
+            first_name=fake.first_name(),
+            last_name=fake.last_name(),
+            id_type=fake.random_element(elements=UserIdentificationType),
+            gender=fake.random_element(elements=Gender),
+        )
 
-        # Map dataclass instance to dictionary
-        result_dict = self.mapper.to_dict(instance)
+        user_dict = DataClassMapper.to_dict(user_instance)
 
         # Check if all fields are properly mapped
-        self.assertEqual(result_dict["id"], str(instance.id))
-        self.assertEqual(result_dict["name"], instance.name)
-        self.assertEqual(result_dict["type"], instance.type.value)
-        self.assertEqual(result_dict["age"], instance.age)
+        self.assertEqual(user_dict["id"], str(user_instance.id))
+        self.assertEqual(user_dict["email"], user_instance.email)
+        self.assertEqual(user_dict["first_name"], user_instance.first_name)
+        self.assertEqual(user_dict["last_name"], user_instance.last_name)
+        self.assertEqual(user_dict["id_type"], user_instance.id_type.value)
+        self.assertEqual(user_dict["gender"], user_instance.gender.value)
+
+    def test_to_users_profile_dict(self):
+        # Generate random data using Faker
+        user_instance = FakeUserClass(
+            id=uuid4(),
+            email=fake.email(),
+            first_name=fake.first_name(),
+            last_name=fake.last_name(),
+            id_type=fake.random_element(elements=UserIdentificationType),
+            gender=fake.random_element(elements=Gender),
+        )
+
+        # Map dataclass instance to dictionary
+        user_profile_dict = DataClassMapper.to_subclass_dict(user_instance, FakeUserProfileClass)
+
+        self.assertEqual(user_profile_dict["id_type"], user_instance.id_type.value)
+        self.assertEqual(user_profile_dict["gender"], user_instance.gender.value)
+        self.assertNotIn("email", user_profile_dict)
+        self.assertNotIn("first_name", user_profile_dict)
+        self.assertNotIn("last_name", user_profile_dict)
+        self.assertNotIn("id", user_profile_dict)

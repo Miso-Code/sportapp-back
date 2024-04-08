@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
+from app.models.schemas.profiles_schema import UserPersonalProfile
 from app.security.jwt import JWTManager
 from app.models.users import User
-from app.models.schemas.schema import UserCreate
-from app.models.mappers.mapper import DataClassMapper
+from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 
 
@@ -28,7 +28,6 @@ class UsersService:
     def __init__(self, db: Session):
         self.db = db
         self.jwt_manager = JWTManager(Config.JWT_SECRET_KEY, Config.JWT_ALGORITHM, Config.ACCESS_TOKEN_EXPIRE_MINUTES, Config.REFRESH_TOKEN_EXPIRE_MINUTES)
-        self.mapper = DataClassMapper(User)
 
     def create_users(self, users_create):
         values_to_insert = []
@@ -61,13 +60,19 @@ class UsersService:
 
         self.db.commit()
 
-        return self.mapper.to_dict(user)
+        return DataClassMapper.to_dict(user)
 
     def authenticate_user(self, user_credentials):
         if user_credentials.refresh_token:
             return self._process_refresh_token_login(user_credentials.refresh_token)
         else:
             return self._process_email_password_login(user_credentials.email, user_credentials.password)
+
+    def get_user_personal_information(self, user_id):
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            raise NotFoundError(f"User with id {user_id} not found")
+        return DataClassMapper.to_subclass_dict(user, UserPersonalProfile)
 
     def _create_user_dict(self, user_data):
         return {"user_id": str(user_data[0]), "first_name": user_data[1], "last_name": user_data[2], "email": user_data[3]}

@@ -192,3 +192,31 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         authenticate_user_mock.assert_called_once_with(user_credentials)
         self.assertEqual(response_body, token_data)
+
+    @patch("app.services.users.UsersService.get_user_personal_information")
+    async def test_get_user_personal_information(self, get_user_personal_information_mock):
+        user_id = fake.uuid4()
+        user_data = {
+            "email": fake.email(),
+            "first_name": fake.first_name(),
+            "last_name": fake.last_name(),
+            "identification_type": fake.enum(UserIdentificationType).value,
+            "identification_number": fake.numerify(text="############"),
+            "gender": fake.enum(Gender).value,
+            "country_of_birth": fake.country(),
+            "city_of_birth": fake.city(),
+            "country_of_residence": fake.country(),
+            "city_of_residence": fake.city(),
+            "residence_age": fake.random_int(min=1, max=100),
+            "birth_date": fake.date_of_birth(minimum_age=18).strftime("%Y-%m-%d"),
+        }
+
+        get_user_personal_information_mock.return_value = user_data
+
+        db = MagicMock()
+        response = await users_routes.get_user_personal_information(user_id, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        get_user_personal_information_mock.assert_called_once_with(user_id)
+        self.assertEqual(response_body, user_data)

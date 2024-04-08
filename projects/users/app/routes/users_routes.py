@@ -62,3 +62,9 @@ async def login_user(user_credentials: UserCredentials, db: Session = Depends(ge
 async def complete_user_registration(user_id: uuid.UUID, user_additional_information: UserAdditionalInformation, db: Session = Depends(get_db)):
     complete_user_registration_response = UsersService(db).complete_user_registration(user_id, user_additional_information)
     return JSONResponse(content=complete_user_registration_response, status_code=200)
+
+
+@router.get("/profiles/{user_id}/personal")
+async def get_user_personal_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user_personal_information = UsersService(db).get_user_personal_information(user_id)
+    return JSONResponse(content=user_personal_information, status_code=200)
