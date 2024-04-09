@@ -12,6 +12,7 @@ from http import HTTPStatus
 from app.config.settings import Config
 from app.models.users import User
 from app.security.passwords import PasswordManager
+from app.utils import utils
 from main import app
 from app.config.db import base, get_db
 from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user
@@ -341,6 +342,47 @@ async def test_get_user_personal_profile_not_found(test_db):
     async with TestClient(app) as client:
         fake_id = fake.uuid4()
         response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/personal")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["message"] == f"User with id {fake_id} not found"
+
+
+@pytest.mark.asyncio
+async def test_get_user_sports_profile(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["favourite_sport_id"] == user_created.favourite_sport_id
+        assert response_json["training_objective"] == user_created.training_objective.value
+        assert response_json["weight"] == user_created.weight
+        assert response_json["height"] == user_created.height
+        assert response_json["available_training_hours_per_week"] == user_created.available_training_hours_per_week
+        assert response_json["training_frequency"] == user_created.training_frequency.value
+        assert response_json["bmi"] == utils.calculate_bmi(user_created.weight, user_created.height)
+
+        assert getattr(response_json, "email", None) is None
+        assert getattr(response_json, "first_name", None) is None
+        assert getattr(response_json, "last_name", None) is None
+        assert getattr(response_json, "identification_type", None) is None
+        assert getattr(response_json, "identification_number", None) is None
+        assert getattr(response_json, "gender", None) is None
+
+
+@pytest.mark.asyncio
+async def test_get_user_sports_profile_not_found(test_db):
+    async with TestClient(app) as client:
+        fake_id = fake.uuid4()
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/sports")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.NOT_FOUND

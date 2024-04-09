@@ -6,7 +6,8 @@ from faker import Faker
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from app.models.schemas.profiles_schema import UserPersonalProfile
+from app.models.mappers.user_mapper import DataClassMapper
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 from app.models.users import User
@@ -17,6 +18,7 @@ from tests.utils.users_util import (
     generate_random_user_login_data,
     generate_random_user,
     generate_random_user_personal_profile,
+    generate_random_user_sports_profile,
 )
 
 fake = Faker()
@@ -219,4 +221,28 @@ class TestUsersService(unittest.TestCase):
 
         with self.assertRaises(NotFoundError) as context:
             self.users_service.get_user_personal_information(user_id)
+        self.assertEqual(str(context.exception), f"User with id {user_id} not found")
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
+    def test_get_user_sports_profile(self, mock_to_subclass_dict):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_sports_profile = generate_random_user_sports_profile(fake)
+        user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile)
+        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_to_subclass_dict.return_value = user_sports_profile_dict
+
+        response = self.users_service.get_user_sports_information(user_id)
+
+        self.assertEqual(response, user_sports_profile_dict)
+        mock_to_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        self.mock_db.query.assert_called_once_with(User)
+        self.mock_db.query.return_value.filter.assert_called_once()
+
+    def test_get_user_sports_profile_user_not_found(self):
+        user_id = fake.uuid4()
+        self.mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.get_user_sports_information(user_id)
         self.assertEqual(str(context.exception), f"User with id {user_id} not found")

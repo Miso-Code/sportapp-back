@@ -8,7 +8,7 @@ from faker import Faker
 from app.models.schemas.schema import UserAdditionalInformation, UserCreate, UserCredentials
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
-from app.models.users import UserIdentificationType, Gender
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency
 
 fake = Faker()
 
@@ -220,3 +220,25 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         get_user_personal_information_mock.assert_called_once_with(user_id)
         self.assertEqual(response_body, user_data)
+
+    @patch("app.services.users.UsersService.get_user_sports_information")
+    async def test_get_user_sports_information(self, get_user_sports_information_mock):
+        user_id = fake.uuid4()
+        user_sports_profile_data = {
+            "favourite_sport_id": str(fake.uuid4()),
+            "training_objective": fake.enum(TrainingObjective).value,
+            "weight": fake.random_int(min=1, max=100),
+            "height": fake.random_int(min=1, max=100),
+            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "training_frequency": fake.enum(TrainingFrequency).value,
+        }
+
+        get_user_sports_information_mock.return_value = user_sports_profile_data
+
+        db = MagicMock()
+        response = await users_routes.get_user_sports_information(user_id, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        get_user_sports_information_mock.assert_called_once_with(user_id)
+        self.assertEqual(response_body, user_sports_profile_data)

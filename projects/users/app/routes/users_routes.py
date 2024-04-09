@@ -68,3 +68,9 @@ async def complete_user_registration(user_id: uuid.UUID, user_additional_informa
 async def get_user_personal_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user_personal_information = UsersService(db).get_user_personal_information(user_id)
     return JSONResponse(content=user_personal_information, status_code=200)
+
+
+@router.get("/profiles/{user_id}/sports")
+async def get_user_sports_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user_sports_information = UsersService(db).get_user_sports_information(user_id)
+    return JSONResponse(content=user_sports_information, status_code=200)

@@ -19,9 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 base.metadata.create_all(bind=engine)
-
 
 app.include_router(sports.router)
 

@@ -1,8 +1,8 @@
 import unittest
 from faker import Faker
 
-from app.models.schemas.profiles_schema import UserPersonalProfile
-from app.models.users import UserIdentificationType, Gender
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency
 
 fake = Faker()
 
@@ -37,3 +37,22 @@ class TestUserProfiles(unittest.TestCase):
         self.assertEqual(user_personal_profile.city_of_residence, user_personal_profile_data["city_of_residence"])
         self.assertEqual(user_personal_profile.residence_age, user_personal_profile_data["residence_age"])
         self.assertEqual(user_personal_profile.birth_date, user_personal_profile_data["birth_date"])
+
+    def test_user_sports_profile(self):
+        user_sports_profile_data = {
+            "favourite_sport_id": fake.uuid4(),
+            "training_objective": fake.enum(TrainingObjective).value,
+            "weight": fake.random_int(min=1, max=100),
+            "height": fake.random_int(min=1, max=100),
+            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "training_frequency": fake.enum(TrainingFrequency).value,
+        }
+
+        user_sports_profile = UserSportsProfile(**user_sports_profile_data)
+
+        self.assertEqual(user_sports_profile.favourite_sport_id, user_sports_profile_data["favourite_sport_id"])
+        self.assertEqual(user_sports_profile.training_objective, user_sports_profile_data["training_objective"])
+        self.assertEqual(user_sports_profile.weight, user_sports_profile_data["weight"])
+        self.assertEqual(user_sports_profile.height, user_sports_profile_data["height"])
+        self.assertEqual(user_sports_profile.available_training_hours_per_week, user_sports_profile_data["available_training_hours_per_week"])
+        self.assertEqual(user_sports_profile.training_frequency, user_sports_profile_data["training_frequency"])

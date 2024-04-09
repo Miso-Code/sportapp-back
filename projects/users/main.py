@@ -25,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+base.metadata.reflect(bind=engine)
 base.metadata.create_all(bind=engine)
 
 app.include_router(users_routes.router)
