@@ -10,5 +10,5 @@ async def async_sleep(seconds):
 
 def calculate_bmi(weight, height):
     if height == 0:
-        raise ValueError("Height must be greater than zero")
+        return 0
     return round(weight / (math.pow(height, 2)), 2)
