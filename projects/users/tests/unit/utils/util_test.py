@@ -2,7 +2,11 @@ import asyncio
 import unittest
 from unittest.mock import MagicMock, AsyncMock
 
-from app.utils.utils import async_sleep
+from faker import Faker
+
+from app.utils.utils import async_sleep, calculate_bmi
+
+fake = Faker()
 
 
 class TestAsyncSleep(unittest.IsolatedAsyncioTestCase):
@@ -38,3 +42,19 @@ class TestMockSleep(unittest.IsolatedAsyncioTestCase):
         asyncio.sleep = mocked_sleep
         await async_sleep(duration)
         mocked_sleep.assert_called_once_with(duration)
+
+
+class TestCalculateBmi(unittest.TestCase):
+    def test_calculate_bmi(self):
+        height = fake.random_int(150, 200) / 100
+        weight = fake.random_int(40, 120)
+        expected_bmi = round(weight / (height**2), 2)
+        actuald_bmi = calculate_bmi(weight, height)
+        self.assertEqual(expected_bmi, actuald_bmi)
+
+    def test_calculate_bmi_zero_height(self):
+        height = 0
+        weight = fake.random_int(40, 120)
+        with self.assertRaises(ValueError) as context:
+            calculate_bmi(weight, height)
+        self.assertEqual(str(context.exception), "Height must be greater than zero")

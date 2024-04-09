@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.models.users import UserIdentificationType, Gender
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency
 
 
 @dataclass
@@ -17,3 +17,13 @@ class UserPersonalProfile:
     city_of_residence: str
     residence_age: int
     birth_date: str
+
+
+@dataclass
+class UserSportsProfile:
+    favourite_sport_id: str
+    training_objective: TrainingObjective
+    weight: float
+    height: float
+    available_training_hours_per_week: int
+    training_frequency: TrainingFrequency

@@ -2,7 +2,9 @@ import enum
 from dataclasses import dataclass
 from uuid import uuid4
 
-from sqlalchemy import Column, Uuid, Enum, String, Integer, Float
+from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey
+from sqlalchemy.orm import relationship
+
 from app.config.db import base
 
 
@@ -46,12 +48,6 @@ class UserTrainingLimitation(base):
     limitation_id = Column(Uuid(as_uuid=True), primary_key=True)
 
 
-class UserSport(base):
-    __tablename__ = "user_sport"
-    user_id = Column(Uuid(as_uuid=True), primary_key=True)
-    sport_id = Column(Uuid(as_uuid=True), primary_key=True)
-
-
 class FoodPreference(enum.Enum):
     VEGETARIAN = "vegetarian"
     VEGAN = "vegan"
@@ -62,6 +58,20 @@ class UserSubscriptionType(enum.Enum):
     FREE = "free"
     INTERMEDIATE = "intermediate"
     PREMIUM = "premium"
+
+
+class TrainingObjective(enum.Enum):
+    BUILD_MUSCLE_MASS = "build_muscle_mass"
+    LOSE_WEIGHT = "lose_weight"
+    TONE_UP = "tone_up"
+    MAINTAIN_FITNESS = "maintain_fitness"
+
+
+class TrainingFrequency(enum.Enum):
+    DAILY = "daily"
+    EVERY_OTHER_DAY = "every_other_day"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
 
 
 @dataclass
@@ -82,14 +92,16 @@ class User(base):
     country_of_residence: str = Column(String)
     city_of_residence: str = Column(String)
     residence_age: int = Column(Integer)
-    # Demographic profile
     birth_date: str = Column(String)
+    # Sport profile
+    favourite_sport_id = Column(String, default=None)
+    training_objective = Column(Enum(TrainingObjective), default=TrainingObjective.MAINTAIN_FITNESS)
     weight: float = Column(Float)
     height: float = Column(Float)
-    # Sport profile
-    training_years: int = Column(Integer)
-    training_hours_per_week: int = Column(Integer)
     available_training_hours_per_week: int = Column(Integer)
+    training_frequency: str = Column(Enum(TrainingFrequency), default=TrainingFrequency.WEEKLY)
+    # Additional sport info
+    training_years: int = Column(Integer)
     food_preference: str = Column(Enum(FoodPreference))
     # Subscription info
-    subscription_type: str = Column(Enum(UserSubscriptionType))
+    subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)

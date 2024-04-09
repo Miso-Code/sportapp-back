@@ -1,5 +1,5 @@
-from app.models.schemas.profiles_schema import UserPersonalProfile
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, UserSubscriptionType
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
+from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 
 
@@ -58,6 +58,18 @@ def generate_random_user_personal_profile(faker):
     )
 
 
+def generate_random_user_sports_profile(faker):
+    user = generate_random_user(faker)
+    return UserSportsProfile(
+        favourite_sport_id=user.favourite_sport_id,
+        training_objective=faker.enum(TrainingObjective),
+        weight=faker.random_number(),
+        height=faker.random_number(),
+        available_training_hours_per_week=faker.random_number(),
+        training_frequency=faker.enum(TrainingFrequency),
+    )
+
+
 def generate_random_user(faker):
     return User(
         first_name=faker.first_name(),
@@ -73,11 +85,12 @@ def generate_random_user(faker):
         city_of_residence=faker.city(),
         residence_age=faker.random_number(),
         birth_date=faker.date_of_birth(minimum_age=15).isoformat(),
-        weight=faker.pyfloat(left_digits=2, right_digits=2, positive=True),
-        height=faker.pyfloat(left_digits=3, right_digits=2, positive=True),
-        training_years=faker.random_number(),
-        training_hours_per_week=faker.random_number(),
+        favourite_sport_id=faker.uuid4(),
+        training_objective=faker.enum(TrainingObjective),
+        height=faker.random_int(150, 200) / 100,
+        weight=faker.random_int(40, 120),
         available_training_hours_per_week=faker.random_number(),
-        food_preference=faker.random_element(elements=FoodPreference),
-        subscription_type=faker.random_element(elements=UserSubscriptionType),
+        training_frequency=faker.enum(TrainingFrequency),
+        training_years=faker.random_number(),
+        food_preference=faker.enum(FoodPreference),
     )

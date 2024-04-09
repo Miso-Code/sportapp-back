@@ -4,11 +4,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
-from app.models.schemas.profiles_schema import UserPersonalProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
 from app.security.jwt import JWTManager
 from app.models.users import User
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
+from app.utils import utils
 
 
 def _get_password_hash(password):
@@ -69,10 +70,14 @@ class UsersService:
             return self._process_email_password_login(user_credentials.email, user_credentials.password)
 
     def get_user_personal_information(self, user_id):
-        user = self.db.query(User).filter(User.user_id == user_id).first()
-        if not user:
-            raise NotFoundError(f"User with id {user_id} not found")
+        user = self.get_user_by_id(user_id)
         return DataClassMapper.to_subclass_dict(user, UserPersonalProfile)
+
+    def get_user_sports_information(self, user_id):
+        user = self.get_user_by_id(user_id)
+        user_sports_profile = DataClassMapper.to_subclass_dict(user, UserSportsProfile)
+        user_sports_profile["bmi"] = utils.calculate_bmi(user_sports_profile["weight"], user_sports_profile["height"])
+        return user_sports_profile
 
     def _create_user_dict(self, user_data):
         return {"user_id": str(user_data[0]), "first_name": user_data[1], "last_name": user_data[2], "email": user_data[3]}
@@ -92,3 +97,9 @@ class UsersService:
             return self.jwt_manager.refresh_token(refresh_token)
         except JWTError:
             raise InvalidCredentialsError("Invalid or expired refresh token")
+
+    def get_user_by_id(self, user_id):
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            raise NotFoundError(f"User with id {user_id} not found")
+        return user
