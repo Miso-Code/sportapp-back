@@ -239,6 +239,26 @@ class TestUsersService(unittest.TestCase):
         self.mock_db.query.assert_called_once_with(User)
         self.mock_db.query.return_value.filter.assert_called_once()
 
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
+    def test_get_user_sports_profile_no_bmi(self, mock_to_subclass_dict):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_sports_profile = generate_random_user_sports_profile(fake)
+        user_sports_profile.weight = None
+        user_sports_profile.height = None
+        user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile)
+        print(user_sports_profile_dict)
+        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_to_subclass_dict.return_value = user_sports_profile_dict
+
+        response = self.users_service.get_user_sports_information(user_id)
+
+        self.assertEqual(response, user_sports_profile_dict)
+        self.assertNotIn("bmi", response)
+        mock_to_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        self.mock_db.query.assert_called_once_with(User)
+        self.mock_db.query.return_value.filter.assert_called_once()
+
     def test_get_user_sports_profile_user_not_found(self):
         user_id = fake.uuid4()
         self.mock_db.query.return_value.filter.return_value.first.return_value = None

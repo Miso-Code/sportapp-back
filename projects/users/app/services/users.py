@@ -76,7 +76,8 @@ class UsersService:
     def get_user_sports_information(self, user_id):
         user = self.get_user_by_id(user_id)
         user_sports_profile = DataClassMapper.to_subclass_dict(user, UserSportsProfile)
-        user_sports_profile["bmi"] = utils.calculate_bmi(user_sports_profile["weight"], user_sports_profile["height"])
+        if "weight" in user_sports_profile and "height" in user_sports_profile:
+            user_sports_profile["bmi"] = utils.calculate_bmi(user_sports_profile["weight"], user_sports_profile["height"])
         return user_sports_profile
 
     def _create_user_dict(self, user_data):

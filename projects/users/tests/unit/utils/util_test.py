@@ -55,6 +55,5 @@ class TestCalculateBmi(unittest.TestCase):
     def test_calculate_bmi_zero_height(self):
         height = 0
         weight = fake.random_int(40, 120)
-        with self.assertRaises(ValueError) as context:
-            calculate_bmi(weight, height)
-        self.assertEqual(str(context.exception), "Height must be greater than zero")
+        bmi = calculate_bmi(weight, height)
+        self.assertEqual(bmi, 0)

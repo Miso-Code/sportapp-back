@@ -94,12 +94,12 @@ class User(base):
     residence_age: int = Column(Integer)
     birth_date: str = Column(String)
     # Sport profile
-    favourite_sport_id = Column(String, default=None)
-    training_objective = Column(Enum(TrainingObjective), default=TrainingObjective.MAINTAIN_FITNESS)
+    favourite_sport_id = Column(String)
+    training_objective = Column(Enum(TrainingObjective))
     weight: float = Column(Float)
     height: float = Column(Float)
     available_training_hours_per_week: int = Column(Integer)
-    training_frequency: str = Column(Enum(TrainingFrequency), default=TrainingFrequency.WEEKLY)
+    training_frequency: str = Column(Enum(TrainingFrequency))
     # Additional sport info
     training_years: int = Column(Integer)
     food_preference: str = Column(Enum(FoodPreference))
