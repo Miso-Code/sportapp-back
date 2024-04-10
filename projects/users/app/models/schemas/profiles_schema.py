@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
 
 
 @dataclass
@@ -27,3 +27,9 @@ class UserSportsProfile:
     height: float
     available_training_hours_per_week: int
     training_frequency: TrainingFrequency
+
+
+@dataclass
+class UserNutritionalProfile:
+    food_preference: FoodPreference
+    nutritional_limitations: list[str]

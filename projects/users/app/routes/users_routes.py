@@ -23,16 +23,16 @@ router = APIRouter(
 async def register_user(user: UserCreate):
     UserCache.users.append(user)
 
-    async def event_generator(user):
+    async def event_generator(user_to_add):
         while True:
-            if user.email in UserCache.users_with_errors_by_email_map:
-                del UserCache.users_with_errors_by_email_map[user.email]
+            if user_to_add.email in UserCache.users_with_errors_by_email_map:
+                del UserCache.users_with_errors_by_email_map[user_to_add.email]
                 response = {"status": "error", "message": "User already exists"}
                 yield json.dumps(response)
                 break
-            elif user.email in UserCache.users_success_by_email_map:
-                user_created = UserCache.users_success_by_email_map[user.email]
-                del UserCache.users_success_by_email_map[user.email]
+            elif user_to_add.email in UserCache.users_success_by_email_map:
+                user_created = UserCache.users_success_by_email_map[user_to_add.email]
+                del UserCache.users_success_by_email_map[user_to_add.email]
                 response = {
                     "status": "success",
                     "message": "User created",
@@ -74,3 +74,9 @@ async def get_user_personal_information(user_id: uuid.UUID, db: Session = Depend
 async def get_user_sports_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user_sports_information = UsersService(db).get_user_sports_information(user_id)
     return JSONResponse(content=user_sports_information, status_code=200)
+
+
+@router.get("/profiles/{user_id}/nutritional")
+async def get_user_nutritional_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user_nutritional_information = UsersService(db).get_user_nutritional_information(user_id)
+    return JSONResponse(content=user_nutritional_information, status_code=200)

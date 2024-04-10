@@ -67,7 +67,7 @@ class TestDataClassMapper(unittest.TestCase):
         )
 
         # Map dataclass instance to dictionary
-        user_profile_dict = DataClassMapper.to_subclass_dict(user_instance, FakeUserProfileClass)
+        user_profile_dict = DataClassMapper.to_user_subclass_dict(user_instance, FakeUserProfileClass)
 
         self.assertEqual(user_profile_dict["id_type"], user_instance.id_type.value)
         self.assertEqual(user_profile_dict["gender"], user_instance.gender.value)

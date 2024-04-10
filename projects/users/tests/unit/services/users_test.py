@@ -19,6 +19,7 @@ from tests.utils.users_util import (
     generate_random_user,
     generate_random_user_personal_profile,
     generate_random_user_sports_profile,
+    generate_random_user_nutrition_profile,
 )
 
 fake = Faker()
@@ -200,18 +201,18 @@ class TestUsersService(unittest.TestCase):
             self.users_service.authenticate_user(user_credentials)
         self.assertEqual(str(context.exception), "Invalid or expired refresh token")
 
-    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
-    def test_get_user_personal_profile(self, mock_to_subclass_dict):
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_subclass_dict")
+    def test_get_user_personal_profile(self, mock_to_user_subclass_dict):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
         user_personal_profile = generate_random_user_personal_profile(fake)
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
-        mock_to_subclass_dict.return_value = user_personal_profile
+        mock_to_user_subclass_dict.return_value = user_personal_profile
 
         response = self.users_service.get_user_personal_information(user_id)
 
         self.assertEqual(response, user_personal_profile)
-        mock_to_subclass_dict.assert_called_once_with(user, UserPersonalProfile)
+        mock_to_user_subclass_dict.assert_called_once_with(user, UserPersonalProfile)
         self.mock_db.query.assert_called_once_with(User)
         self.mock_db.query.return_value.filter.assert_called_once()
 
@@ -223,24 +224,24 @@ class TestUsersService(unittest.TestCase):
             self.users_service.get_user_personal_information(user_id)
         self.assertEqual(str(context.exception), f"User with id {user_id} not found")
 
-    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
-    def test_get_user_sports_profile(self, mock_to_subclass_dict):
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_subclass_dict")
+    def test_get_user_sports_profile(self, mock_to_user_subclass_dict):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
         user_sports_profile = generate_random_user_sports_profile(fake)
         user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile)
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
-        mock_to_subclass_dict.return_value = user_sports_profile_dict
+        mock_to_user_subclass_dict.return_value = user_sports_profile_dict
 
         response = self.users_service.get_user_sports_information(user_id)
 
         self.assertEqual(response, user_sports_profile_dict)
-        mock_to_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        mock_to_user_subclass_dict.assert_called_once_with(user, UserSportsProfile)
         self.mock_db.query.assert_called_once_with(User)
         self.mock_db.query.return_value.filter.assert_called_once()
 
-    @patch("app.models.mappers.user_mapper.DataClassMapper.to_subclass_dict")
-    def test_get_user_sports_profile_no_bmi(self, mock_to_subclass_dict):
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_subclass_dict")
+    def test_get_user_sports_profile_no_bmi(self, mock_to_user_subclass_dict):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
         user_sports_profile = generate_random_user_sports_profile(fake)
@@ -249,17 +250,44 @@ class TestUsersService(unittest.TestCase):
         user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile)
         print(user_sports_profile_dict)
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
-        mock_to_subclass_dict.return_value = user_sports_profile_dict
+        mock_to_user_subclass_dict.return_value = user_sports_profile_dict
 
         response = self.users_service.get_user_sports_information(user_id)
 
         self.assertEqual(response, user_sports_profile_dict)
         self.assertNotIn("bmi", response)
-        mock_to_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        mock_to_user_subclass_dict.assert_called_once_with(user, UserSportsProfile)
         self.mock_db.query.assert_called_once_with(User)
         self.mock_db.query.return_value.filter.assert_called_once()
 
     def test_get_user_sports_profile_user_not_found(self):
+        user_id = fake.uuid4()
+        self.mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.get_user_sports_information(user_id)
+        self.assertEqual(str(context.exception), f"User with id {user_id} not found")
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_subclass_dict")
+    def test_get_user_nutritional_profile(self, mock_to_user_subclass_dict):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_nutritional_profile = generate_random_user_nutrition_profile(fake)
+        user_nutritional_profile.weight = None
+        user_nutritional_profile.height = None
+        user_nutritional_profile_dict = DataClassMapper.to_dict(user_nutritional_profile)
+        print(user_nutritional_profile_dict)
+        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_to_user_subclass_dict.return_value = user_nutritional_profile_dict
+
+        response = self.users_service.get_user_sports_information(user_id)
+
+        self.assertEqual(response, user_nutritional_profile_dict)
+        mock_to_user_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        self.mock_db.query.assert_called_once_with(User)
+        self.mock_db.query.return_value.filter.assert_called_once()
+
+    def test_get_user_nutritional_profile_user_not_found(self):
         user_id = fake.uuid4()
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 

@@ -1,4 +1,4 @@
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 
@@ -62,11 +62,18 @@ def generate_random_user_sports_profile(faker):
     user = generate_random_user(faker)
     return UserSportsProfile(
         favourite_sport_id=user.favourite_sport_id,
-        training_objective=faker.enum(TrainingObjective),
-        weight=faker.random_number(),
-        height=faker.random_number(),
-        available_training_hours_per_week=faker.random_number(),
-        training_frequency=faker.enum(TrainingFrequency),
+        training_objective=user.training_objective,
+        weight=user.weight,
+        height=user.height,
+        available_training_hours_per_week=user.available_training_hours_per_week,
+        training_frequency=TrainingFrequency(user.training_frequency),
+    )
+
+
+def generate_random_user_nutrition_profile(faker):
+    return UserNutritionalProfile(
+        food_preference=faker.enum(FoodPreference),
+        nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number())],
     )
 
 
