@@ -8,11 +8,10 @@ from sqlalchemy.orm import relationship
 from app.config.db import base
 
 
-class UserIdentificationType(enum.Enum):
-    CEDULA_CIUDADANIA = "CC"
-    CEDULA_EXTRANJERIA = "CE"
-    PASAPORTE = "PA"
-    TARJETA_IDENTIDAD = "TI"
+class FoodPreference(enum.Enum):
+    VEGETARIAN = "vegetarian"
+    VEGAN = "vegan"
+    EVERYTHING = "everything"
 
 
 class Gender(enum.Enum):
@@ -22,42 +21,11 @@ class Gender(enum.Enum):
     PREFER_NOT_TO_SAY = "P"
 
 
-class TrainingLimitation(base):
-    __tablename__ = "training_limitations"
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-
-
-class NutritionLimitation(base):
-    __tablename__ = "nutrition_limitations"
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-
-
-class UserNutritionLimitation(base):
-    __tablename__ = "user_nutrition_limitations"
-    user_id = Column(Uuid(as_uuid=True), primary_key=True)
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True)
-
-
-class UserTrainingLimitation(base):
-    __tablename__ = "user_training_limitations"
-    user_id = Column(Uuid(as_uuid=True), primary_key=True)
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True)
-
-
-class FoodPreference(enum.Enum):
-    VEGETARIAN = "vegetarian"
-    VEGAN = "vegan"
-    EVERYTHING = "everything"
-
-
-class UserSubscriptionType(enum.Enum):
-    FREE = "free"
-    INTERMEDIATE = "intermediate"
-    PREMIUM = "premium"
+class TrainingFrequency(enum.Enum):
+    DAILY = "daily"
+    EVERY_OTHER_DAY = "every_other_day"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
 
 
 class TrainingObjective(enum.Enum):
@@ -67,11 +35,51 @@ class TrainingObjective(enum.Enum):
     MAINTAIN_FITNESS = "maintain_fitness"
 
 
-class TrainingFrequency(enum.Enum):
-    DAILY = "daily"
-    EVERY_OTHER_DAY = "every_other_day"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
+class UserIdentificationType(enum.Enum):
+    CEDULA_CIUDADANIA = "CC"
+    CEDULA_EXTRANJERIA = "CE"
+    PASAPORTE = "PA"
+    TARJETA_IDENTIDAD = "TI"
+
+
+class UserSubscriptionType(enum.Enum):
+    FREE = "free"
+    INTERMEDIATE = "intermediate"
+    PREMIUM = "premium"
+
+
+@dataclass
+class TrainingLimitation(base):
+    __tablename__ = "training_limitations"
+    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    users = relationship("User", secondary="user_training_limitations", back_populates="training_limitations")
+
+
+@dataclass
+class UserTrainingLimitation(base):
+    __tablename__ = "user_training_limitations"
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
+    limitation_id = Column(Uuid(as_uuid=True), ForeignKey("training_limitations.limitation_id"))
+
+
+@dataclass
+class NutritionalLimitation(base):
+    __tablename__ = "nutritional_limitations"
+    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    users = relationship("User", secondary="user_nutritional_limitations", back_populates="nutritional_limitations")
+
+
+@dataclass
+class UserNutritionalLimitation(base):
+    __tablename__ = "user_nutritional_limitations"
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
+    limitation_id = Column(Uuid(as_uuid=True), ForeignKey("nutritional_limitations.limitation_id"))
 
 
 @dataclass
@@ -100,8 +108,11 @@ class User(base):
     height: float = Column(Float)
     available_training_hours_per_week: int = Column(Integer)
     training_frequency: str = Column(Enum(TrainingFrequency))
+    training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations", back_populates="users")
     # Additional sport info
     training_years: int = Column(Integer)
+    # Nutrition profile
     food_preference: str = Column(Enum(FoodPreference))
+    nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations", back_populates="users")
     # Subscription info
     subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)

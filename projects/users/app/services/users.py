@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.security.jwt import JWTManager
 from app.models.users import User
 from app.models.mappers.user_mapper import DataClassMapper
@@ -71,15 +71,22 @@ class UsersService:
 
     def get_user_personal_information(self, user_id):
         user = self.get_user_by_id(user_id)
-        return DataClassMapper.to_subclass_dict(user, UserPersonalProfile)
+        return DataClassMapper.to_user_subclass_dict(user, UserPersonalProfile)
 
     def get_user_sports_information(self, user_id):
         user = self.get_user_by_id(user_id)
-        user_sports_profile = DataClassMapper.to_subclass_dict(user, UserSportsProfile)
+        user_sports_profile = DataClassMapper.to_user_subclass_dict(user, UserSportsProfile)
         if "weight" in user_sports_profile and "height" in user_sports_profile:
             user_sports_profile["bmi"] = utils.calculate_bmi(user_sports_profile["weight"], user_sports_profile["height"])
         return user_sports_profile
 
+    def get_user_nutritional_information(self, user_id):
+        user = self.get_user_by_id(user_id)
+        user_dict = DataClassMapper.to_user_subclass_dict(user, UserNutritionalProfile)
+        user_dict["nutritional_limitations"] = [str(limitation.limitation_id) for limitation in user.nutritional_limitations]
+        return user_dict
+
+    # noinspection PyMethodMayBeStatic
     def _create_user_dict(self, user_data):
         return {"user_id": str(user_data[0]), "first_name": user_data[1], "last_name": user_data[2], "email": user_data[3]}
 

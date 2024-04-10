@@ -388,3 +388,32 @@ async def test_get_user_sports_profile_not_found(test_db):
         assert response.status_code == HTTPStatus.NOT_FOUND
         assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert response_json["message"] == f"User with id {fake_id} not found"
+
+
+@pytest.mark.asyncio
+async def test_get_user_nutritional_profile(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["food_preference"] == user_created.food_preference.value
+        assert response_json["nutritional_limitations"] == [str(limitation.limitation_id) for limitation in user_created.nutritional_limitations]
+
+
+@pytest.mark.asyncio
+async def test_get_user_nutritional_profile_not_found(test_db):
+    async with TestClient(app) as client:
+        fake_id = fake.uuid4()
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/nutritional")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["message"] == f"User with id {fake_id} not found"

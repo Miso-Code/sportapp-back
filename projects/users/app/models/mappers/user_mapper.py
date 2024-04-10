@@ -16,6 +16,6 @@ class DataClassMapper:
         return {k: custom_encoder(v) for k, v in asdict(instance).items() if v is not None and k != "hashed_password"}
 
     @staticmethod
-    def to_subclass_dict(user, subclass):
+    def to_user_subclass_dict(user, subclass):
         instance = subclass(*[getattr(user, field) for field in subclass.__dataclass_fields__])
         return DataClassMapper.to_dict(instance)

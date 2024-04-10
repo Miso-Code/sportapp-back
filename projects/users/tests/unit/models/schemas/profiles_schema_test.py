@@ -1,8 +1,8 @@
 import unittest
 from faker import Faker
 
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
 
 fake = Faker()
 
@@ -56,3 +56,14 @@ class TestUserProfiles(unittest.TestCase):
         self.assertEqual(user_sports_profile.height, user_sports_profile_data["height"])
         self.assertEqual(user_sports_profile.available_training_hours_per_week, user_sports_profile_data["available_training_hours_per_week"])
         self.assertEqual(user_sports_profile.training_frequency, user_sports_profile_data["training_frequency"])
+
+    def test_user_nutritional_profile(self):
+        user_nutritional_profile_data = {
+            "food_preference": fake.enum(FoodPreference).value,
+            "nutritional_limitations": [fake.word() for _ in range(fake.random_int(min=1, max=5))],
+        }
+
+        user_nutritional_profile = UserNutritionalProfile(**user_nutritional_profile_data)
+
+        self.assertEqual(user_nutritional_profile.food_preference, user_nutritional_profile_data["food_preference"])
+        self.assertEqual(user_nutritional_profile.nutritional_limitations, user_nutritional_profile_data["nutritional_limitations"])
