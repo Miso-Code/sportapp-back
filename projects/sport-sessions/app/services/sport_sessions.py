@@ -6,6 +6,7 @@ from app.exceptions.exceptions import NotFoundError, NotActiveError
 from app.models.schemas.schema import SportSessionFinish, SportSessionStart, SportSessionLocationCreate
 
 from app.services.utils import estimate_distance, estimate_calories_burned, estimate_speed
+from app.config.settings import Config
 
 
 class SportSessionService:
@@ -16,7 +17,7 @@ class SportSessionService:
         sport_session = self.db.query(SportSession).filter(SportSession.session_id == sport_session_id).first()
 
         if not sport_session:
-            raise NotFoundError("Sport session not found")
+            raise NotFoundError(Config.NOT_FOUND_MESSAGE)
 
         return {
             "session_id": str(sport_session.session_id),
@@ -64,7 +65,7 @@ class SportSessionService:
         sport_session: SportSession = self.db.query(SportSession).filter(SportSession.session_id == sport_session_id).first()
 
         if not sport_session:
-            raise NotFoundError("Sport session not found")
+            raise NotFoundError(Config.NOT_FOUND_MESSAGE)
 
         if not sport_session.is_active:
             raise NotActiveError("Sport session is already finished")
@@ -100,7 +101,7 @@ class SportSessionService:
         sport_session: SportSession = self.db.query(SportSession).filter(SportSession.session_id == sport_session_id).first()
 
         if not sport_session:
-            raise NotFoundError("Sport session not found")
+            raise NotFoundError(Config.NOT_FOUND_MESSAGE)
 
         elif not sport_session.is_active:
             raise NotActiveError("Sport session is already finished")

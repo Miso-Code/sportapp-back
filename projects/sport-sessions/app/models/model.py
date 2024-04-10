@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from sqlalchemy import Column, Uuid, Integer, Float, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship, Mapped
-from ..config.db import base
+from app.config.db import base
 
 
 class SportSession(base):
