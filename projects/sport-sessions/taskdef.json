@@ -11,9 +11,9 @@
           "appProtocol": "http"
         }
       ],
-      "image": "887664210442.dkr.ecr.us-east-1.amazonaws.com/sports",
+      "image": "887664210442.dkr.ecr.us-east-1.amazonaws.com/sport-sessions",
       "essential": true,
-      "name": "sports-service",
+      "name": "sport-session-service",
       "secrets": [
         {
           "valueFrom": "arn:aws:secretsmanager:us-east-1:887664210442:secret:DB_CREDENTIALS-BT2TLE:name::",
