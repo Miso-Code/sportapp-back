@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from app.config.settings import Config
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.security.jwt import JWTManager
-from app.models.users import User
+from app.models.users import User, NutritionalLimitation
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 from app.utils import utils
@@ -111,3 +111,7 @@ class UsersService:
         if not user:
             raise NotFoundError(f"User with id {user_id} not found")
         return user
+
+    def get_nutritional_limitations(self):
+        nutritional_limitations = self.db.query(NutritionalLimitation).all()
+        return [DataClassMapper.to_dict(limitation) for limitation in nutritional_limitations]

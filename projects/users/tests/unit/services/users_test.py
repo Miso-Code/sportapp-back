@@ -7,10 +7,10 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.models.mappers.user_mapper import DataClassMapper
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
-from app.models.users import User
+from app.models.users import User, NutritionalLimitation
 
 from tests.utils.users_util import (
     generate_random_user_create_data,
@@ -248,7 +248,6 @@ class TestUsersService(unittest.TestCase):
         user_sports_profile.weight = None
         user_sports_profile.height = None
         user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile)
-        print(user_sports_profile_dict)
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
         mock_to_user_subclass_dict.return_value = user_sports_profile_dict
 
@@ -276,14 +275,13 @@ class TestUsersService(unittest.TestCase):
         user_nutritional_profile.weight = None
         user_nutritional_profile.height = None
         user_nutritional_profile_dict = DataClassMapper.to_dict(user_nutritional_profile)
-        print(user_nutritional_profile_dict)
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
         mock_to_user_subclass_dict.return_value = user_nutritional_profile_dict
 
-        response = self.users_service.get_user_sports_information(user_id)
+        response = self.users_service.get_user_nutritional_information(user_id)
 
         self.assertEqual(response, user_nutritional_profile_dict)
-        mock_to_user_subclass_dict.assert_called_once_with(user, UserSportsProfile)
+        mock_to_user_subclass_dict.assert_called_once_with(user, UserNutritionalProfile)
         self.mock_db.query.assert_called_once_with(User)
         self.mock_db.query.return_value.filter.assert_called_once()
 
@@ -292,5 +290,29 @@ class TestUsersService(unittest.TestCase):
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
 
         with self.assertRaises(NotFoundError) as context:
-            self.users_service.get_user_sports_information(user_id)
+            self.users_service.get_user_nutritional_information(user_id)
         self.assertEqual(str(context.exception), f"User with id {user_id} not found")
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_dict")
+    def test_get_nutritional_limitations(self, mock_to_dict):
+        limitations = [
+            {
+                "limitation_id": str(fake.uuid4()),
+                "limitation_name": fake.word(),
+                "limitation_description": fake.sentence(),
+            },
+            {
+                "limitation_id": str(fake.uuid4()),
+                "limitation_name": fake.word(),
+                "limitation_description": fake.sentence(),
+            },
+        ]
+
+        self.mock_db.query.return_value.all.return_value = limitations
+        mock_to_dict.side_effect = lambda limitation: limitation
+
+        response = self.users_service.get_nutritional_limitations()
+
+        self.assertEqual(response, limitations)
+        self.assertEqual(mock_to_dict.call_count, 2)
+        self.mock_db.query.assert_called_once_with(NutritionalLimitation)

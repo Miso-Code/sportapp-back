@@ -15,7 +15,7 @@ from app.security.passwords import PasswordManager
 from app.utils import utils
 from main import app
 from app.config.db import base, get_db
-from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user
+from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user, generate_random_user_nutritional_limitation
 
 
 class Constants:
@@ -417,3 +417,27 @@ async def test_get_user_nutritional_profile_not_found(test_db):
         assert response.status_code == HTTPStatus.NOT_FOUND
         assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert response_json["message"] == f"User with id {fake_id} not found"
+
+
+@pytest.mark.asyncio
+async def test_get_users_nutritional_limitations(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        nutritional_limitation = generate_random_user_nutritional_limitation(fake)
+        nutritional_limitation_2 = generate_random_user_nutritional_limitation(fake)
+        helper_db.add(nutritional_limitation)
+        helper_db.add(nutritional_limitation_2)
+        helper_db.commit()
+
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/nutritional-limitations")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert len(response_json) == 2
+        assert response_json[0]["limitation_id"] == str(nutritional_limitation.limitation_id)
+        assert response_json[0]["name"] == nutritional_limitation.name
+        assert response_json[0]["description"] == nutritional_limitation.description
+        assert response_json[1]["limitation_id"] == str(nutritional_limitation_2.limitation_id)
+        assert response_json[1]["name"] == nutritional_limitation_2.name
+        assert response_json[1]["description"] == nutritional_limitation_2.description

@@ -260,3 +260,33 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         get_user_nutritional_information_mock.assert_called_once_with(user_id)
         self.assertEqual(response_body, user_sports_profile_data)
+
+    @patch("app.services.users.UsersService.get_nutritional_limitations")
+    async def test_get_nutritional_limitations(self, get_nutritional_limitations_mock):
+        nutritional_limitations = [
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+        ]
+
+        get_nutritional_limitations_mock.return_value = nutritional_limitations
+
+        db = MagicMock()
+        response = await users_routes.get_nutritional_limitations(db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        get_nutritional_limitations_mock.assert_called_once()
+        self.assertEqual(response_body, nutritional_limitations)

@@ -1,6 +1,6 @@
 import asyncio
 import unittest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 
 from faker import Faker
 
@@ -49,8 +49,8 @@ class TestCalculateBmi(unittest.TestCase):
         height = fake.random_int(150, 200) / 100
         weight = fake.random_int(40, 120)
         expected_bmi = round(weight / (height**2), 2)
-        actuald_bmi = calculate_bmi(weight, height)
-        self.assertEqual(expected_bmi, actuald_bmi)
+        actual_bmi = calculate_bmi(weight, height)
+        self.assertEqual(expected_bmi, actual_bmi)
 
     def test_calculate_bmi_zero_height(self):
         height = 0
