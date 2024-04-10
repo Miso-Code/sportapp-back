@@ -6,6 +6,10 @@ COPY pyproject.toml poetry.lock main.py /service/
 
 COPY app/ /service/app/
 
+COPY alembic.ini /service/
+
+COPY migrations/ /service/migrations/
+
 WORKDIR /service
 
 RUN pip install poetry && poetry config virtualenvs.create false
@@ -14,4 +18,4 @@ RUN poetry install --no-interaction --no-ansi
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--workers", "2"]
+CMD alembic downgrade base;alembic upgrade head;uvicorn main:app --host 0.0.0.0 --workers 2

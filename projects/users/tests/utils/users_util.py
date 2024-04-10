@@ -1,5 +1,7 @@
+from uuid import UUID
+
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency
+from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency, NutritionalLimitation
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 
 
@@ -100,4 +102,12 @@ def generate_random_user(faker):
         training_frequency=faker.enum(TrainingFrequency),
         training_years=faker.random_number(),
         food_preference=faker.enum(FoodPreference),
+    )
+
+
+def generate_random_user_nutritional_limitation(faker):
+    return NutritionalLimitation(
+        limitation_id=UUID(faker.uuid4()),
+        name=faker.word(),
+        description=faker.sentence(),
     )

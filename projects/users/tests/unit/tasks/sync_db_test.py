@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 import faker
 
-from app.models.users import User
 from app.tasks import sync_db
 from app.utils.user_cache import UserCache
 from app.config.settings import Config

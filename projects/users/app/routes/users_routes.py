@@ -80,3 +80,9 @@ async def get_user_sports_information(user_id: uuid.UUID, db: Session = Depends(
 async def get_user_nutritional_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user_nutritional_information = UsersService(db).get_user_nutritional_information(user_id)
     return JSONResponse(content=user_nutritional_information, status_code=200)
+
+
+@router.get("/nutritional-limitations")
+async def get_nutritional_limitations(db: Session = Depends(get_db)):
+    nutritional_limitations = UsersService(db).get_nutritional_limitations()
+    return JSONResponse(content=nutritional_limitations, status_code=200)

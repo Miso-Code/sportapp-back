@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey
 from sqlalchemy.orm import relationship
@@ -51,42 +51,40 @@ class UserSubscriptionType(enum.Enum):
 @dataclass
 class TrainingLimitation(base):
     __tablename__ = "training_limitations"
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    users = relationship("User", secondary="user_training_limitations", back_populates="training_limitations")
+    limitation_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    name: str = Column(String, nullable=False)
+    description: str = Column(String, nullable=False)
 
 
 @dataclass
 class UserTrainingLimitation(base):
     __tablename__ = "user_training_limitations"
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
-    limitation_id = Column(Uuid(as_uuid=True), ForeignKey("training_limitations.limitation_id"))
+    id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: str = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
+    limitation_id: str = Column(Uuid(as_uuid=True), ForeignKey("training_limitations.limitation_id"))
 
 
 @dataclass
 class NutritionalLimitation(base):
     __tablename__ = "nutritional_limitations"
-    limitation_id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    users = relationship("User", secondary="user_nutritional_limitations", back_populates="nutritional_limitations")
+    limitation_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    name: str = Column(String, nullable=False)
+    description: str = Column(String, nullable=False)
 
 
 @dataclass
 class UserNutritionalLimitation(base):
     __tablename__ = "user_nutritional_limitations"
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-    user_id = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
-    limitation_id = Column(Uuid(as_uuid=True), ForeignKey("nutritional_limitations.limitation_id"))
+    id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: str = Column(Uuid(as_uuid=True), ForeignKey("users.user_id"))
+    limitation_id: str = Column(Uuid(as_uuid=True), ForeignKey("nutritional_limitations.limitation_id"))
 
 
 @dataclass
 class User(base):
     __tablename__ = "users"
     # Basic info
-    user_id: str = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
     first_name: str = Column(String, nullable=False)
     last_name: str = Column(String, nullable=False)
     email: str = Column(String, nullable=False, unique=True)
@@ -108,11 +106,11 @@ class User(base):
     height: float = Column(Float)
     available_training_hours_per_week: int = Column(Integer)
     training_frequency: str = Column(Enum(TrainingFrequency))
-    training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations", back_populates="users")
+    training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations")
     # Additional sport info
     training_years: int = Column(Integer)
     # Nutrition profile
     food_preference: str = Column(Enum(FoodPreference))
-    nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations", back_populates="users")
+    nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations")
     # Subscription info
     subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
