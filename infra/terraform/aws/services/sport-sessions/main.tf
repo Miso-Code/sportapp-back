@@ -23,7 +23,7 @@ module "sport-sessions-listener-rule" {
   source                = "../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
   rule_path_pattern     = "/sport-sessions/*"
-  rule_priority         = 1
+  rule_priority         = 3
   rule_target_group_arn = module.sport-sessions-tg.tg_arn
 }
 
@@ -38,7 +38,6 @@ module "sport-sessions-task-def" {
   task_role_arn             = data.aws_iam_role.ecs_role.arn
 }
 
-// Register service
 module "sport-sessions-service" {
   source              = "../../modules/ecs/service"
   service_name        = "sport-sessions-service"
@@ -51,12 +50,38 @@ module "sport-sessions-service" {
   task_definition_arn = module.sport-sessions-task-def.task_arn
 }
 
-// Login and Register Service API Gateway endpoints
-module "sport-sessions-register-route" {
+module "sport-sessions-register-route-start" {
   source                   = "../../modules/api_gateway/route"
   api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_integration_method = "POST"
   route_integration_uri    = "http://${data.terraform_remote_state.resources.outputs.elb_dns_name}/sport-sessions"
   route_method             = "POST"
   route_path               = "/sport-sessions/"
+}
+
+module "sport-sessions-register-route-add-location" {
+  source                   = "../../modules/api_gateway/route"
+  api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_integration_method = "PUT"
+  route_integration_uri    = "http://${data.terraform_remote_state.resources.outputs.elb_dns_name}/sport-sessions"
+  route_method             = "PUT"
+  route_path               = "/sport-sessions/{sport-session-id}/location"
+}
+
+module "sport-sessions-register-route-finish" {
+  source                   = "../../modules/api_gateway/route"
+  api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_integration_method = "PATCH"
+  route_integration_uri    = "http://${data.terraform_remote_state.resources.outputs.elb_dns_name}/sport-sessions"
+  route_method             = "PATCH"
+  route_path               = "/sport-sessions/{sport-session-id}/location"
+}
+
+module "sport-sessions-register-route-get-by-id" {
+  source                   = "../../modules/api_gateway/route"
+  api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_integration_method = "GET"
+  route_integration_uri    = "http://${data.terraform_remote_state.resources.outputs.elb_dns_name}/sport-sessions"
+  route_method             = "GET"
+  route_path               = "/sport-sessions/{sport-session-id}"
 }
