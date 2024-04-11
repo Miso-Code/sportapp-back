@@ -2,7 +2,7 @@ import enum
 from dataclasses import asdict
 from uuid import UUID
 
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserNutritionalProfile, UserSportsProfileGet
 from app.utils import utils
 
 
@@ -50,13 +50,14 @@ class DataClassMapper:
 
     @staticmethod
     def to_user_sports_profile(user):
-        user_sports_profile = UserSportsProfile(
+        user_sports_profile = UserSportsProfileGet(
             favourite_sport_id=user.favourite_sport_id,
             training_objective=user.training_objective,
             weight=user.weight,
             height=user.height,
-            available_training_hours_per_week=user.available_training_hours_per_week,
+            available_training_hours=user.available_training_hours,
             training_frequency=user.training_frequency,
+            training_limitations=[str(limitation.limitation_id) for limitation in user.training_limitations],
         )
 
         user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile, pydantic=True)

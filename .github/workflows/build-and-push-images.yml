@@ -23,7 +23,7 @@ jobs:
     needs: resolve-tag
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "users" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -58,7 +58,7 @@ jobs:
     needs: resolve-tag
     strategy:
       matrix:
-        service: [ "sports", "users" ]
+        service: [ "sports", "sport-sessions", "users" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

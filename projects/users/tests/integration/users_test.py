@@ -159,7 +159,8 @@ async def test_complete_user_registration(test_db):
             "birth_date": additional_info.birth_date,
         }
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/{user_id}/complete-registration", json=additional_info_json)
+        client.headers["user-id"] = str(user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/complete-registration", json=additional_info_json)
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.OK
@@ -315,7 +316,8 @@ async def test_get_user_personal_profile(test_db):
         helper_db.add(user_created)
         helper_db.commit()
 
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/personal")
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/personal")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.OK
@@ -342,7 +344,9 @@ async def test_get_user_personal_profile(test_db):
 async def test_get_user_personal_profile_not_found(test_db):
     async with TestClient(app) as client:
         fake_id = fake.uuid4()
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/personal")
+
+        client.headers["user-id"] = str(fake_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/personal")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.NOT_FOUND
@@ -358,7 +362,8 @@ async def test_get_user_sports_profile(test_db):
         helper_db.add(user_created)
         helper_db.commit()
 
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports")
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/sports")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.OK
@@ -367,7 +372,7 @@ async def test_get_user_sports_profile(test_db):
         assert response_json["training_objective"] == user_created.training_objective.value
         assert response_json["weight"] == user_created.weight
         assert response_json["height"] == user_created.height
-        assert response_json["available_training_hours_per_week"] == user_created.available_training_hours_per_week
+        assert response_json["available_training_hours"] == user_created.available_training_hours
         assert response_json["training_frequency"] == user_created.training_frequency.value
         assert response_json["bmi"] == utils.calculate_bmi(user_created.weight, user_created.height)
 
@@ -383,7 +388,9 @@ async def test_get_user_sports_profile(test_db):
 async def test_get_user_sports_profile_not_found(test_db):
     async with TestClient(app) as client:
         fake_id = fake.uuid4()
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/sports")
+
+        client.headers["user-id"] = str(fake_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/sports")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.NOT_FOUND
@@ -399,7 +406,8 @@ async def test_get_user_nutritional_profile(test_db):
         helper_db.add(user_created)
         helper_db.commit()
 
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional")
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/nutritional")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.OK
@@ -412,7 +420,9 @@ async def test_get_user_nutritional_profile(test_db):
 async def test_get_user_nutritional_profile_not_found(test_db):
     async with TestClient(app) as client:
         fake_id = fake.uuid4()
-        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/{fake_id}/nutritional")
+
+        client.headers["user-id"] = str(fake_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/profiles/nutritional")
         response_json = response.json()
 
         assert response.status_code == HTTPStatus.NOT_FOUND
@@ -467,7 +477,8 @@ async def test_update_user_personal_profile(test_db):
             "birth_date": new_user_data.birth_date,
         }
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/personal", json=new_user_data_json)
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/personal", json=new_user_data_json)
 
         response_json = response.json()
 
@@ -501,14 +512,16 @@ async def test_update_user_sports_profile(test_db, mocker):
             "training_objective": new_user_data.training_objective.value,
             "weight": new_user_data.weight,
             "height": new_user_data.height,
-            "available_training_hours_per_week": new_user_data.available_training_hours_per_week,
+            "available_training_hours": new_user_data.available_training_hours,
             "training_frequency": new_user_data.training_frequency.value,
+            "training_limitations": [{"name": fake.word(), "description": fake.sentence()} for _ in range(fake.random_int(1, 4))],
         }
 
         external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
         external_service.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports", json=new_user_data_json)
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
 
         response_json = response.json()
 
@@ -518,9 +531,10 @@ async def test_update_user_sports_profile(test_db, mocker):
         assert response_json["training_objective"] == new_user_data.training_objective.value
         assert response_json["weight"] == new_user_data.weight
         assert response_json["height"] == new_user_data.height
-        assert response_json["available_training_hours_per_week"] == new_user_data.available_training_hours_per_week
+        assert response_json["available_training_hours"] == new_user_data.available_training_hours
         assert response_json["training_frequency"] == new_user_data.training_frequency.value
         assert response_json["bmi"] == utils.calculate_bmi(new_user_data.weight, new_user_data.height)
+        assert len(response_json["training_limitations"]) == len(new_user_data_json["training_limitations"])
 
 
 @pytest.mark.asyncio
@@ -537,14 +551,15 @@ async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
             "training_objective": new_user_data.training_objective.value,
             "weight": new_user_data.weight,
             "height": new_user_data.height,
-            "available_training_hours_per_week": new_user_data.available_training_hours_per_week,
+            "available_training_hours": new_user_data.available_training_hours,
             "training_frequency": new_user_data.training_frequency.value,
         }
 
         external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
         external_service.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports", json=new_user_data_json)
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
 
         response_json = response.json()
 
@@ -567,7 +582,8 @@ async def test_update_user_nutritional_profile(test_db):
             "nutritional_limitations": [str(limitation.limitation_id) for limitation in new_user_data.nutritional_limitations],
         }
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional", json=new_user_data_json)
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/nutritional", json=new_user_data_json)
 
         response_json = response.json()
 
@@ -595,7 +611,8 @@ async def test_update_user_nutritional_profile_not_found_limitation_id(test_db):
             "nutritional_limitations": [str(nutritional_limitation.limitation_id), str(fake.uuid4())],
         }
 
-        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional", json=new_user_data_json)
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/nutritional", json=new_user_data_json)
 
         response_json = response.json()
 

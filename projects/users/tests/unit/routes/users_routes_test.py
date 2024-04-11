@@ -5,7 +5,6 @@ from unittest.mock import patch, MagicMock
 
 from faker import Faker
 
-from app.models.schemas.profiles_schema import UserNutritionalProfile, UserPersonalProfile
 from app.models.schemas.schema import UserAdditionalInformation, UserCreate, UserCredentials
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
@@ -231,7 +230,7 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
             "training_objective": fake.enum(TrainingObjective).value,
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
-            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "available_training_hours": fake.random_int(min=1, max=100),
             "training_frequency": fake.enum(TrainingFrequency).value,
         }
 
@@ -333,7 +332,7 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
             "training_objective": fake.enum(TrainingObjective).value,
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
-            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "available_training_hours": fake.random_int(min=1, max=100),
             "training_frequency": fake.enum(TrainingFrequency).value,
         }
 

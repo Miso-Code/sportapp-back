@@ -20,6 +20,7 @@ from tests.utils.users_util import (
     generate_random_user_personal_profile,
     generate_random_user_sports_profile,
     generate_random_user_nutritional_profile,
+    generate_random_user_sport_profile_update,
 )
 
 fake = Faker()
@@ -342,7 +343,7 @@ class TestUsersService(unittest.TestCase):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
 
-        user_sports_profile_updated = generate_random_user_sports_profile(fake)
+        user_sports_profile_updated = generate_random_user_sport_profile_update(fake)
         user_sports_profile_updated_dict = DataClassMapper.to_dict(user_sports_profile_updated, pydantic=True)
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = user

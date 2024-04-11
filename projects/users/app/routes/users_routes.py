@@ -1,14 +1,15 @@
 import asyncio
 import json
 import uuid
+from typing import Annotated
 
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, Header
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sse_starlette import EventSourceResponse
 
 from app.config.db import get_db
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserNutritionalProfile, UserSportsProfileUpdate
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 from app.services.users import UsersService
 from app.utils.user_cache import UserCache
@@ -59,44 +60,44 @@ async def login_user(user_credentials: UserCredentials, db: Session = Depends(ge
     return JSONResponse(content=login_user_response, status_code=200)
 
 
-@router.patch("/{user_id}/complete-registration")
-async def complete_user_registration(user_id: uuid.UUID, user_additional_information: UserAdditionalInformation, db: Session = Depends(get_db)):
+@router.patch("/complete-registration")
+async def complete_user_registration(user_additional_information: UserAdditionalInformation, user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     complete_user_registration_response = UsersService(db).complete_user_registration(user_id, user_additional_information)
     return JSONResponse(content=complete_user_registration_response, status_code=200)
 
 
-@router.get("/profiles/{user_id}/personal")
-async def get_user_personal_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+@router.get("/profiles/personal")
+async def get_user_personal_information(user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_personal_information = UsersService(db).get_user_personal_information(user_id)
     return JSONResponse(content=user_personal_information, status_code=200)
 
 
-@router.get("/profiles/{user_id}/sports")
-async def get_user_sports_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+@router.get("/profiles/sports")
+async def get_user_sports_information(user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_sports_information = UsersService(db).get_user_sports_information(user_id)
     return JSONResponse(content=user_sports_information, status_code=200)
 
 
-@router.get("/profiles/{user_id}/nutritional")
-async def get_user_nutritional_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
+@router.get("/profiles/nutritional")
+async def get_user_nutritional_information(user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_nutritional_information = UsersService(db).get_user_nutritional_information(user_id)
     return JSONResponse(content=user_nutritional_information, status_code=200)
 
 
-@router.patch("/profiles/{user_id}/personal")
-async def update_user_personal_information(user_id: uuid.UUID, personal_profile: UserPersonalProfile, db: Session = Depends(get_db)):
+@router.patch("/profiles/personal")
+async def update_user_personal_information(personal_profile: UserPersonalProfile, user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_personal_information = UsersService(db).update_user_personal_information(user_id, personal_profile)
     return JSONResponse(content=user_personal_information, status_code=200)
 
 
-@router.patch("/profiles/{user_id}/sports")
-async def update_user_sports_information(user_id: uuid.UUID, sports_profile: UserSportsProfile, db: Session = Depends(get_db)):
+@router.patch("/profiles/sports")
+async def update_user_sports_information(sports_profile: UserSportsProfileUpdate, user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_sports_information = UsersService(db).update_user_sports_information(user_id, sports_profile)
     return JSONResponse(content=user_sports_information, status_code=200)
 
 
-@router.patch("/profiles/{user_id}/nutritional")
-async def update_user_nutritional_information(user_id: uuid.UUID, nutritional_profile: UserNutritionalProfile, db: Session = Depends(get_db)):
+@router.patch("/profiles/nutritional")
+async def update_user_nutritional_information(nutritional_profile: UserNutritionalProfile, user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
     user_nutritional_information = UsersService(db).update_user_nutritional_information(user_id, nutritional_profile)
     return JSONResponse(content=user_nutritional_information, status_code=200)
 
