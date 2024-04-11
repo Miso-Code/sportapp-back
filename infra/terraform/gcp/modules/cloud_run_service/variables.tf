@@ -41,6 +41,12 @@ variable "max_instance_count" {
   default     = 1
 }
 
+variable "db_instance" {
+  description = "The Cloud SQL instance to connect to"
+  type        = string
+
+}
+
 variable "env" {
   description = "A map of environment variables to be made available to the container"
   type        = map(string)

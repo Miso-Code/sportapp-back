@@ -11,7 +11,7 @@ resource "google_cloud_run_v2_service" "run_service" {
     volumes {
       name = "cloudsql"
       cloud_sql_instance {
-        instances = [var.env.db_instance]
+        instances = [var.db_instance]
       }
     }
 
@@ -22,10 +22,17 @@ resource "google_cloud_run_v2_service" "run_service" {
       ports {
         container_port = var.port
       }
-      env {
-        name  = "DATABASE_URL"
-        value = var.env.db_url
+
+      dynamic "env" {
+        for_each = var.env
+
+        content {
+          name  = env.key
+          value = env.value
+        }
       }
+
+
       dynamic "env" {
         for_each = var.secrets
 
