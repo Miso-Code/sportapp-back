@@ -1,35 +1,35 @@
-from dataclasses import dataclass
+from typing import Optional
+from uuid import UUID
+
+from pydantic import BaseModel, confloat, conint
 
 from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
 
 
-@dataclass
-class UserPersonalProfile:
-    email: str
-    first_name: str
-    last_name: str
-    identification_type: UserIdentificationType
-    identification_number: str
-    gender: Gender
-    country_of_birth: str
-    city_of_birth: str
-    country_of_residence: str
-    city_of_residence: str
-    residence_age: int
-    birth_date: str
+class UserPersonalProfile(BaseModel):
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    identification_type: Optional[UserIdentificationType] = None
+    identification_number: Optional[str] = None
+    gender: Optional[Gender] = None
+    country_of_birth: Optional[str] = None
+    city_of_birth: Optional[str] = None
+    country_of_residence: Optional[str] = None
+    city_of_residence: Optional[str] = None
+    residence_age: Optional[conint(ge=0)] = None
+    birth_date: Optional[str] = None
 
 
-@dataclass
-class UserSportsProfile:
-    favourite_sport_id: str
-    training_objective: TrainingObjective
-    weight: float
-    height: float
-    available_training_hours_per_week: int
-    training_frequency: TrainingFrequency
+class UserSportsProfile(BaseModel):
+    favourite_sport_id: Optional[UUID]
+    training_objective: Optional[TrainingObjective]
+    weight: Optional[confloat(gt=0)]
+    height: Optional[confloat(gt=0)]
+    available_training_hours_per_week: Optional[confloat(gt=0)]
+    training_frequency: Optional[TrainingFrequency]
 
 
-@dataclass
-class UserNutritionalProfile:
-    food_preference: FoodPreference
-    nutritional_limitations: list[str]
+class UserNutritionalProfile(BaseModel):
+    food_preference: Optional[FoodPreference]
+    nutritional_limitations: Optional[list[str]]

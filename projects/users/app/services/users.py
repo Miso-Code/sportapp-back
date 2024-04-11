@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import bcrypt
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -9,6 +11,7 @@ from app.security.jwt import JWTManager
 from app.models.users import User, NutritionalLimitation
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
+from app.services.external import ExternalServices
 from app.utils import utils
 
 
@@ -29,6 +32,7 @@ class UsersService:
     def __init__(self, db: Session):
         self.db = db
         self.jwt_manager = JWTManager(Config.JWT_SECRET_KEY, Config.JWT_ALGORITHM, Config.ACCESS_TOKEN_EXPIRE_MINUTES, Config.REFRESH_TOKEN_EXPIRE_MINUTES)
+        self.external_services = ExternalServices()
 
     def create_users(self, users_create):
         values_to_insert = []
@@ -71,20 +75,15 @@ class UsersService:
 
     def get_user_personal_information(self, user_id):
         user = self.get_user_by_id(user_id)
-        return DataClassMapper.to_user_subclass_dict(user, UserPersonalProfile)
+        return DataClassMapper.to_user_personal_profile(user)
 
     def get_user_sports_information(self, user_id):
         user = self.get_user_by_id(user_id)
-        user_sports_profile = DataClassMapper.to_user_subclass_dict(user, UserSportsProfile)
-        if "weight" in user_sports_profile and "height" in user_sports_profile:
-            user_sports_profile["bmi"] = utils.calculate_bmi(user_sports_profile["weight"], user_sports_profile["height"])
-        return user_sports_profile
+        return DataClassMapper.to_user_sports_profile(user)
 
     def get_user_nutritional_information(self, user_id):
         user = self.get_user_by_id(user_id)
-        user_dict = DataClassMapper.to_user_subclass_dict(user, UserNutritionalProfile)
-        user_dict["nutritional_limitations"] = [str(limitation.limitation_id) for limitation in user.nutritional_limitations]
-        return user_dict
+        return DataClassMapper.to_user_nutritional_profile(user)
 
     # noinspection PyMethodMayBeStatic
     def _create_user_dict(self, user_data):
@@ -115,3 +114,39 @@ class UsersService:
     def get_nutritional_limitations(self):
         nutritional_limitations = self.db.query(NutritionalLimitation).all()
         return [DataClassMapper.to_dict(limitation) for limitation in nutritional_limitations]
+
+    def update_user_personal_information(self, user_id, personal_profile):
+        user = self.get_user_by_id(user_id)
+        for field in personal_profile.dict(exclude_none=True).keys():
+            setattr(user, field, getattr(personal_profile, field))
+
+        self.db.commit()
+        return DataClassMapper.to_user_personal_profile(user)
+
+    def update_user_sports_information(self, user_id, sports_profile):
+        user = self.get_user_by_id(user_id)
+        for field in sports_profile.dict(exclude={"favourite_sport_id"}, exclude_none=True).keys():
+            setattr(user, field, getattr(sports_profile, field))
+
+        if sports_profile.favourite_sport_id:
+            sport = self.external_services.get_sport(sports_profile.favourite_sport_id)
+            user.favourite_sport_id = sport["sport_id"]
+
+        self.db.commit()
+        return DataClassMapper.to_user_sports_profile(user)
+
+    def update_user_nutritional_information(self, user_id, nutritional_profile):
+        user = self.get_user_by_id(user_id)
+        if nutritional_profile.food_preference:
+            user.food_preference = nutritional_profile.food_preference
+
+        user.nutritional_limitations = []
+        for limitation_id in nutritional_profile.nutritional_limitations:
+            limitation = self.db.query(NutritionalLimitation).filter(NutritionalLimitation.limitation_id == UUID(limitation_id)).first()
+            if limitation:
+                user.nutritional_limitations.append(limitation)
+            else:
+                raise NotFoundError(f"Nutritional limitation with id {limitation_id} not found")
+
+        self.db.commit()
+        return DataClassMapper.to_user_nutritional_profile(user)

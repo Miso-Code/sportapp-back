@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sse_starlette import EventSourceResponse
 
 from app.config.db import get_db
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
 from app.services.users import UsersService
 from app.utils.user_cache import UserCache
@@ -79,6 +80,24 @@ async def get_user_sports_information(user_id: uuid.UUID, db: Session = Depends(
 @router.get("/profiles/{user_id}/nutritional")
 async def get_user_nutritional_information(user_id: uuid.UUID, db: Session = Depends(get_db)):
     user_nutritional_information = UsersService(db).get_user_nutritional_information(user_id)
+    return JSONResponse(content=user_nutritional_information, status_code=200)
+
+
+@router.patch("/profiles/{user_id}/personal")
+async def update_user_personal_information(user_id: uuid.UUID, personal_profile: UserPersonalProfile, db: Session = Depends(get_db)):
+    user_personal_information = UsersService(db).update_user_personal_information(user_id, personal_profile)
+    return JSONResponse(content=user_personal_information, status_code=200)
+
+
+@router.patch("/profiles/{user_id}/sports")
+async def update_user_sports_information(user_id: uuid.UUID, sports_profile: UserSportsProfile, db: Session = Depends(get_db)):
+    user_sports_information = UsersService(db).update_user_sports_information(user_id, sports_profile)
+    return JSONResponse(content=user_sports_information, status_code=200)
+
+
+@router.patch("/profiles/{user_id}/nutritional")
+async def update_user_nutritional_information(user_id: uuid.UUID, nutritional_profile: UserNutritionalProfile, db: Session = Depends(get_db)):
+    user_nutritional_information = UsersService(db).update_user_nutritional_information(user_id, nutritional_profile)
     return JSONResponse(content=user_nutritional_information, status_code=200)
 
 

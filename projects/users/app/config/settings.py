@@ -2,6 +2,7 @@ import os
 
 
 class Config:
+    SPORTS_URL = os.getenv("SPORTS_URL", "http://localhost:8001")
     SYNC_USERS = os.getenv("SYNC_USERS", True)
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     REFRESH_TOKEN_EXPIRE_MINUTES = int(os.getenv("REFRESH_TOKEN_EXPIRE_MINUTES", 10080))
