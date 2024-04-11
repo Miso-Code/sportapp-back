@@ -68,3 +68,8 @@ class UserCredentials(BaseModel):
             raise InvalidValueError("Either provide refresh_token or both email and password")
 
         return values
+
+
+class CreateTrainingLimitation(BaseModel):
+    name: str
+    description: str

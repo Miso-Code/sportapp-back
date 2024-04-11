@@ -26,7 +26,7 @@ class TestUser(unittest.TestCase):
             "training_objective": fake.enum(TrainingObjective),
             "weight": fake.random_int(min=1, max=200),
             "height": fake.random_int(min=1, max=200),
-            "available_training_hours_per_week": fake.random_int(min=1, max=50),
+            "available_training_hours": fake.random_int(min=1, max=50),
             "training_frequency": fake.enum(TrainingFrequency),
             "training_years": fake.random_int(min=1, max=50),
         }
@@ -51,6 +51,6 @@ class TestUser(unittest.TestCase):
         self.assertEqual(user.training_objective, user_data["training_objective"])
         self.assertEqual(user.weight, user_data["weight"])
         self.assertEqual(user.height, user_data["height"])
-        self.assertEqual(user.available_training_hours_per_week, user_data["available_training_hours_per_week"])
+        self.assertEqual(user.available_training_hours, user_data["available_training_hours"])
         self.assertEqual(user.training_frequency, user_data["training_frequency"])
         self.assertEqual(user.training_years, user_data["training_years"])

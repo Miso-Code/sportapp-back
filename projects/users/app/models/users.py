@@ -104,7 +104,7 @@ class User(base):
     training_objective = Column(Enum(TrainingObjective))
     weight: float = Column(Float)
     height: float = Column(Float)
-    available_training_hours_per_week: int = Column(Integer)
+    available_training_hours: int = Column(Integer)
     training_frequency: str = Column(Enum(TrainingFrequency))
     training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations")
     # Additional sport info

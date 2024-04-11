@@ -46,7 +46,7 @@ class TestUserProfiles(unittest.TestCase):
             "training_objective": fake.enum(TrainingObjective).value,
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
-            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "available_training_hours": fake.random_int(min=1, max=100),
             "training_frequency": fake.enum(TrainingFrequency).value,
         }
 
@@ -56,7 +56,7 @@ class TestUserProfiles(unittest.TestCase):
         self.assertEqual(user_sports_profile.training_objective.value, user_sports_profile_data["training_objective"])
         self.assertEqual(user_sports_profile.weight, user_sports_profile_data["weight"])
         self.assertEqual(user_sports_profile.height, user_sports_profile_data["height"])
-        self.assertEqual(user_sports_profile.available_training_hours_per_week, user_sports_profile_data["available_training_hours_per_week"])
+        self.assertEqual(user_sports_profile.available_training_hours, user_sports_profile_data["available_training_hours"])
         self.assertEqual(user_sports_profile.training_frequency.value, user_sports_profile_data["training_frequency"])
 
     def test_user_nutritional_profile(self):

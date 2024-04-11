@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, confloat, conint
 
+from app.models.schemas.schema import CreateTrainingLimitation
 from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
 
 
@@ -22,14 +23,22 @@ class UserPersonalProfile(BaseModel):
 
 
 class UserSportsProfile(BaseModel):
-    favourite_sport_id: Optional[UUID]
-    training_objective: Optional[TrainingObjective]
-    weight: Optional[confloat(gt=0)]
-    height: Optional[confloat(gt=0)]
-    available_training_hours_per_week: Optional[confloat(gt=0)]
-    training_frequency: Optional[TrainingFrequency]
+    favourite_sport_id: Optional[UUID] = None
+    training_objective: Optional[TrainingObjective] = None
+    weight: Optional[confloat(gt=0)] = None
+    height: Optional[confloat(gt=0)] = None
+    available_training_hours: Optional[confloat(gt=0)] = None
+    training_frequency: Optional[TrainingFrequency] = None
+
+
+class UserSportsProfileGet(UserSportsProfile):
+    training_limitations: Optional[list[str]] = []
+
+
+class UserSportsProfileUpdate(UserSportsProfile):
+    training_limitations: Optional[list[CreateTrainingLimitation]] = []
 
 
 class UserNutritionalProfile(BaseModel):
-    food_preference: Optional[FoodPreference]
-    nutritional_limitations: Optional[list[str]]
+    food_preference: Optional[FoodPreference] = None
+    nutritional_limitations: Optional[list[str]] = []

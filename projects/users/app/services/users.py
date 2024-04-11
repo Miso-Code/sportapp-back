@@ -6,9 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
 from app.security.jwt import JWTManager
-from app.models.users import User, NutritionalLimitation
+from app.models.users import User, NutritionalLimitation, TrainingLimitation
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
 from app.services.external import ExternalServices
@@ -117,7 +116,7 @@ class UsersService:
 
     def update_user_personal_information(self, user_id, personal_profile):
         user = self.get_user_by_id(user_id)
-        for field in personal_profile.dict(exclude_none=True).keys():
+        for field in personal_profile.dict(exclude_defaults=True).keys():
             setattr(user, field, getattr(personal_profile, field))
 
         self.db.commit()
@@ -125,12 +124,17 @@ class UsersService:
 
     def update_user_sports_information(self, user_id, sports_profile):
         user = self.get_user_by_id(user_id)
-        for field in sports_profile.dict(exclude={"favourite_sport_id"}, exclude_none=True).keys():
+        for field in sports_profile.dict(exclude={"favourite_sport_id", "training_limitations"}, exclude_defaults=True).keys():
             setattr(user, field, getattr(sports_profile, field))
 
         if sports_profile.favourite_sport_id:
             sport = self.external_services.get_sport(sports_profile.favourite_sport_id)
             user.favourite_sport_id = sport["sport_id"]
+
+        user.training_limitations = []
+        for training_limitation_to_create in sports_profile.training_limitations:
+            training_limitation = TrainingLimitation(name=training_limitation_to_create.name, description=training_limitation_to_create.description)
+            user.training_limitations.append(training_limitation)
 
         self.db.commit()
         return DataClassMapper.to_user_sports_profile(user)

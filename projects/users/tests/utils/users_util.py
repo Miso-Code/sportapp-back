@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency, NutritionalLimitation
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation
 
 
 def generate_random_users_create_data(faker, count):
@@ -67,8 +67,20 @@ def generate_random_user_sports_profile(faker):
         training_objective=user.training_objective,
         weight=user.weight,
         height=user.height,
-        available_training_hours_per_week=user.available_training_hours_per_week,
+        available_training_hours=user.available_training_hours,
         training_frequency=TrainingFrequency(user.training_frequency),
+    )
+
+
+def generate_random_user_sport_profile_update(faker):
+    return UserSportsProfileUpdate(
+        favourite_sport_id=faker.uuid4(),
+        training_objective=faker.enum(TrainingObjective),
+        weight=faker.random_int(40, 120),
+        height=faker.random_int(150, 200) / 100,
+        available_training_hours=faker.random_number(1, 20),
+        training_frequency=faker.enum(TrainingFrequency),
+        training_limitations=[CreateTrainingLimitation(name=faker.word(), description=faker.sentence()) for _ in range(faker.random_number(1, 5))],
     )
 
 
@@ -98,7 +110,7 @@ def generate_random_user(faker):
         training_objective=faker.enum(TrainingObjective),
         height=faker.random_int(150, 200) / 100,
         weight=faker.random_int(40, 120),
-        available_training_hours_per_week=faker.random_number(1, 20),
+        available_training_hours=faker.random_number(1, 20),
         training_frequency=faker.enum(TrainingFrequency),
         training_years=faker.random_number(1, 20),
         food_preference=faker.enum(FoodPreference),
