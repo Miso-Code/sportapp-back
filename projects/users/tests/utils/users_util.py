@@ -72,10 +72,10 @@ def generate_random_user_sports_profile(faker):
     )
 
 
-def generate_random_user_nutrition_profile(faker):
+def generate_random_user_nutritional_profile(faker):
     return UserNutritionalProfile(
         food_preference=faker.enum(FoodPreference),
-        nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number())],
+        nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number(1, 5))],
     )
 
 
@@ -86,7 +86,7 @@ def generate_random_user(faker):
         email=faker.email(),
         hashed_password=faker.password(),
         identification_type=faker.enum(UserIdentificationType),
-        identification_number=faker.random_number(),
+        identification_number=faker.numerify(text="############"),
         gender=faker.enum(Gender),
         country_of_birth=faker.country(),
         city_of_birth=faker.city(),
@@ -98,9 +98,9 @@ def generate_random_user(faker):
         training_objective=faker.enum(TrainingObjective),
         height=faker.random_int(150, 200) / 100,
         weight=faker.random_int(40, 120),
-        available_training_hours_per_week=faker.random_number(),
+        available_training_hours_per_week=faker.random_number(1, 20),
         training_frequency=faker.enum(TrainingFrequency),
-        training_years=faker.random_number(),
+        training_years=faker.random_number(1, 20),
         food_preference=faker.enum(FoodPreference),
     )
 

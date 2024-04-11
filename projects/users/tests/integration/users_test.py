@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from http import HTTPStatus
 
 from app.config.settings import Config
+from app.exceptions.exceptions import NotFoundError
 from app.models.users import User
 from app.security.passwords import PasswordManager
 from app.utils import utils
@@ -441,3 +442,163 @@ async def test_get_users_nutritional_limitations(test_db):
         assert response_json[1]["limitation_id"] == str(nutritional_limitation_2.limitation_id)
         assert response_json[1]["name"] == nutritional_limitation_2.name
         assert response_json[1]["description"] == nutritional_limitation_2.description
+
+
+@pytest.mark.asyncio
+async def test_update_user_personal_profile(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        new_user_data = generate_random_user(fake)
+        new_user_data_json = {
+            "first_name": new_user_data.first_name,
+            "last_name": new_user_data.last_name,
+            "identification_type": new_user_data.identification_type.value,
+            "identification_number": new_user_data.identification_number,
+            "gender": new_user_data.gender.value,
+            "country_of_birth": new_user_data.country_of_birth,
+            "city_of_birth": new_user_data.city_of_birth,
+            "country_of_residence": new_user_data.country_of_residence,
+            "city_of_residence": new_user_data.city_of_residence,
+            "residence_age": new_user_data.residence_age,
+            "birth_date": new_user_data.birth_date,
+        }
+
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/personal", json=new_user_data_json)
+
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["email"] == user_created.email
+        assert response_json["first_name"] == new_user_data.first_name
+        assert response_json["last_name"] == new_user_data.last_name
+        assert response_json["identification_type"] == new_user_data.identification_type.value
+        assert response_json["identification_number"] == new_user_data.identification_number
+        assert response_json["gender"] == new_user_data.gender.value
+        assert response_json["country_of_birth"] == new_user_data.country_of_birth
+        assert response_json["city_of_birth"] == new_user_data.city_of_birth
+        assert response_json["country_of_residence"] == new_user_data.country_of_residence
+        assert response_json["city_of_residence"] == new_user_data.city_of_residence
+        assert response_json["residence_age"] == new_user_data.residence_age
+        assert response_json["birth_date"] == new_user_data.birth_date
+
+
+@pytest.mark.asyncio
+async def test_update_user_sports_profile(test_db, mocker):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        new_user_data = generate_random_user(fake)
+        new_user_data_json = {
+            "favourite_sport_id": new_user_data.favourite_sport_id,
+            "training_objective": new_user_data.training_objective.value,
+            "weight": new_user_data.weight,
+            "height": new_user_data.height,
+            "available_training_hours_per_week": new_user_data.available_training_hours_per_week,
+            "training_frequency": new_user_data.training_frequency.value,
+        }
+
+        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports", json=new_user_data_json)
+
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["favourite_sport_id"] == new_user_data.favourite_sport_id
+        assert response_json["training_objective"] == new_user_data.training_objective.value
+        assert response_json["weight"] == new_user_data.weight
+        assert response_json["height"] == new_user_data.height
+        assert response_json["available_training_hours_per_week"] == new_user_data.available_training_hours_per_week
+        assert response_json["training_frequency"] == new_user_data.training_frequency.value
+        assert response_json["bmi"] == utils.calculate_bmi(new_user_data.weight, new_user_data.height)
+
+
+@pytest.mark.asyncio
+async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        new_user_data = generate_random_user(fake)
+        new_user_data_json = {
+            "favourite_sport_id": new_user_data.favourite_sport_id,
+            "training_objective": new_user_data.training_objective.value,
+            "weight": new_user_data.weight,
+            "height": new_user_data.height,
+            "available_training_hours_per_week": new_user_data.available_training_hours_per_week,
+            "training_frequency": new_user_data.training_frequency.value,
+        }
+
+        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
+
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/sports", json=new_user_data_json)
+
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["message"] == f"Sport with id {new_user_data.favourite_sport_id} not found"
+
+
+@pytest.mark.asyncio
+async def test_update_user_nutritional_profile(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        new_user_data = generate_random_user(fake)
+        new_user_data_json = {
+            "food_preference": new_user_data.food_preference.value,
+            "nutritional_limitations": [str(limitation.limitation_id) for limitation in new_user_data.nutritional_limitations],
+        }
+
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional", json=new_user_data_json)
+
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["food_preference"] == new_user_data.food_preference.value
+        assert response_json["nutritional_limitations"] == [str(limitation.limitation_id) for limitation in new_user_data.nutritional_limitations]
+
+
+@pytest.mark.asyncio
+async def test_update_user_nutritional_profile_not_found_limitation_id(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+
+        nutritional_limitation = generate_random_user_nutritional_limitation(fake)
+        helper_db.add(nutritional_limitation)
+        helper_db.commit()
+
+        new_user_data = generate_random_user(fake)
+        new_user_data_json = {
+            "food_preference": new_user_data.food_preference.value,
+            "nutritional_limitations": [str(nutritional_limitation.limitation_id), str(fake.uuid4())],
+        }
+
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/{user_created.user_id}/nutritional", json=new_user_data_json)
+
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert response_json["message"] == f"Nutritional limitation with id {new_user_data_json['nutritional_limitations'][1]} not found"

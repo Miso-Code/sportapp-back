@@ -1,4 +1,6 @@
 import unittest
+from uuid import UUID
+
 from faker import Faker
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
@@ -50,12 +52,12 @@ class TestUserProfiles(unittest.TestCase):
 
         user_sports_profile = UserSportsProfile(**user_sports_profile_data)
 
-        self.assertEqual(user_sports_profile.favourite_sport_id, user_sports_profile_data["favourite_sport_id"])
-        self.assertEqual(user_sports_profile.training_objective, user_sports_profile_data["training_objective"])
+        self.assertEqual(user_sports_profile.favourite_sport_id, UUID(user_sports_profile_data["favourite_sport_id"]))
+        self.assertEqual(user_sports_profile.training_objective.value, user_sports_profile_data["training_objective"])
         self.assertEqual(user_sports_profile.weight, user_sports_profile_data["weight"])
         self.assertEqual(user_sports_profile.height, user_sports_profile_data["height"])
         self.assertEqual(user_sports_profile.available_training_hours_per_week, user_sports_profile_data["available_training_hours_per_week"])
-        self.assertEqual(user_sports_profile.training_frequency, user_sports_profile_data["training_frequency"])
+        self.assertEqual(user_sports_profile.training_frequency.value, user_sports_profile_data["training_frequency"])
 
     def test_user_nutritional_profile(self):
         user_nutritional_profile_data = {
@@ -65,5 +67,5 @@ class TestUserProfiles(unittest.TestCase):
 
         user_nutritional_profile = UserNutritionalProfile(**user_nutritional_profile_data)
 
-        self.assertEqual(user_nutritional_profile.food_preference, user_nutritional_profile_data["food_preference"])
+        self.assertEqual(user_nutritional_profile.food_preference.value, user_nutritional_profile_data["food_preference"])
         self.assertEqual(user_nutritional_profile.nutritional_limitations, user_nutritional_profile_data["nutritional_limitations"])

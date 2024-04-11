@@ -5,10 +5,12 @@ from unittest.mock import patch, MagicMock
 
 from faker import Faker
 
+from app.models.schemas.profiles_schema import UserNutritionalProfile, UserPersonalProfile
 from app.models.schemas.schema import UserAdditionalInformation, UserCreate, UserCredentials
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
 from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
+from tests.utils.users_util import generate_random_user_personal_profile, generate_random_user_nutritional_profile, generate_random_user_sports_profile
 
 fake = Faker()
 
@@ -290,3 +292,90 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         get_nutritional_limitations_mock.assert_called_once()
         self.assertEqual(response_body, nutritional_limitations)
+
+    @patch("app.services.users.UsersService.update_user_personal_information")
+    async def test_update_user_personal_profile(self, update_user_personal_information_mock):
+        user_id = fake.uuid4()
+        user_updated_personal_profile = generate_random_user_personal_profile(fake)
+
+        personal_profile_output = {
+            "email": fake.email(),
+            "first_name": fake.first_name(),
+            "last_name": fake.last_name(),
+            "identification_type": fake.enum(UserIdentificationType).value,
+            "identification_number": fake.numerify(text="############"),
+            "gender": fake.enum(Gender).value,
+            "country_of_birth": fake.country(),
+            "city_of_birth": fake.city(),
+            "country_of_residence": fake.country(),
+            "city_of_residence": fake.city(),
+            "residence_age": fake.random_int(min=1, max=100),
+            "birth_date": fake.date_of_birth(minimum_age=18).strftime("%Y-%m-%d"),
+        }
+
+        update_user_personal_information_mock.return_value = personal_profile_output
+
+        db = MagicMock()
+        response = await users_routes.update_user_personal_information(user_id, user_updated_personal_profile, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        update_user_personal_information_mock.assert_called_once()
+        self.assertEqual(response_body, personal_profile_output)
+
+    @patch("app.services.users.UsersService.update_user_sports_information")
+    async def test_update_user_sports_profile(self, update_user_sports_information_mock):
+        user_id = fake.uuid4()
+        user_updated_sports_profile = generate_random_user_sports_profile(fake)
+
+        sports_profile_output = {
+            "favourite_sport_id": str(fake.uuid4()),
+            "training_objective": fake.enum(TrainingObjective).value,
+            "weight": fake.random_int(min=1, max=100),
+            "height": fake.random_int(min=1, max=100),
+            "available_training_hours_per_week": fake.random_int(min=1, max=100),
+            "training_frequency": fake.enum(TrainingFrequency).value,
+        }
+
+        update_user_sports_information_mock.return_value = sports_profile_output
+
+        db = MagicMock()
+        response = await users_routes.update_user_sports_information(user_id, user_updated_sports_profile, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        update_user_sports_information_mock.assert_called_once()
+        self.assertEqual(response_body, sports_profile_output)
+
+    @patch("app.services.users.UsersService.update_user_nutritional_information")
+    async def test_update_user_nutritional_profile(self, update_user_nutritional_information_mock):
+        user_id = fake.uuid4()
+        user_updated_nutritional_profile = generate_random_user_nutritional_profile(fake)
+
+        nutritional_profile_output = [
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+            {
+                "limitation_id": str(fake.uuid4()),
+                "name": fake.word(),
+                "description": fake.sentence(),
+            },
+        ]
+
+        update_user_nutritional_information_mock.return_value = nutritional_profile_output
+
+        db = MagicMock()
+        response = await users_routes.update_user_nutritional_information(user_id, user_updated_nutritional_profile, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        update_user_nutritional_information_mock.assert_called_once()
+        self.assertEqual(response_body, nutritional_profile_output)
