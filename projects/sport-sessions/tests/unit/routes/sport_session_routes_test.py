@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 
 from sqlalchemy.orm import Session
 
-from app.routes.sport_sessions import start_sport_session, add_locations_to_sport_session, finish_sport_session, get_sport_session
+from app.routes.sport_sessions import start_sport_session, add_locations_to_sport_session, finish_sport_session, get_sport_session, get_all_sport_sessions
 
 from app.models.schemas.schema import SportSessionStart
 
@@ -64,3 +64,14 @@ class TestSportRoutes:
         response = await get_sport_session(sport_session_id=uuid.uuid4(), user_id=uuid.uuid4(), db=mocked_db_session)
         assert "error" in json.loads(response.body)
         assert response.status_code == 403
+
+    @patch("app.services.sport_sessions.SportSessionService.get_sport_sessions")
+    async def test_get_sport_sessions(self, mocked_get_sport_sessions):
+        mocked_db_session = MagicMock(spec=Session)
+        data = [{"id": "1", "user_id": "1234", "locations": []}, {"id": "2", "user_id": "1234", "locations": []}]
+        mocked_get_sport_sessions.return_value = data
+        response = await get_all_sport_sessions(user_id=uuid.uuid4(), db=mocked_db_session)
+        json_response = json.loads(response.body)
+
+        assert response.status_code == 200
+        assert len(json_response) == 2

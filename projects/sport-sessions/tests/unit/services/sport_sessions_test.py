@@ -1,7 +1,7 @@
 import uuid
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from sqlalchemy.orm import Session
 
 from app.exceptions.exceptions import NotFoundError, NotActiveError
@@ -240,3 +240,31 @@ class TestSportSessionService:
         # When
         with pytest.raises(NotFoundError):
             sport_service.get_sport_session(sport_session_id)
+
+    def test_get_sport_sessions_should_return_sport_sessions(self, mocked_db_session: Session) -> None:
+        # Given
+        user_id = uuid.uuid4()
+        mocked_db_session.add(SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at="2022-01-01T00:00:00", is_active=True))
+
+        sport_service = SportSessionService(mocked_db_session)
+
+        # When
+        sport_sessions = sport_service.get_sport_sessions(user_id)
+
+        # Then
+        assert len(sport_sessions) == 2
+
+    def test_get_sport_sessions_should_only_return_users_sessions(self) -> None:
+        # Given
+        user_id = uuid.uuid4()
+        db_mock = MagicMock(spec=Session)
+        sport_service = SportSessionService(db_mock)
+
+        db_mock.query.filter.first.return_value = []
+
+        # When
+        sport_sessions = sport_service.get_sport_sessions(user_id)
+
+        # Then
+        assert len(sport_sessions) == 0

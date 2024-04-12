@@ -142,3 +142,24 @@ class SportSessionService:
             "max_heartrate": float(sport_session.max_heartrate) if sport_session.max_heartrate else None,
             "avg_heartrate": float(sport_session.avg_heartrate) if sport_session.avg_heartrate else None,
         }
+
+    def get_sport_sessions(self, user_id):
+        sport_sessions = self.db.query(SportSession).filter(SportSession.user_id == user_id).all()
+
+        return [
+            {
+                "session_id": str(sport_session.session_id),
+                "sport_id": str(sport_session.sport_id),
+                "user_id": str(sport_session.user_id),
+                "started_at": str(sport_session.started_at),
+                "duration": int(sport_session.duration) if sport_session.duration else None,
+                "steps": int(sport_session.steps) if sport_session.steps else None,
+                "distance": float(sport_session.distance) if sport_session.distance else None,
+                "calories": float(sport_session.calories) if sport_session.calories else None,
+                "average_speed": float(sport_session.average_speed) if sport_session.average_speed else None,
+                "min_heartrate": float(sport_session.min_heartrate) if sport_session.min_heartrate else None,
+                "max_heartrate": float(sport_session.max_heartrate) if sport_session.max_heartrate else None,
+                "avg_heartrate": float(sport_session.avg_heartrate) if sport_session.avg_heartrate else None,
+            }
+            for sport_session in sport_sessions
+        ]

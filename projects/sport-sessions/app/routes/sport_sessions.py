@@ -26,6 +26,12 @@ async def start_sport_session(sport_session: SportSessionStart, user_id: Annotat
     return JSONResponse(content=sport_session, status_code=200)
 
 
+@router.get("/")
+async def get_all_sport_sessions(user_id: Annotated[UUID4 | None, Header()] = None, db: Session = Depends(get_db)):
+    sport_sessions = SportSessionService(db).get_sport_sessions(user_id)
+    return JSONResponse(content=sport_sessions, status_code=200)
+
+
 @router.put("/{sport_session_id}/location")
 async def add_locations_to_sport_session(
     sport_session_id: UUID4,
