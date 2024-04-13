@@ -53,7 +53,7 @@ def run_migrations_offline() -> None:
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        version_table="alembic_version_users",
+        version_table="alembic_version_sports",
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
@@ -82,7 +82,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table="alembic_version_users",
+            version_table="alembic_version_sports",
         )
 
         with context.begin_transaction():
