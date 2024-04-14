@@ -99,7 +99,7 @@ class UsersService:
 
         scopes = utils.get_user_scopes(user.subscription_type)
 
-        return self.jwt_manager.generate_tokens({"user_id": str(user.user_id), "scopes": scopes})
+        return self.jwt_manager.generate_tokens(str(user.user_id), scopes)
 
     def _process_refresh_token_login(self, refresh_token):
         try:
@@ -125,23 +125,6 @@ class UsersService:
         self.db.commit()
         return DataClassMapper.to_user_personal_profile(user)
 
-    def update_user_sports_information(self, user_id, sports_profile):
-        user = self.get_user_by_id(user_id)
-        for field in sports_profile.dict(exclude={"favourite_sport_id", "training_limitations"}, exclude_defaults=True).keys():
-            setattr(user, field, getattr(sports_profile, field))
-
-        if sports_profile.favourite_sport_id:
-            sport = self.external_services.get_sport(sports_profile.favourite_sport_id, self.user_token)
-            user.favourite_sport_id = sport["sport_id"]
-
-        user.training_limitations = []
-        for training_limitation_to_create in sports_profile.training_limitations:
-            training_limitation = TrainingLimitation(name=training_limitation_to_create.name, description=training_limitation_to_create.description)
-            user.training_limitations.append(training_limitation)
-
-        self.db.commit()
-        return DataClassMapper.to_user_sports_profile(user)
-
     def update_user_nutritional_information(self, user_id, nutritional_profile):
         user = self.get_user_by_id(user_id)
         if nutritional_profile.food_preference:
@@ -157,3 +140,36 @@ class UsersService:
 
         self.db.commit()
         return DataClassMapper.to_user_nutritional_profile(user)
+
+    def update_user_sports_information(self, user_id, sports_profile):
+        user = self.get_user_by_id(user_id)
+        for field in sports_profile.dict(exclude={"favourite_sport_id", "training_limitations"}, exclude_defaults=True).keys():
+            setattr(user, field, getattr(sports_profile, field))
+
+        if sports_profile.favourite_sport_id:
+            sport = self.external_services.get_sport(sports_profile.favourite_sport_id, self.user_token)
+            user.favourite_sport_id = sport["sport_id"]
+
+        user.training_limitations = self._process_training_limitations(sports_profile.training_limitations)
+        self.db.commit()
+        return DataClassMapper.to_user_sports_profile(user)
+
+    def _process_training_limitations(self, training_limitations_to_update: list[TrainingLimitation]):
+        training_limitations = []
+        for training_limitation in training_limitations_to_update:
+            if training_limitation.limitation_id:
+                limitation_id = training_limitation.limitation_id
+                limitation = self.db.query(TrainingLimitation).filter(TrainingLimitation.limitation_id == limitation_id).first()
+                if limitation:
+                    limitation.name = training_limitation.name
+                    limitation.description = training_limitation.description
+                    training_limitations.append(limitation)
+                else:
+                    raise NotFoundError(f"Training limitation with id {limitation_id} not found")
+            else:
+                training_limitations.append(self._create_training_limitation(training_limitation))
+
+        return training_limitations
+
+    def _create_training_limitation(self, training_limitation):
+        return TrainingLimitation(name=training_limitation.name, description=training_limitation.description)

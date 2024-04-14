@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import pytest
@@ -17,7 +18,7 @@ class TestSportSessionService:
         sport_session_start = SportSessionStart(
             sport_id=uuid.uuid4(),
             user_id=uuid.uuid4(),
-            started_at="2022-01-01T00:00:00",
+            started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
             initial_location={"latitude": 10.0, "longitude": 20.0, "accuracy": 10.0, "altitude": 10.0, "altitude_accuracy": 10.0, "heading": 10.0, "speed": 10.0},
         )
 
@@ -32,7 +33,15 @@ class TestSportSessionService:
     def test_add_location_to_sport_session_should_create_location(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -64,7 +73,15 @@ class TestSportSessionService:
     def test_add_location_to_sport_session_should_raise_not_active_error(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=False))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=False,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
         location = SportSessionLocationCreate(latitude=10.0, longitude=20.0, accuracy=10.0, altitude=10.0, altitude_accuracy=10.0, heading=10.0, speed=10.0)
@@ -76,7 +93,15 @@ class TestSportSessionService:
     def test_finish_sport_session_should_return_metrics(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -126,7 +151,15 @@ class TestSportSessionService:
     def test_finish_sport_session_should_raise_not_active_error(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=False))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=False,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
         sport_session_finish = SportSessionFinish(
@@ -148,7 +181,15 @@ class TestSportSessionService:
     def test_finish_sport_session_should_calculate_distance(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -173,7 +214,15 @@ class TestSportSessionService:
     def test_finish_sport_session_should_calculate_calories(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -198,7 +247,15 @@ class TestSportSessionService:
     def test_finish_sport_session_should_calculate_speed(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -222,7 +279,15 @@ class TestSportSessionService:
     def test_get_sport_session_should_return_sport_session(self, mocked_db_session: Session) -> None:
         # Given
         sport_session_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=sport_session_id, sport_id=uuid.uuid4(), user_id=uuid.uuid4(), started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(
+                session_id=sport_session_id,
+                sport_id=uuid.uuid4(),
+                user_id=uuid.uuid4(),
+                started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"),
+                is_active=True,
+            ),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
@@ -244,8 +309,12 @@ class TestSportSessionService:
     def test_get_sport_sessions_should_return_sport_sessions(self, mocked_db_session: Session) -> None:
         # Given
         user_id = uuid.uuid4()
-        mocked_db_session.add(SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at="2022-01-01T00:00:00", is_active=True))
-        mocked_db_session.add(SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at="2022-01-01T00:00:00", is_active=True))
+        mocked_db_session.add(
+            SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"), is_active=True),
+        )
+        mocked_db_session.add(
+            SportSession(session_id=uuid.uuid4(), sport_id=uuid.uuid4(), user_id=user_id, started_at=datetime.datetime.fromisoformat("2022-01-01T00:00:00+00:00"), is_active=True),
+        )
 
         sport_service = SportSessionService(mocked_db_session)
 
