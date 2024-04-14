@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
 from app.models.users import UserIdentificationType, Gender
@@ -71,5 +72,6 @@ class UserCredentials(BaseModel):
 
 
 class CreateTrainingLimitation(BaseModel):
+    limitation_id: Optional[UUID] = None
     name: str
     description: str

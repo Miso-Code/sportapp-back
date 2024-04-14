@@ -39,10 +39,11 @@ class TestJWTManager(unittest.TestCase):
 
     @patch("jose.jwt.encode")
     def test_generate_token(self, mock_encode):
-        payload = {"username": fake.word()}
+        user_id = fake.uuid4()
+        scopes = [fake.word() for _ in range(3)]
         mock_encode.side_effect = fake_encode_function
 
-        response = self.jwt_manager.generate_tokens(payload=payload)
+        response = self.jwt_manager.generate_tokens(user_id=user_id, scopes=scopes)
         self.assertIn("access_token", response)
         self.assertIn("access_token_expires_minutes", response)
         self.assertIn("refresh_token", response)
@@ -51,13 +52,15 @@ class TestJWTManager(unittest.TestCase):
         self.assertEqual(response["access_token_expires_minutes"], self._access_token_expiry)
         self.assertEqual(response["refresh_token_expires_minutes"], self._refresh_token_expiry)
 
-        self.assertIn(json.loads(response["access_token"])["payload"]["username"], payload["username"])
+        self.assertIn(json.loads(response["access_token"])["payload"]["user_id"], user_id)
 
     @patch("jose.jwt.encode")
     @patch("jose.jwt.decode")
     def test_refresh_token(self, mock_decode, mock_encode):
         expiry = datetime.now(timezone.utc) + timedelta(minutes=10)
-        fake_decoded_token = {"username": fake.word(), "expiry": expiry.timestamp()}
+        user_id = fake.uuid4()
+        scopes = [fake.word() for _ in range(3)]
+        fake_decoded_token = {"user_id": user_id, "expiry": expiry.timestamp(), "scopes": scopes}
         fake_token = json.dumps(fake_decoded_token)
         mock_encode.side_effect = fake_encode_function
         mock_decode.side_effect = fake_decode_function

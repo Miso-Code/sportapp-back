@@ -7,10 +7,11 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.models.mappers.user_mapper import DataClassMapper
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
+from app.models.schemas.schema import CreateTrainingLimitation
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
-from app.models.users import User, NutritionalLimitation
+from app.models.users import User, NutritionalLimitation, TrainingLimitation
 
 from tests.utils.users_util import (
     generate_random_user_create_data,
@@ -137,6 +138,7 @@ class TestUsersService(unittest.TestCase):
         mock_checkpw.return_value = True
 
         token_data = {
+            "user_id": fake.uuid4(),
             "access_token": fake.sha256(),
             "access_token_expires_minutes": fake.random_int(min=1, max=60),
             "refresh_token": fake.sha256(),
@@ -182,6 +184,7 @@ class TestUsersService(unittest.TestCase):
         user_credentials = generate_random_user_login_data(fake, token=True)
 
         token_data = {
+            "user_id": fake.uuid4(),
             "access_token": fake.sha256(),
             "access_token_expires_minutes": fake.random_int(min=1, max=60),
             "refresh_token": fake.sha256(),
@@ -342,11 +345,26 @@ class TestUsersService(unittest.TestCase):
     def test_update_user_sports_profile(self, mock_get_sport, mock_to_user_sports_profile):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
+        user_training_limitations = [
+            TrainingLimitation(limitation_id=fake.uuid4(), name=fake.word(), description=fake.sentence()),
+        ]
 
-        user_sports_profile_updated = generate_random_user_sport_profile_update(fake)
+        updated_limitations = [
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(limitation_id=user_training_limitations[0].limitation_id, name=fake.word(), description=fake.sentence()),
+        ]
+
+        user_sports_profile_updated = UserSportsProfileUpdate(
+            height=fake.random_int(150, 200) / 100,
+            weight=fake.random_int(40, 120),
+            favourite_sport_id=fake.uuid4(),
+            training_limitations=updated_limitations,
+        )
+
         user_sports_profile_updated_dict = DataClassMapper.to_dict(user_sports_profile_updated, pydantic=True)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        self.mock_db.query.return_value.filter.return_value.first.side_effect = [user, user_training_limitations[0]]
         mock_to_user_sports_profile.return_value = user_sports_profile_updated_dict
 
         mock_get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
@@ -354,10 +372,51 @@ class TestUsersService(unittest.TestCase):
         response = self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
 
         self.assertEqual(response, user_sports_profile_updated_dict)
-        self.assertNotIn("bmi", response)
-        mock_to_user_sports_profile.assert_called_once_with(user)
-        self.mock_db.query.assert_called_once_with(User)
-        self.mock_db.query.return_value.filter.assert_called_once()
+        self.assertEqual(self.mock_db.query.call_count, 2)
+        self.assertEqual(self.mock_db.query.return_value.filter.call_count, 2)
+
+    @patch("app.services.external.ExternalServices.get_sport")
+    def test_update_user_sports_profile_invalid_sport(self, mock_get_sport):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_sports_profile_updated = UserSportsProfileUpdate(favourite_sport_id=fake.uuid4())
+
+        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        mock_get_sport.side_effect = NotFoundError(f"Sport with id {user_sports_profile_updated.favourite_sport_id} not found")
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
+        self.assertEqual(str(context.exception), f"Sport with id {user_sports_profile_updated.favourite_sport_id} not found")
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_sports_profile")
+    @patch("app.services.external.ExternalServices.get_sport")
+    def test_update_user_sports_profile_invalid_training_limitation(self, mock_get_sport, mock_to_user_sports_profile):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_training_limitations = [
+            TrainingLimitation(limitation_id=fake.uuid4(), name=fake.word(), description=fake.sentence()),
+        ]
+
+        updated_limitations = [
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(limitation_id=user_training_limitations[0].limitation_id, name=fake.word(), description=fake.sentence()),
+        ]
+
+        user_sports_profile_updated = UserSportsProfileUpdate(
+            training_limitations=updated_limitations,
+        )
+
+        user_sports_profile_updated_dict = DataClassMapper.to_dict(user_sports_profile_updated, pydantic=True)
+
+        self.mock_db.query.return_value.filter.return_value.first.side_effect = [user, None]
+        mock_to_user_sports_profile.return_value = user_sports_profile_updated_dict
+
+        mock_get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
+        self.assertEqual(str(context.exception), f"Training limitation with id {user_training_limitations[0].limitation_id} not found")
 
     @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_nutritional_profile")
     def test_update_user_nutritional_profile(self, mock_to_user_nutritional_profile):

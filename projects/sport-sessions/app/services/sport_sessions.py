@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import UUID4
 from sqlalchemy.orm import Session
 
@@ -23,7 +25,7 @@ class SportSessionService:
             "session_id": str(sport_session.session_id),
             "sport_id": str(sport_session.sport_id),
             "user_id": str(sport_session.user_id),
-            "started_at": str(sport_session.started_at),
+            "started_at": sport_session.started_at.replace(tzinfo=datetime.UTC).isoformat(),
             "duration": int(sport_session.duration) if sport_session.duration else None,
             "steps": int(sport_session.steps) if sport_session.steps else None,
             "distance": float(sport_session.distance) if sport_session.distance else None,
@@ -132,7 +134,7 @@ class SportSessionService:
             "session_id": str(sport_session.session_id),
             "sport_id": str(sport_session.sport_id),
             "user_id": str(sport_session.user_id),
-            "started_at": str(sport_session.started_at),
+            "started_at": sport_session.started_at.replace(tzinfo=datetime.UTC).isoformat(),
             "duration": int(sport_session.duration),
             "steps": int(sport_session.steps) if sport_session.steps else None,
             "distance": float(sport_session.distance) if sport_session.distance else None,
@@ -151,7 +153,7 @@ class SportSessionService:
                 "session_id": str(sport_session.session_id),
                 "sport_id": str(sport_session.sport_id),
                 "user_id": str(sport_session.user_id),
-                "started_at": str(sport_session.started_at),
+                "started_at": sport_session.started_at.replace(tzinfo=datetime.UTC).isoformat(),
                 "duration": int(sport_session.duration) if sport_session.duration else None,
                 "steps": int(sport_session.steps) if sport_session.steps else None,
                 "distance": float(sport_session.distance) if sport_session.distance else None,

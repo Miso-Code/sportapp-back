@@ -32,7 +32,7 @@ class UserSportsProfile(BaseModel):
 
 
 class UserSportsProfileGet(UserSportsProfile):
-    training_limitations: Optional[list[str]] = []
+    training_limitations: Optional[list[dict]] = []
 
 
 class UserSportsProfileUpdate(UserSportsProfile):

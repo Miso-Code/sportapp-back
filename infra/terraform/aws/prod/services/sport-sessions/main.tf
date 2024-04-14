@@ -29,7 +29,7 @@ module "sport-sessions-tg" {
 module "sport-sessions-listener-rule" {
   source                = "../../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  rule_path_pattern     = "/sport-sessions/*"
+  rule_path_pattern     = "/sport-session/*"
   rule_priority         = 3
   rule_target_group_arn = module.sport-sessions-tg.tg_arn
 }
@@ -85,7 +85,16 @@ module "sport-sessions-register-route-start" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "POST"
-  route_path       = "/sport-sessions"
+  route_path       = "/sport-session"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "sport-sessions-get-all-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/sport-session"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
@@ -94,7 +103,7 @@ module "sport-sessions-register-route-add-location" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "PUT"
-  route_path       = "/sport-sessions/{sport-session-id}/location"
+  route_path       = "/sport-session/{sport-session-id}/location"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
@@ -103,7 +112,7 @@ module "sport-sessions-register-route-finish" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "PATCH"
-  route_path       = "/sport-sessions/{sport-session-id}/location"
+  route_path       = "/sport-session/{sport-session-id}"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
@@ -112,7 +121,7 @@ module "sport-sessions-register-route-get-by-id" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
-  route_path       = "/sport-sessions/{sport-session-id}"
+  route_path       = "/sport-session/{sport-session-id}"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }

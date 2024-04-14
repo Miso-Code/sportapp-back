@@ -57,7 +57,7 @@ class DataClassMapper:
             height=user.height,
             available_training_hours=user.available_training_hours,
             training_frequency=user.training_frequency,
-            training_limitations=[str(limitation.limitation_id) for limitation in user.training_limitations],
+            training_limitations=[DataClassMapper.to_dict(limitation) for limitation in user.training_limitations],
         )
 
         user_sports_profile_dict = DataClassMapper.to_dict(user_sports_profile, pydantic=True)

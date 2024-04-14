@@ -14,8 +14,10 @@ class JWTManager:
         self._access_token_expiry = access_token_expiry_minutes
         self._refresh_token_expiry = refresh_token_expiry_minutes
 
-    def generate_tokens(self, payload: Dict) -> Dict[str, str]:
+    def generate_tokens(self, user_id, scopes) -> Dict[str, str]:
+        payload = {"user_id": user_id, "scopes": scopes}
         return {
+            "user_id": user_id,
             "access_token": self._create_token(payload, self._access_token_expiry),
             "access_token_expires_minutes": self._access_token_expiry,
             "refresh_token": self._create_token(payload, self._refresh_token_expiry),
@@ -33,7 +35,7 @@ class JWTManager:
         if datetime.now(timezone.utc).timestamp() > payload["expiry"]:
             raise InvalidCredentialsError(INVALID_EXPIRED_MESSAGE)
 
-        return self.generate_tokens(payload)
+        return self.generate_tokens(payload["user_id"], payload["scopes"])
 
     def _create_token(self, payload: Dict, expires_in_minutes: int) -> str:
         expiration_time = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
