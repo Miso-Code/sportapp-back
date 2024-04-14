@@ -3,6 +3,9 @@ name: Build and push images to Registries (AWS ECR and GCP Artifact Registry)
 on:
   push:
     branches: [ "develop", "main" ]
+    paths:
+      - 'projects/**'
+      - '.github/workflows/build-and-push-images.yml'
 
 env:
   GCP_PROJECT_ID: "sportapp-417820"

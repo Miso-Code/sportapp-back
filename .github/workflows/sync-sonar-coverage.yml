@@ -1,8 +1,12 @@
 name: Sync SonarCloud Coverage information
 
 on:
+  workflow_dispatch: { }
   push:
     branches: [ "develop", "main" ]
+    paths:
+      - 'projects/**'
+      - '.github/workflows/sync-sonar-coverage.yml'
 
 jobs:
 
@@ -22,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "users" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users" ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
