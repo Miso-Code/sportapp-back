@@ -31,12 +31,12 @@ jobs:
             # echo "{name}={value}" >> $GITHUB_OUTPUT
             echo "strategy=$BUMP_STRATEGY" >> $GITHUB_OUTPUT
           else
-            if [[ "${{ github.event.head_commit.message }}" == *"[MAJOR]"* ]]; then
-              echo "strategy=major" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.head_commit.message }}" == *"[PATCH]"* ]]; then
+              echo "strategy=patch" >> $GITHUB_OUTPUT
             elif [[ "${{ github.event.head_commit.message }}" == *"[MINOR]"* ]]; then
               echo "strategy=minor" >> $GITHUB_OUTPUT
             else
-              echo "strategy=patch" >> $GITHUB_OUTPUT
+              echo "strategy=major" >> $GITHUB_OUTPUT
             fi
           fi
 
