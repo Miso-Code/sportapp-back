@@ -21,9 +21,12 @@ def lambda_handler(event, context):
         secret = _get_secret(os.environ.get("SECRET_NAME", "test"))
         token = event.get("headers", {}).get("authorization", "").split(" ")[-1]
         payload = _get_token_payload(token, secret)
-        scopes = list(payload.get("scopes", ""))
-        response["isAuthorized"] = bool(os.environ.get("AUTH_SCOPE", "") in scopes)
-        response["context"] = {"user_id": payload.get("user_id", "")}
+        is_authorized = False
+        if "scopes" in payload:
+            scopes = payload["scopes"]
+            is_authorized = bool(os.environ.get("AUTH_SCOPE", "") in scopes)
+            response["context"] = {"user_id": payload.get("user_id", "")}
+        response["isAuthorized"] = is_authorized
 
         return response
     except BaseException as e:

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from faker import Faker
 
-from app.utils.utils import async_sleep, calculate_bmi
+from app.utils.utils import async_sleep, calculate_bmi, get_user_scopes
 
 fake = Faker()
 
@@ -57,3 +57,23 @@ class TestCalculateBmi(unittest.TestCase):
         weight = fake.random_int(40, 120)
         bmi = calculate_bmi(weight, height)
         self.assertEqual(bmi, 0)
+
+
+class TestGetUserScopes(unittest.TestCase):
+    def test_get_user_scopes_free(self):
+        subscription_type = "free"
+        expected_scopes = ["free"]
+        actual_scopes = get_user_scopes(subscription_type)
+        self.assertListEqual(expected_scopes, actual_scopes)
+
+    def test_get_user_scopes_intermediate(self):
+        subscription_type = "intermediate"
+        expected_scopes = ["free", "intermediate"]
+        actual_scopes = get_user_scopes(subscription_type)
+        self.assertListEqual(expected_scopes, actual_scopes)
+
+    def test_get_user_scopes_premium(self):
+        subscription_type = "premium"
+        expected_scopes = ["free", "intermediate", "premium"]
+        actual_scopes = get_user_scopes(subscription_type)
+        self.assertListEqual(expected_scopes, actual_scopes)

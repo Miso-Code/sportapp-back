@@ -5,9 +5,10 @@ terraform {
     organization = "MisoTeam"
 
     workspaces {
-      name = "aws-resources"
+      name = "aws-services-dev-sports"
     }
   }
+
 
   required_providers {
     aws = {

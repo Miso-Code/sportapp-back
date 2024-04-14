@@ -75,7 +75,7 @@ async def test_register_user(test_db):
     async with TestClient(app) as client:
         user_data = generate_random_user_create_data(fake)
 
-        response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
+        response = await client.post(f"{Constants.USERS_BASE_PATH}/registration", json=user_data.__dict__)
         assert response.status_code == HTTPStatus.OK
         assert Constants.TEXT_EVENT_STREAM in response.headers["content-type"]
 
@@ -98,7 +98,7 @@ async def test_register_user_repeated_user(test_db):
         user_data = generate_random_user_create_data(fake)
         processing_response = {"status": "processing", "message": Constants.PROCESSING_MESSAGE}
 
-        first_create_user_response = await client.post(f"{Constants.USERS_BASE_PATH}", json=user_data.__dict__)
+        first_create_user_response = await client.post(f"{Constants.USERS_BASE_PATH}/registration", json=user_data.__dict__)
         sse_responses = first_create_user_response.text.split("\r\n\r\n")
         created_response = json.loads(sse_responses[1][6:])
 
@@ -108,7 +108,7 @@ async def test_register_user_repeated_user(test_db):
         assert created_response["status"] == Constants.USER_CREATED_STATUS
         assert created_response["message"] == Constants.USER_CREATED_MESSAGE
 
-        second_create_user_response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
+        second_create_user_response = await client.post(f"{Constants.USERS_BASE_PATH}/registration", json=user_data.__dict__)
         sse_responses = second_create_user_response.text.split("\r\n\r\n")
         user_exists_response = {"status": "error", "message": "User already exists"}
 
@@ -124,7 +124,7 @@ async def test_register_user_with_invalid_password(test_db):
         user_data = generate_random_user_create_data(fake)
         user_data.password = "not_strong"
 
-        response = await client.post(Constants.USERS_BASE_PATH, json=user_data.__dict__)
+        response = await client.post(f"{Constants.USERS_BASE_PATH}/registration", json=user_data.__dict__)
         response_json = response.json()
 
         assert response.status_code == 400

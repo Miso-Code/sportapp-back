@@ -47,13 +47,13 @@ def test_handler_should_work_with_no_header(mock_boto3_client):
 
 
 @patch("lambda_function.client")
-def test_handler_should_work_with_invalid_scope(mock_boto3_client):
+def test_handler_should_not_work_with_invalid_scope(mock_boto3_client):
     event = _generate_event()
     event["headers"]["authorization"] = "Bearer " + jwt.encode({"scope": "invalid", "user_id": str(uuid.uuid4())}, "secretToken", algorithm="HS256")
     context = {}
     response = lambda_function.lambda_handler(event, context)
     assert response["isAuthorized"] == False
-    assert "user_id" in response["context"]
+    assert "user_id" not in response["context"]
 
 
 @patch("lambda_function.client")

@@ -21,7 +21,7 @@ router = APIRouter(
 )
 
 
-@router.post("")
+@router.post("/registration")
 async def register_user(user: UserCreate):
     UserCache.users.append(user)
 
@@ -91,8 +91,13 @@ async def update_user_personal_information(personal_profile: UserPersonalProfile
 
 
 @router.patch("/profiles/sports")
-async def update_user_sports_information(sports_profile: UserSportsProfileUpdate, user_id: Annotated[uuid.UUID, Header()], db: Session = Depends(get_db)):
-    user_sports_information = UsersService(db).update_user_sports_information(user_id, sports_profile)
+async def update_user_sports_information(
+    sports_profile: UserSportsProfileUpdate,
+    user_id: Annotated[uuid.UUID, Header()],
+    authorization: Annotated[str, Header()] = None,
+    db: Session = Depends(get_db),
+):
+    user_sports_information = UsersService(db, authorization).update_user_sports_information(user_id, sports_profile)
     return JSONResponse(content=user_sports_information, status_code=200)
 
 

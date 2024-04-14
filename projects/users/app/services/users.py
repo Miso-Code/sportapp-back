@@ -28,7 +28,8 @@ def _verify_password(password, hashed_password):
 
 
 class UsersService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_token: str = None):
+        self.user_token = user_token
         self.db = db
         self.jwt_manager = JWTManager(Config.JWT_SECRET_KEY, Config.JWT_ALGORITHM, Config.ACCESS_TOKEN_EXPIRE_MINUTES, Config.REFRESH_TOKEN_EXPIRE_MINUTES)
         self.external_services = ExternalServices()
@@ -96,7 +97,9 @@ class UsersService:
         if not _verify_password(password, user.hashed_password):
             raise InvalidCredentialsError("Invalid email or password")
 
-        return self.jwt_manager.generate_tokens({"user_id": str(user.user_id)})
+        scopes = utils.get_user_scopes(user.subscription_type)
+
+        return self.jwt_manager.generate_tokens({"user_id": str(user.user_id), "scopes": scopes})
 
     def _process_refresh_token_login(self, refresh_token):
         try:
@@ -128,7 +131,7 @@ class UsersService:
             setattr(user, field, getattr(sports_profile, field))
 
         if sports_profile.favourite_sport_id:
-            sport = self.external_services.get_sport(sports_profile.favourite_sport_id)
+            sport = self.external_services.get_sport(sports_profile.favourite_sport_id, self.user_token)
             user.favourite_sport_id = sport["sport_id"]
 
         user.training_limitations = []

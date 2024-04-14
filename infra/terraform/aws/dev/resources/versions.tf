@@ -5,7 +5,7 @@ terraform {
     organization = "MisoTeam"
 
     workspaces {
-      name = "aws-resources"
+      name = "aws-resources-dev"
     }
   }
 

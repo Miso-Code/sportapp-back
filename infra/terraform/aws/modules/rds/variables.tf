@@ -23,3 +23,9 @@ variable "subnet_ids" {
   description = "The subnet IDs of the database"
   type        = list(string)
 }
+
+variable "environment" {
+  description = "The environment of the database"
+  type        = string
+  default     = ""
+}
