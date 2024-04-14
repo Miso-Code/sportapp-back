@@ -15,7 +15,7 @@ data "aws_iam_policy" "basic_lambda_execution" {
 }
 
 resource "aws_iam_role" "lambda_get_secrets_role" {
-  name               = "lambda-authorizer-role"
+  name               = "lambda-authorizer-role${var.environment}"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 resource "aws_iam_role_policy" "secretmanager_policy" {
-  name = "lambda-secretmanager-policy"
+  name = "lambda-secretmanager-policy${var.environment}"
   role = aws_iam_role.lambda_get_secrets_role.id
 
   policy = <<EOF

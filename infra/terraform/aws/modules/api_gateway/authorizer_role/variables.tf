@@ -3,3 +3,9 @@ variable "lambda_get_secrets_role_name" {
   type        = string
   default     = "lambda-get-secrets-role"
 }
+
+variable "environment" {
+  description = "The environment in which the resources are being created"
+  type        = string
+  default     = ""
+}

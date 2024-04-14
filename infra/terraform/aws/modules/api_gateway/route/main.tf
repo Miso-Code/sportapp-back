@@ -1,12 +1,15 @@
 resource "aws_apigatewayv2_integration" "integration" {
   api_id           = var.api_id
   integration_type = "HTTP_PROXY"
+  connection_type  = "VPC_LINK"
+  connection_id    = var.vpc_link_id
 
-  integration_method = var.route_integration_method
-  integration_uri    = var.route_integration_uri
+  integration_method = var.route_method
+  integration_uri    = var.elb_listener_arn
 
   request_parameters = {
     "append:header.user-id" = "$context.authorizer.user_id"
+    "overwrite:path"        = "$request.path"
   }
 }
 

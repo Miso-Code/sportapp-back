@@ -1,10 +1,5 @@
-variable "name" {
-  description = "The name of the task definition"
-  type        = string
-}
-
-variable "container_definition_file" {
-  description = "Path to the container definitions file"
+variable "service_name" {
+  description = "The name of the service"
   type        = string
 }
 
@@ -26,4 +21,30 @@ variable "cpu" {
 variable "memory" {
   description = "The amount (in MiB) of memory used by the task"
   type        = number
+}
+
+variable "container_port" {
+  description = "The port number on the container that is bound to the user-specified or automatically assigned host port"
+  type        = number
+}
+
+variable "container_image" {
+  description = "Container image"
+  type        = string
+}
+
+variable "environment_variables" {
+  description = "Environment variables for the container"
+  type        = list(object({
+    name  = string
+    value = string
+  }))
+}
+
+variable "secrets" {
+  description = "Secrets for the container"
+  type        = list(object({
+    valueFrom = string
+    name      = string
+  }))
 }

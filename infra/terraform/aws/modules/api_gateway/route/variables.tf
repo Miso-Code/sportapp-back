@@ -13,12 +13,12 @@ variable "route_method" {
   type        = string
 }
 
-variable "route_integration_method" {
-  description = "Route integration method"
+variable "vpc_link_id" {
+  description = "VPC Link ID"
   type        = string
 }
 
-variable "route_integration_uri" {
-  description = "Route integration URI"
+variable "elb_listener_arn" {
+  description = "ELB Listener ARN"
   type        = string
 }
