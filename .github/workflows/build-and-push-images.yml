@@ -1,0 +1,84 @@
+name: Build and push images to Registries (AWS ECR and GCP Artifact Registry)
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+    paths:
+      - 'projects/**'
+      - '.github/workflows/build-and-push-images.yml'
+
+env:
+  GCP_PROJECT_ID: "sportapp-417820"
+  GCP_PROJECT_REGION: "us-central1"
+  WORKLOAD_IDENTITY_PROVIDER: "projects/480619174578/locations/global/workloadIdentityPools/gh-actions-pool/providers/my-repo"
+
+jobs:
+  resolve-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - id: tag
+        run: |
+          echo "tag=${{ github.ref_name == 'main' && 'latest' || 'develop' }}" >> $GITHUB_OUTPUT
+
+  build-and-push-aws:
+    needs: resolve-tag
+    strategy:
+      matrix:
+        service: [ "authorizer", "sports", "sport-sessions", "users" ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ matrix.service }}
+          IMAGE_TAG: ${{ needs.resolve-tag.outputs.image_tag }}
+        run: |
+          cd projects/$REPOSITORY
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+
+  build-and-push-gcp:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    needs: resolve-tag
+    strategy:
+      matrix:
+        service: [ "sports", "sport-sessions", "users" ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Build, tag, and push docker image to Google Artifact Registry
+        env:
+          REPOSITORY: ${{ matrix.service }}
+          IMAGE_TAG: ${{ needs.resolve-tag.outputs.image_tag }}
+        run: |
+          cd projects/$REPOSITORY
+          docker build -t $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$REPOSITORY:$IMAGE_TAG .
+          docker push $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$REPOSITORY:$IMAGE_TAG

@@ -1,0 +1,97 @@
+version: v3
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  alerts-service:
+    profiles: [ "dev" ]
+    build:
+      dockerfile: Dockerfile
+      context: alerts/
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+    ports:
+      - "3000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nutritional-plan-service:
+    build:
+      dockerfile: Dockerfile
+      context: nutritional_plan/
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - NOTIFICATION_SQS_QUEUE=nutritional_plan_queue.fifo
+    ports:
+      - "3001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  adverse-incidents-service:
+    profiles: [ "dev" ]
+    build:
+      dockerfile: Dockerfile
+      context: adverse_incidents/
+    environment:
+      - SPORT_SESSION_URL=http://sport-session-service:8000/sport-session
+      - ADVERSE_INCIDENTS_PROVIDER_URL=http://adverse-incidents-provider:8000/incidents
+      - ADVERSE_INCIDENTS_PROVIDER_REFRESH_INTERVAL_SECONDS=5
+      - ADVERSE_INCIDENTS_PROVIDER_API_KEY=1234
+      - AWS_REGION=us-east-1
+      - NOTIFICATION_SQS_QUEUE=adverse_incidents_queue.fifo
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "3002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      adverse-incidents-provider:
+        condition: service_started
+
+  sport-session-service:
+    build:
+      dockerfile: Dockerfile
+      context: sport_session/
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+    ports:
+      - "3003:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  adverse-incidents-provider:
+    build:
+      dockerfile: Dockerfile
+      context: adverse_incidents_provider/
+    environment:
+      - API_KEY=1234
+      - ADVERSE_INCIDENTS_AFFECTED_RANGE=0.5
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "4000:8000"

@@ -1,6 +1,0 @@
-fastapi
-pydantic
-pydantic_core
-uvicorn
-botocore
-boto3

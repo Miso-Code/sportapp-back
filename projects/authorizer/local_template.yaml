@@ -1,0 +1,78 @@
+# This is the template for the authorizer function only for development purposes
+# Although this is a valid CloudFormation template, it is not meant to be deployed, we use terraform for that
+# This template is intended to be used with aws-sam-cli to test the authorizer function locally
+# This creates 2 functions, one for the standard scope and one for the scoped scope to test the authorizer with different scopes
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyLambdaRequestAuthorizer
+        Authorizers:
+          MyLambdaRequestAuthorizer:
+            FunctionArn: !GetAtt MyAuthFunction.Arn
+            Identity:
+              Headers:
+                - Authorization
+            AuthorizerPayloadFormatVersion: "2.0"
+            EnableSimpleResponses: true
+          MyLambdaRequestAuthorizerScoped:
+            FunctionArn: !GetAtt MyAuthFunctionScoped.Arn
+            Identity:
+              Headers:
+                - Authorization
+            AuthorizerPayloadFormatVersion: "2.0"
+            EnableSimpleResponses: true
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: example.handler
+      Runtime: python3.12
+      Events:
+        GetRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyApi
+            Path: /
+            Method: get
+
+  MyFunctionScoped:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: example.handler
+      Runtime: python3.12
+      Events:
+        GetRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MyApi
+            Path: /scoped
+            Method: get
+            Auth:
+              Authorizer: MyLambdaRequestAuthorizerScoped
+
+  MyAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          AUTH_SCOPE: "standard"
+
+  MyAuthFunctionScoped:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          AUTH_SCOPE: "scoped"

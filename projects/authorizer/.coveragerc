@@ -1,0 +1,12 @@
+[run]
+branch = True
+omit =
+    **/__init__.py
+    **/*test.py
+    **/local_*
+
+[html]
+directory = coverage_html_report
+
+[xml]
+output = coverage.xml

@@ -1,0 +1,59 @@
+version: "3"
+
+networks:
+  all:
+    driver: bridge
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    command: postgres -c max_connections=70 # 70 conexiones es el el máximo en el tamaño mínimo de AWS RDS
+    #    command: postgres -c max_connections=560 # Maquina 8 veces más grande para Experimento 1 (sync)
+    ports:
+      - "5432:5432"
+    networks:
+      - all
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mock:
+    build:
+      context: mock-go
+      dockerfile: Dockerfile
+    networks:
+      - all
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+    deploy:
+      #      replicas: 15 # Experimento 1 (sync)
+      #      replicas: 2 # Experimento 2 (async) processing polling
+      replicas: 5 # Experimento 2 (async) processing sse
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1024M
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - db
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: nginx.Dockerfile
+    restart: on-failure
+    ports:
+      - "3000:80"
+    networks:
+      - all
+    depends_on:
+      - mock
