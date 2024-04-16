@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 data "aws_iam_role" "ecs_role" {
   name = "ecsTaskExecutionRole"
 }
