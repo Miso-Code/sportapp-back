@@ -9,7 +9,7 @@ resource "aws_db_subnet_group" "subnet_group" {
 
 resource "aws_db_instance" "db" {
   db_name              = "${var.database_name}${var.environment}"
-  identifier           = var.database_name
+  identifier           = "${var.database_name}${var.environment}"
   allocated_storage    = 10
   engine               = "postgres"
   instance_class       = var.instance_class
