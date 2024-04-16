@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import users_routes
-from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError
+from app.routes import users_routes, business_partners_routes
+from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError
 from app.config.db import engine, base, session_local
 from app.tasks.sync_db import sync_users
 from app.utils.utils import async_sleep
@@ -18,6 +18,7 @@ base.metadata.reflect(bind=engine)
 base.metadata.create_all(bind=engine)
 
 app.include_router(users_routes.router)
+app.include_router(business_partners_routes.router)
 
 
 @app.on_event("startup")
@@ -36,6 +37,11 @@ async def not_found_error_handler(request, exc):
 
 @app.exception_handler(InvalidValueError)
 async def value_error_handler(request, exc):
+    return JSONResponse(status_code=400, content={"message": str(exc)})
+
+
+@app.exception_handler(EntityExistsError)
+async def entity_exists_error_handler(request, exc):
     return JSONResponse(status_code=400, content={"message": str(exc)})
 
 

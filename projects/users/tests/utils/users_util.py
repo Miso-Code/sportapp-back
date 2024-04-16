@@ -1,8 +1,9 @@
 from uuid import UUID
 
+from app.models.business_partners import BusinessPartner
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
 from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency, NutritionalLimitation
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation, BusinessPartnerCreate
 
 
 def generate_random_users_create_data(faker, count):
@@ -122,4 +123,21 @@ def generate_random_user_nutritional_limitation(faker):
         limitation_id=UUID(faker.uuid4()),
         name=faker.word(),
         description=faker.sentence(),
+    )
+
+
+def generate_random_business_partner_create_data(faker):
+    return BusinessPartnerCreate(
+        business_partner_name=faker.company(),
+        email=faker.email(),
+        password=faker.password(),
+    )
+
+
+def generate_random_business_partner(faker):
+    return BusinessPartner(
+        business_partner_id=faker.uuid4(),
+        business_partner_name=faker.company(),
+        email=faker.email(),
+        hashed_password=faker.password(),
     )
