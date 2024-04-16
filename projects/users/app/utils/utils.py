@@ -15,10 +15,16 @@ def calculate_bmi(weight, height):
 
 
 def get_user_scopes(subscription_type):
-    scopes = ["free"]
-    if subscription_type == "intermediate":
+    scopes = []
+    if subscription_type == "free":
+        scopes.append("free")
+    elif subscription_type == "intermediate":
+        scopes.append("free")
         scopes.append("intermediate")
     elif subscription_type == "premium":
+        scopes.append("free")
         scopes.append("intermediate")
         scopes.append("premium")
+    elif subscription_type == "business_partner":
+        scopes.append("business_partner")
     return scopes

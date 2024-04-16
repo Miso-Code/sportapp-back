@@ -3,6 +3,8 @@ from typing import Dict
 
 from jose import jwt, JWTError
 from app.exceptions.exceptions import InvalidCredentialsError
+from app.security.passwords import PasswordManager
+from app.utils import utils
 
 INVALID_EXPIRED_MESSAGE = "Invalid or expired refresh token"
 
@@ -13,6 +15,19 @@ class JWTManager:
         self._algorithm = algorithm
         self._access_token_expiry = access_token_expiry_minutes
         self._refresh_token_expiry = refresh_token_expiry_minutes
+
+    def process_refresh_token_login(self, refresh_token):
+        try:
+            return self.refresh_token(refresh_token)
+        except JWTError:
+            raise InvalidCredentialsError("Invalid or expired refresh token")
+
+    def process_email_password_login(self, user_id, input_password, user_password, user_subscription_type):
+        if not PasswordManager.verify_password(input_password, user_password):
+            raise InvalidCredentialsError("Invalid email or password")
+
+        scopes = utils.get_user_scopes(user_subscription_type)
+        return self.generate_tokens(str(user_id), scopes)
 
     def generate_tokens(self, user_id, scopes) -> Dict[str, str]:
         payload = {"user_id": user_id, "scopes": scopes}
