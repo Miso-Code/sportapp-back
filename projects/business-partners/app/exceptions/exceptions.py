@@ -12,3 +12,7 @@ class InvalidValueError(Exception):
 
 class InvalidCredentialsError(Exception):
     pass
+
+
+class AWSException(Exception):
+    pass

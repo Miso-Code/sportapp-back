@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.routes import business_partners_routes
-from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError
+from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError, AWSException
 from app.config.db import engine, base
 
 app = FastAPI()
@@ -12,6 +12,11 @@ base.metadata.reflect(bind=engine)
 base.metadata.create_all(bind=engine)
 
 app.include_router(business_partners_routes.router)
+
+
+@app.exception_handler(AWSException)
+async def aws_exception_handler(request, exc):
+    return JSONResponse(status_code=500, content={"message": str(exc)})
 
 
 @app.exception_handler(NotFoundError)
