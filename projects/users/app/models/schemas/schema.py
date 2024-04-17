@@ -75,9 +75,3 @@ class CreateTrainingLimitation(BaseModel):
     limitation_id: Optional[UUID] = None
     name: str
     description: str
-
-
-class BusinessPartnerCreate(BaseModel):
-    business_partner_name: str
-    email: str
-    password: str

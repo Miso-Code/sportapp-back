@@ -8,10 +8,8 @@ from sqlalchemy.orm import Session
 from app.services.business_partners import BusinessPartnersService
 from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError
 
-from tests.utils.users_util import (
-    generate_random_user_create_data,
+from tests.utils.business_partners_util import (
     generate_random_user_login_data,
-    generate_random_user,
     generate_random_business_partner_create_data,
 )
 
@@ -53,14 +51,14 @@ class TestBusinessPartnersService(unittest.TestCase):
         self.assertIn("business_partner_id", response)
 
     def test_create_business_partner_already_exists(self):
-        business_partner_data = generate_random_user_create_data(fake)
+        business_partner_data = generate_random_business_partner_create_data(fake)
 
         mock_query = MagicMock()
         mock_filter = MagicMock()
 
         self.mock_db.query.return_value = mock_query
         mock_query.filter.return_value = mock_filter
-        mock_filter.first.return_value = generate_random_user(fake)
+        mock_filter.first.return_value = business_partner_data
 
         with self.assertRaises(EntityExistsError) as context:
             self.business_partners_service.create_business_partner(business_partner_data)

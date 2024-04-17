@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.config.settings import Config
-from app.models.business_partners import BusinessPartner, BUSINESS_PARTNER_SCOPE
-from app.models.schemas.schema import UserCredentials, BusinessPartnerCreate
+from app.models.business_partners import BusinessPartner
+from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate
 from app.security.jwt import JWTManager
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError
@@ -29,7 +29,7 @@ class BusinessPartnersService:
         self.db.commit()
         return DataClassMapper.to_dict(business_partner)
 
-    def authenticate_business_partner(self, business_partner_credentials: UserCredentials):
+    def authenticate_business_partner(self, business_partner_credentials: BusinessPartnerCredentials):
         if business_partner_credentials.refresh_token:
             return self.jwt_manager.process_refresh_token_login(business_partner_credentials.refresh_token)
         else:
@@ -44,5 +44,4 @@ class BusinessPartnersService:
             business_partner.business_partner_id,
             business_partner_credentials_password,
             business_partner.hashed_password,
-            BUSINESS_PARTNER_SCOPE,
         )

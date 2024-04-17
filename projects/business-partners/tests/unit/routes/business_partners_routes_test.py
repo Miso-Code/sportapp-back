@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 from faker import Faker
 
-from app.models.schemas.schema import UserCredentials, BusinessPartnerCreate
+from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate
 from app.routes import business_partners_routes
 
 fake = Faker()
@@ -35,7 +35,7 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.services.business_partners.BusinessPartnersService.authenticate_business_partner")
     async def test_login_business_partner(self, mock_authenticate_business_partner):
-        business_partner_credentials = UserCredentials(email=fake.email(), password=fake.password())
+        business_partner_credentials = BusinessPartnerCredentials(email=fake.email(), password=fake.password())
         db_mock = MagicMock()
 
         token_data = {

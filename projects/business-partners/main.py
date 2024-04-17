@@ -1,32 +1,17 @@
-import asyncio
-
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import users_routes
+from app.routes import business_partners_routes
 from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError
-from app.config.db import engine, base, session_local
-from app.tasks.sync_db import sync_users
-from app.utils.utils import async_sleep
+from app.config.db import engine, base
 
-load_dotenv()
 app = FastAPI()
 
 base.metadata.reflect(bind=engine)
 base.metadata.create_all(bind=engine)
 
-app.include_router(users_routes.router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    try:
-        asyncio.create_task(sync_users(db=session_local(), sleep=async_sleep))
-    except Exception as e:
-        print(f"Error creating task: {e}")
-        raise e
+app.include_router(business_partners_routes.router)
 
 
 @app.exception_handler(NotFoundError)
@@ -66,4 +51,4 @@ async def invalid_credentials_error_handler(request, exc):
 
 @app.get("/ping")
 async def root():
-    return {"message": "Users Service"}
+    return {"message": "Business Partners Service"}

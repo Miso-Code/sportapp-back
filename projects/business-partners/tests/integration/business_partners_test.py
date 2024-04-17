@@ -9,7 +9,7 @@ from http import HTTPStatus
 from app.config.settings import Config
 from main import app
 from app.config.db import base, get_db
-from tests.utils.users_util import generate_random_business_partner_create_data
+from tests.utils.business_partners_util import generate_random_business_partner_create_data
 
 
 class Constants:
