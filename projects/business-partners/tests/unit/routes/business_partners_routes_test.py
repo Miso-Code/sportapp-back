@@ -7,6 +7,7 @@ from faker import Faker
 
 from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate
 from app.routes import business_partners_routes
+from tests.utils.business_partners_util import generate_random_business_partner_product_create_data
 
 fake = Faker()
 
@@ -53,3 +54,59 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         mock_authenticate_business_partner.assert_called_once_with(business_partner_credentials)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_body, token_data)
+
+    @patch("app.services.business_partners.BusinessPartnersService.create_business_partner_product")
+    async def test_create_business_partner_product(self, mock_create_business_partner_product):
+        business_partner_product_create = generate_random_business_partner_product_create_data(fake)
+        business_partner_product_create_dict = {
+            "product_id": fake.uuid4(),
+            "category": business_partner_product_create.category.value,
+            "name": business_partner_product_create.name,
+            "url": business_partner_product_create.url,
+            "price": business_partner_product_create.price,
+            "payment_type": business_partner_product_create.payment_type.value,
+            "payment_frequency": business_partner_product_create.payment_frequency.value,
+            "image_url": business_partner_product_create.image_url,
+            "description": business_partner_product_create.description,
+        }
+        db_mock = MagicMock()
+
+        mock_create_business_partner_product.return_value = business_partner_product_create_dict
+
+        response = await business_partners_routes.create_business_partner_product(business_partner_product_create, db_mock)
+
+        response_json = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response_json, business_partner_product_create_dict)
+
+    @patch("app.services.business_partners.BusinessPartnersService.get_business_partner_products")
+    async def test_get_all_business_partner_products(self, mock_get_business_partner_products):
+        db_mock = MagicMock()
+        user_id = fake.uuid4()
+        limit = fake.random_int(min=1, max=20)
+        offset = fake.random_int(min=0, max=10)
+
+        business_partner_products = [
+            {
+                "product_id": fake.uuid4(),
+                "category": fake.random_element(["product", "service"]),
+                "name": fake.company(),
+                "url": fake.url(),
+                "price": fake.random_int(min=1, max=1000),
+                "payment_type": fake.random_element(["one_time", "subscription"]),
+                "payment_frequency": fake.random_element(["monthly", "yearly"]),
+                "image_url": fake.url(),
+                "description": fake.text(),
+            }
+            for _ in range(limit)
+        ]
+
+        mock_get_business_partner_products.return_value = business_partner_products
+
+        response = await business_partners_routes.get_all_business_partner_products(user_id, db_mock, offset, limit)
+        response_json = json.loads(response.body)
+
+        mock_get_business_partner_products.assert_called_once_with(user_id, offset, limit)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, business_partner_products)

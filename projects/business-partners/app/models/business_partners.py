@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey
+from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, Mapped
 
 from app.config.db import base
@@ -35,15 +35,6 @@ class PaymentFrequency(enum.Enum):
     OTHER = "other"
 
 
-# @dataclass
-# class BusinessPartnerProduct(base):
-#     __tablename__ = "business_partner_products"
-#     business_partner_product_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
-#     business_partner_id: UUID = Column("business_partner_id", ForeignKey('business_partners.business_partner_id'),
-#                                        nullable=False)
-#     product_id: UUID = Column("product_id", ForeignKey('products.product_id'), nullable=False)
-
-
 @dataclass
 class BusinessPartner(base):
     __tablename__ = "business_partners"
@@ -67,3 +58,4 @@ class BusinessPartnerProduct(base):
     payment_frequency: PaymentFrequency = Column(Enum(PaymentFrequency), nullable=True)
     image_url: str = Column(String, nullable=True)
     description: str = Column(String, nullable=False)
+    active: bool = Column(Boolean, nullable=False, default=True)
