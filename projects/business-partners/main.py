@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -6,6 +7,7 @@ from app.routes import business_partners_routes
 from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError, AWSException
 from app.config.db import engine, base
 
+load_dotenv()
 app = FastAPI()
 
 base.metadata.reflect(bind=engine)

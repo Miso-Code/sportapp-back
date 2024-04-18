@@ -1,10 +1,9 @@
 import enum
 from dataclasses import dataclass
-from typing import List
 from uuid import uuid4, UUID
 
 from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm import relationship
 
 from app.config.db import base
 
