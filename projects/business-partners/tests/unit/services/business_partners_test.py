@@ -5,14 +5,16 @@ from unittest.mock import MagicMock, patch
 from faker import Faker
 from sqlalchemy.orm import Session
 
+from app.models.mappers.user_mapper import DataClassMapper
 from app.services.business_partners import BusinessPartnersService
 from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError
 
-from tests.utils.users_util import (
-    generate_random_user_create_data,
+from tests.utils.business_partners_util import (
     generate_random_user_login_data,
-    generate_random_user,
     generate_random_business_partner_create_data,
+    generate_random_business_partner,
+    generate_random_business_partner_product_create_data,
+    generate_random_business_partner_product,
 )
 
 fake = Faker()
@@ -21,9 +23,11 @@ fake = Faker()
 class TestBusinessPartnersService(unittest.TestCase):
     def setUp(self):
         self.mock_jwt = MagicMock()
+        self.mock_aws_service = MagicMock()
         self.mock_db = MagicMock(spec=Session)
         self.business_partners_service = BusinessPartnersService(db=self.mock_db)
         self.business_partners_service.jwt_manager = self.mock_jwt
+        self.business_partners_service.aws_service = self.mock_aws_service
 
     @patch("app.security.passwords.PasswordManager.get_password_hash")
     @patch("app.models.mappers.user_mapper.DataClassMapper.to_dict")
@@ -53,14 +57,14 @@ class TestBusinessPartnersService(unittest.TestCase):
         self.assertIn("business_partner_id", response)
 
     def test_create_business_partner_already_exists(self):
-        business_partner_data = generate_random_user_create_data(fake)
+        business_partner_data = generate_random_business_partner_create_data(fake)
 
         mock_query = MagicMock()
         mock_filter = MagicMock()
 
         self.mock_db.query.return_value = mock_query
         mock_query.filter.return_value = mock_filter
-        mock_filter.first.return_value = generate_random_user(fake)
+        mock_filter.first.return_value = business_partner_data
 
         with self.assertRaises(EntityExistsError) as context:
             self.business_partners_service.create_business_partner(business_partner_data)
@@ -144,3 +148,116 @@ class TestBusinessPartnersService(unittest.TestCase):
         with self.assertRaises(InvalidCredentialsError) as context:
             self.business_partners_service.authenticate_business_partner(user_credentials)
         self.assertEqual(str(context.exception), "Invalid or expired refresh token")
+
+    def test_create_business_partner_product(self):
+        business_partner = generate_random_business_partner(fake)
+
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = business_partner
+
+        product_data = generate_random_business_partner_product_create_data(fake)
+
+        response = self.business_partners_service.create_business_partner_product(product_data, business_partner.business_partner_id)
+
+        self.assertEqual(response["category"], product_data.category.value)
+        self.assertEqual(response["name"], product_data.name)
+        self.assertEqual(response["url"], product_data.url)
+        self.assertEqual(response["price"], product_data.price)
+        self.assertEqual(response["payment_type"], product_data.payment_type.value)
+        self.assertEqual(response["payment_frequency"], product_data.payment_frequency.value)
+        self.assertEqual(response["image_url"], product_data.image_url)
+        self.assertEqual(response["description"], product_data.description)
+
+    @patch("tempfile.NamedTemporaryFile")
+    def test_create_business_partner_product_base64_image(self, named_tempfile_mock):
+        business_partner = generate_random_business_partner(fake)
+
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = business_partner
+
+        fake_s3_url = f"https://{fake.word()}.s3.{fake.word()}.amazonaws.com/{fake.word()}"
+        self.mock_aws_service.s3.upload_file.return_value = fake_s3_url
+        tmp_file_mock = MagicMock()
+        tmp_file_mock.write.return_value = None
+        named_tempfile_mock.side_effect = tmp_file_mock
+
+        product_data = generate_random_business_partner_product_create_data(fake)
+        product_data.image_base64 = f"data:image/png;base64,{fake.sha256()}"
+
+        response = self.business_partners_service.create_business_partner_product(product_data, business_partner.business_partner_id)
+
+        self.assertEqual(response["category"], product_data.category.value)
+        self.assertEqual(response["name"], product_data.name)
+        self.assertEqual(response["url"], product_data.url)
+        self.assertEqual(response["price"], product_data.price)
+        self.assertEqual(response["payment_type"], product_data.payment_type.value)
+        self.assertEqual(response["payment_frequency"], product_data.payment_frequency.value)
+        self.assertEqual(response["image_url"], fake_s3_url)
+        self.assertEqual(response["description"], product_data.description)
+
+    def test_create_business_partner_product_business_partner_not_found(self):
+        business_partner_id = fake.uuid4()
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = None
+
+        product_data = generate_random_business_partner_product_create_data(fake)
+
+        with self.assertRaises(Exception) as context:
+            self.business_partners_service.create_business_partner_product(product_data, business_partner_id)
+        self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
+
+    def test_get_business_partner_products(self):
+        business_partner_id = fake.uuid4()
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_limit = MagicMock()
+        mock_offset = MagicMock()
+
+        business_partner = generate_random_business_partner(fake)
+        products = [generate_random_business_partner_product(fake) for _ in range(3)]
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = business_partner
+        mock_filter.limit.return_value = mock_limit
+        mock_limit.offset.return_value = mock_offset
+        mock_offset.all.return_value = products
+
+        response = self.business_partners_service.get_business_partner_products(business_partner_id, 0, 3)
+
+        self.assertEqual(len(response), 3)
+        for product in response:
+            self.assertIn("product_id", product)
+            self.assertIn("category", product)
+            self.assertIn("name", product)
+            self.assertIn("url", product)
+            self.assertIn("price", product)
+            self.assertIn("payment_type", product)
+            self.assertIn("payment_frequency", product)
+            self.assertIn("image_url", product)
+            self.assertIn("description", product)
+
+    def test_get_business_partner_products_business_partner_not_found(self):
+        business_partner_id = fake.uuid4()
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.first.return_value = None
+
+        with self.assertRaises(Exception) as context:
+            self.business_partners_service.get_business_partner_products(business_partner_id, 0, 3)
+        self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")

@@ -1,0 +1,13 @@
+[run]
+branch = True
+omit =
+    **/__init__.py
+    app/config/settings.py
+source =
+    app
+
+[html]
+directory = coverage_html_report
+
+[xml]
+output = coverage.xml

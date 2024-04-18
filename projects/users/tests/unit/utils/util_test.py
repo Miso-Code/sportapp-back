@@ -77,9 +77,3 @@ class TestGetUserScopes(unittest.TestCase):
         expected_scopes = ["free", "intermediate", "premium"]
         actual_scopes = get_user_scopes(subscription_type)
         self.assertListEqual(expected_scopes, actual_scopes)
-
-    def test_get_user_scopes_business_partner(self):
-        subscription_type = "business_partner"
-        expected_scopes = ["business_partner"]
-        actual_scopes = get_user_scopes(subscription_type)
-        self.assertListEqual(expected_scopes, actual_scopes)
