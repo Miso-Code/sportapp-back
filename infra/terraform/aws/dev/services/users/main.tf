@@ -207,21 +207,3 @@ module "users-get-all-nutritional-limitations-route" {
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
-
-module "business-partners-registration-route" {
-  source           = "../../../modules/api_gateway/route"
-  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method     = "POST"
-  route_path       = "/business-partners/registration"
-  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
-}
-
-module "business-partners-login-route" {
-  source           = "../../../modules/api_gateway/route"
-  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method     = "POST"
-  route_path       = "/business-partners/login"
-  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
-}
