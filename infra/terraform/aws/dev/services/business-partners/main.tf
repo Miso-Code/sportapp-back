@@ -38,7 +38,7 @@ module "business-partners-listener-rule" {
   source                = "../../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
   rule_path_pattern     = "/business-partners/*"
-  rule_priority         = 1
+  rule_priority         = 4
   rule_target_group_arn = module.business-partners-tg.tg_arn
 }
 
