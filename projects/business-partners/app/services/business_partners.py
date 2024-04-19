@@ -2,7 +2,6 @@ import base64
 import time
 from tempfile import NamedTemporaryFile
 
-from fastapi import Query
 from sqlalchemy.orm import Session
 
 from app.aws.aws_service import AWSClient
@@ -113,15 +112,74 @@ class BusinessPartnersService:
             )
         return image_url
 
-    def get_business_partner_products(self, user_id, offset, limit):
-        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == user_id).first()
+    def update_business_partner_product(self, product_id, business_partner_id, update_product):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
         if not business_partner:
-            raise NotFoundError(f"Business partner with id {user_id} not found")
+            raise NotFoundError(f"Business partner with id {business_partner_id} not found")
+
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
+            .first()
+        )
+
+        if not product:
+            raise NotFoundError(f"Product with id {product_id} not found")
+
+        for field in update_product.dict(exclude={"image_base64"}, exclude_defaults=True).keys():
+            setattr(product, field, getattr(update_product, field))
+
+        if update_product.image_base64:
+            product.image_url = self._upload_product_image(
+                update_product.image_base64,
+                product.name,
+                business_partner_id,
+            )
+
+        self.db.commit()
+        return DataClassMapper.to_dict(product)
+
+    def delete_business_partner_product(self, product_id, business_partner_id):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
+        if not business_partner:
+            raise NotFoundError(f"Business partner with id {business_partner_id} not found")
+
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
+            .first()
+        )
+
+        if not product:
+            raise NotFoundError(f"Product with id {product_id} not found")
+
+        self.db.delete(product)
+        self.db.commit()
+
+        return {"message": "Product deleted"}
+
+    def get_business_partner_products(self, business_partner_id, offset, limit):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
+        if not business_partner:
+            raise NotFoundError(f"Business partner with id {business_partner_id} not found")
 
         products = (
             self.db.query(BusinessPartnerProduct)
             .filter(
-                BusinessPartnerProduct.business_partner_id == user_id,
+                BusinessPartnerProduct.business_partner_id == business_partner_id,
+            )
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
+
+        return [DataClassMapper.to_dict(product) for product in products]
+
+    def get_all_offered_products(self, offset, limit):
+        products = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(
+                BusinessPartnerProduct.active,
             )
             .limit(limit)
             .offset(offset)

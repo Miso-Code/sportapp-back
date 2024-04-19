@@ -34,6 +34,7 @@ class BusinessPartnerCreate(BaseModel):
 class CreateBusinessPartnerProduct(BaseModel):
     category: ProductCategory
     name: str
+    summary: str
     url: str
     price: float
     payment_type: PaymentType
@@ -41,6 +42,7 @@ class CreateBusinessPartnerProduct(BaseModel):
     image_url: Optional[str] = None
     image_base64: Optional[str] = None
     description: str
+    active: Optional[bool] = True
 
     @model_validator(mode="before")
     def validate_image_source(cls, values):

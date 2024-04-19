@@ -133,7 +133,7 @@ def test_login_business_partner_with_incorrect_password(test_db):
     assert response_json["message"] == "Invalid email or password"
 
 
-def test_create_business_partner_product(test_db, mocker):
+def test_create_business_partner_product(test_db):
     business_partner_create = generate_random_business_partner_create_data(fake)
     business_partner_create_dict = {
         "business_partner_name": business_partner_create.business_partner_name,
@@ -145,19 +145,12 @@ def test_create_business_partner_product(test_db, mocker):
 
     assert response.status_code == HTTPStatus.CREATED
 
-    login_business_partner_dict = {"email": business_partner_create.email, "password": business_partner_create.password}
-
-    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/login", json=login_business_partner_dict)
-
-    response_json = response.json()
-
-    user_id = response_json["user_id"]
+    business_partner_id = response.json()["business_partner_id"]
 
     product_data = {
-        "product_id": fake.uuid4(),
-        "business_partner_id": fake.uuid4(),
         "category": fake.enum(ProductCategory).value,
         "name": fake.word(),
+        "summary": fake.word(),
         "url": fake.url(),
         "price": fake.random_number(),
         "payment_type": fake.enum(PaymentType).value,
@@ -166,26 +159,33 @@ def test_create_business_partner_product(test_db, mocker):
         "description": fake.text(),
     }
 
-    boto_session = mocker.patch("boto3.Session")
-    boto_client = mocker.MagicMock()
-    boto_session.return_value = boto_client
-    boto_client.client.return_value.put_object.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
-
     response = client.post(
         f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
         json=product_data,
-        headers={"user-id": user_id},
+        headers={"user-id": business_partner_id},
     )
 
     assert response.status_code == HTTPStatus.CREATED
 
 
-def test_create_business_partner_business_partner_not_found(test_db):
+def test_create_business_partner_product_business_partner_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
     product_data = {
         "product_id": fake.uuid4(),
         "business_partner_id": fake.uuid4(),
         "category": fake.enum(ProductCategory).value,
         "name": fake.word(),
+        "summary": fake.word(),
         "url": fake.url(),
         "price": fake.random_number(),
         "payment_type": fake.enum(PaymentType).value,
@@ -220,20 +220,13 @@ def test_get_business_partner_products(test_db):
 
     assert response.status_code == HTTPStatus.CREATED
 
-    login_business_partner_dict = {"email": business_partner_create.email, "password": business_partner_create.password}
-
-    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/login", json=login_business_partner_dict)
-
-    response_json = response.json()
-
-    user_id = response_json["user_id"]
+    business_partner_id = response.json()["business_partner_id"]
 
     product_data = [
         {
-            "product_id": fake.uuid4(),
-            "business_partner_id": user_id,
             "category": fake.enum(ProductCategory).value,
             "name": fake.word(),
+            "summary": fake.word(),
             "url": fake.url(),
             "price": fake.random_number(),
             "payment_type": fake.enum(PaymentType).value,
@@ -248,20 +241,20 @@ def test_get_business_partner_products(test_db):
         response = client.post(
             f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
             json=product,
-            headers={"user-id": user_id},
+            headers={"user-id": business_partner_id},
         )
 
         assert response.status_code == HTTPStatus.CREATED
 
     response = client.get(
         f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
-        headers={"user-id": user_id},
+        headers={"user-id": business_partner_id},
     )
     response_json = response.json()
 
     assert response.status_code == HTTPStatus.OK
     assert len(response_json) == 3
-    for i, product in enumerate(product_data):
+    for i, product in enumerate(response_json):
         assert "product_id" in response_json[i]
         assert response_json[i]["business_partner_id"] == product["business_partner_id"]
         assert response_json[i]["category"] == product["category"]
@@ -272,3 +265,381 @@ def test_get_business_partner_products(test_db):
         assert response_json[i]["payment_frequency"] == product["payment_frequency"]
         assert response_json[i]["image_url"] == product["image_url"]
         assert response_json[i]["description"] == product["description"]
+
+
+def test_get_business_partner_products_business_partner_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = [
+        {
+            "category": fake.enum(ProductCategory).value,
+            "name": fake.word(),
+            "summary": fake.word(),
+            "url": fake.url(),
+            "price": fake.random_number(),
+            "payment_type": fake.enum(PaymentType).value,
+            "payment_frequency": fake.enum(PaymentFrequency).value,
+            "image_url": fake.url(),
+            "description": fake.text(),
+        }
+        for _ in range(3)
+    ]
+
+    for product in product_data:
+        response = client.post(
+            f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+            json=product,
+            headers={"user-id": business_partner_id},
+        )
+
+        assert response.status_code == HTTPStatus.CREATED
+
+    fake_business_partner = fake.uuid4()
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        headers={"user-id": fake_business_partner},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == f"Business partner with id {fake_business_partner} not found"
+
+
+def test_update_business_partner_product(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    updated_product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.patch(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        json=updated_product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+
+def test_update_business_partner_product_business_partner_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    updated_product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    business_partner_id_fake = fake.uuid4()
+
+    response = client.patch(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        json=updated_product_data,
+        headers={"user-id": business_partner_id_fake},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == f"Business partner with id {business_partner_id_fake} not found"
+
+
+def test_update_business_partner_product_product_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = fake.uuid4()
+
+    updated_product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.patch(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        json=updated_product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == f"Product with id {product_id} not found"
+
+
+def test_delete_business_partner_product(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    response = client.delete(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+
+
+def test_update_business_partner_product_business_partner_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    business_partner_id_fake = fake.uuid4()
+
+    response = client.delete(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        headers={"user-id": business_partner_id_fake},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == f"Business partner with id {business_partner_id_fake} not found"
+
+
+def test_update_business_partner_product_product_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = fake.uuid4()
+
+    response = client.delete(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}",
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == f"Product with id {product_id} not found"
