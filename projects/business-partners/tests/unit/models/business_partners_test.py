@@ -28,6 +28,7 @@ class TestBusinessPartner(unittest.TestCase):
             "business_partner_id": fake.uuid4(),
             "category": fake.enum(ProductCategory),
             "name": fake.word(),
+            "summary": fake.word(),
             "url": fake.url(),
             "price": fake.random_number(),
             "payment_type": fake.enum(PaymentType),
@@ -42,6 +43,7 @@ class TestBusinessPartner(unittest.TestCase):
         self.assertEqual(business_partner_product.business_partner_id, product_data["business_partner_id"])
         self.assertEqual(business_partner_product.category, product_data["category"])
         self.assertEqual(business_partner_product.name, product_data["name"])
+        self.assertEqual(business_partner_product.summary, product_data["summary"])
         self.assertEqual(business_partner_product.url, product_data["url"])
         self.assertEqual(business_partner_product.price, product_data["price"])
         self.assertEqual(business_partner_product.payment_type, product_data["payment_type"])

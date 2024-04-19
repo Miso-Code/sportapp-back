@@ -179,7 +179,7 @@ class BusinessPartnersService:
         products = (
             self.db.query(BusinessPartnerProduct)
             .filter(
-                BusinessPartnerProduct.active == True,
+                BusinessPartnerProduct.active,
             )
             .limit(limit)
             .offset(offset)

@@ -30,12 +30,14 @@ def generate_random_business_partner_product_create_data(faker):
     return CreateBusinessPartnerProduct(
         category=faker.enum(ProductCategory),
         name=faker.company(),
+        summary=faker.word(),
         url=faker.url(),
         price=faker.random_number(digits=2),
         payment_type=faker.enum(PaymentType),
         payment_frequency=faker.enum(PaymentFrequency),
         image_url=faker.url(),
         description=faker.text(),
+        active=True,
     )
 
 
@@ -44,10 +46,12 @@ def generate_random_business_partner_product(faker):
         product_id=faker.uuid4(),
         category=faker.enum(ProductCategory),
         name=faker.company(),
+        summary=faker.word(),
         url=faker.url(),
         price=faker.random_number(digits=2),
         payment_type=faker.enum(PaymentType),
         payment_frequency=faker.enum(PaymentFrequency),
         image_url=faker.url(),
         description=faker.text(),
+        active=True,
     )
