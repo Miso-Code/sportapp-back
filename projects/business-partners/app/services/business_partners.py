@@ -117,15 +117,16 @@ class BusinessPartnersService:
         if not business_partner:
             raise NotFoundError(f"Business partner with id {business_partner_id} not found")
 
-        product = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.product_id == product_id).first()
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
+            .first()
+        )
 
         if not product:
             raise NotFoundError(f"Product with id {product_id} not found")
 
-        if product.business_partner_id != business_partner_id:
-            raise NotFoundError(f"Product with id {product_id} not found for business partner with id {business_partner_id}")
-
-        for field in update_product.dict(exclude={"image_base64", "training_limitations"}, exclude_defaults=True).keys():
+        for field in update_product.dict(exclude={"image_base64"}, exclude_defaults=True).keys():
             setattr(product, field, getattr(update_product, field))
 
         if update_product.image_base64:
@@ -143,13 +144,14 @@ class BusinessPartnersService:
         if not business_partner:
             raise NotFoundError(f"Business partner with id {business_partner_id} not found")
 
-        product = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.product_id == product_id).first()
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
+            .first()
+        )
 
         if not product:
             raise NotFoundError(f"Product with id {product_id} not found")
-
-        if product.business_partner_id != business_partner_id:
-            raise NotFoundError(f"Product with id {product_id} not found for business partner with id {business_partner_id}")
 
         self.db.delete(product)
         self.db.commit()

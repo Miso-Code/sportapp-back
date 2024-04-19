@@ -2,7 +2,7 @@ import enum
 from dataclasses import dataclass
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean
+from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 
 from app.config.db import base
@@ -51,10 +51,11 @@ class BusinessPartnerProduct(base):
     business_partner_id: UUID = Column("business_partner_id", ForeignKey("business_partners.business_partner_id"), nullable=False)
     category: ProductCategory = Column(Enum(ProductCategory), nullable=False)
     name: str = Column(String, nullable=False)
+    summary: str = Column(String, nullable=False)
     url: str = Column(String, nullable=False)
     price: Float = Column(Float, nullable=False)
     payment_type: PaymentType = Column(Enum(PaymentType), nullable=False)
     payment_frequency: PaymentFrequency = Column(Enum(PaymentFrequency), nullable=True)
     image_url: str = Column(String, nullable=True)
-    description: str = Column(String, nullable=False)
+    description: str = Column(Text, nullable=False)
     active: bool = Column(Boolean, nullable=False, default=True)

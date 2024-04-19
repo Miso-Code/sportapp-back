@@ -41,12 +41,12 @@ async def update_business_partner_product(product_id: UUID, create_product: Crea
 
 
 @router.delete("/products/{product_id}")
-async def update_business_partner_product(product_id: UUID, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
-    update_product_response = BusinessPartnersService(db).delete_business_partner_product(
+async def delete_business_partner_product(product_id: UUID, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
+    delete_product_response = BusinessPartnersService(db).delete_business_partner_product(
         product_id,
         user_id,
     )
-    return JSONResponse(content=update_product_response, status_code=200)
+    return JSONResponse(content=delete_product_response, status_code=200)
 
 
 @router.get("/products")
@@ -66,5 +66,5 @@ async def get_all_offered_products(
     offset: int = Query(0, ge=0, le=1000),
     limit: int = Query(10, gt=0, le=100),
 ):
-    get_products_response = BusinessPartnersService(db).get_all_offered_products(offset, limit)
-    return JSONResponse(content=get_products_response, status_code=200)
+    get_offered_products_response = BusinessPartnersService(db).get_all_offered_products(offset, limit)
+    return JSONResponse(content=get_offered_products_response, status_code=200)

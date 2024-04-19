@@ -34,6 +34,7 @@ class BusinessPartnerCreate(BaseModel):
 class CreateBusinessPartnerProduct(BaseModel):
     category: ProductCategory
     name: str
+    summary: str
     url: str
     price: float
     payment_type: PaymentType
