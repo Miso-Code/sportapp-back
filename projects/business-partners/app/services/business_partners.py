@@ -2,6 +2,7 @@ import base64
 import time
 from tempfile import NamedTemporaryFile
 
+from sqlalchemy import and_, or_, cast, String
 from sqlalchemy.orm import Session
 
 from app.aws.aws_service import AWSClient
@@ -175,15 +176,27 @@ class BusinessPartnersService:
 
         return [DataClassMapper.to_dict(product) for product in products]
 
-    def get_all_offered_products(self, offset, limit):
-        products = (
-            self.db.query(BusinessPartnerProduct)
-            .filter(
-                BusinessPartnerProduct.active,
+    def get_all_offered_products(self, search, offset, limit):
+        if search:
+            products = (
+                self.db.query(BusinessPartnerProduct)
+                .filter(
+                    and_(
+                        BusinessPartnerProduct.active,
+                        or_(
+                            cast(BusinessPartnerProduct.category, String).ilike(f"%{search}%"),
+                            BusinessPartnerProduct.name.ilike(f"%{search}%"),
+                            BusinessPartnerProduct.summary.ilike(f"%{search}%"),
+                            BusinessPartnerProduct.description.ilike(f"%{search}%"),
+                        ),
+                    ),
+                )
+                .order_by(BusinessPartnerProduct.name.desc())
+                .limit(limit)
+                .offset(offset)
+                .all()
             )
-            .limit(limit)
-            .offset(offset)
-            .all()
-        )
+        else:
+            products = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.active).order_by(BusinessPartnerProduct.name.desc()).limit(limit).offset(offset).all()
 
         return [DataClassMapper.to_dict(product) for product in products]

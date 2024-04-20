@@ -63,8 +63,9 @@ async def get_all_business_partner_products(
 @router.get("/products/available")
 async def get_all_offered_products(
     db: Session = Depends(get_db),
+    search: Annotated[str | None, Query(max_length=50)] = None,
     offset: int = Query(0, ge=0, le=1000),
     limit: int = Query(10, gt=0, le=100),
 ):
-    get_offered_products_response = BusinessPartnersService(db).get_all_offered_products(offset, limit)
+    get_offered_products_response = BusinessPartnersService(db).get_all_offered_products(search, offset, limit)
     return JSONResponse(content=get_offered_products_response, status_code=200)
