@@ -116,7 +116,6 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
     @patch("app.services.business_partners.BusinessPartnersService.get_all_offered_products")
     async def test_get_offered_business_partners_products(self, offered_products_mock):
         db_mock = MagicMock()
-        user_id = fake.uuid4()
         limit = fake.random_int(min=1, max=20)
         offset = fake.random_int(min=0, max=10)
 
@@ -138,10 +137,10 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
         offered_products_mock.return_value = business_partner_products
 
-        response = await business_partners_routes.get_all_offered_products(db_mock, offset, limit)
+        response = await business_partners_routes.get_all_offered_products(db_mock, None, offset, limit)
         response_json = json.loads(response.body)
 
-        offered_products_mock.assert_called_once_with(offset, limit)
+        offered_products_mock.assert_called_once_with(None, offset, limit)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_json, business_partner_products)
 

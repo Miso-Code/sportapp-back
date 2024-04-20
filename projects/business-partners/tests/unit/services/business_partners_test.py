@@ -265,39 +265,6 @@ class TestBusinessPartnersService(unittest.TestCase):
             self.business_partners_service.get_business_partner_products(business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
-    def test_get_all_offered_business_partners_products(self):
-        business_partner_id = fake.uuid4()
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_limit = MagicMock()
-        mock_offset = MagicMock()
-
-        business_partner = generate_random_business_partner(fake)
-        products = [generate_random_business_partner_product(fake) for _ in range(3)]
-
-        self.mock_db.query.return_value = mock_query
-        mock_query.filter.return_value = mock_filter
-        mock_filter.first.return_value = business_partner
-        mock_filter.limit.return_value = mock_limit
-        mock_limit.offset.return_value = mock_offset
-        mock_offset.all.return_value = products[1:3]
-
-        response = self.business_partners_service.get_all_offered_products(0, 3)
-
-        self.assertEqual(len(response), 2)
-        for product in response:
-            self.assertIn("product_id", product)
-            self.assertIn("category", product)
-            self.assertIn("name", product)
-            self.assertIn("summary", product)
-            self.assertIn("url", product)
-            self.assertIn("price", product)
-            self.assertIn("payment_type", product)
-            self.assertIn("payment_frequency", product)
-            self.assertIn("image_url", product)
-            self.assertIn("description", product)
-            self.assertTrue(product["active"])
-
     def test_update_business_partner_product(self):
         business_partner = generate_random_business_partner(fake)
         existing_product = generate_random_business_partner_product(fake)
@@ -440,3 +407,74 @@ class TestBusinessPartnersService(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             self.business_partners_service.delete_business_partner_product(product_id, business_partner.business_partner_id)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
+
+    def test_get_all_offered_business_partners_products(self):
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_order_by = MagicMock()
+        mock_limit = MagicMock()
+        mock_offset = MagicMock()
+
+        business_partner = generate_random_business_partner(fake)
+        products = [generate_random_business_partner_product(fake) for _ in range(3)]
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.order_by.return_value = mock_order_by
+        mock_filter.first.return_value = business_partner
+        mock_order_by.limit.return_value = mock_limit
+        mock_limit.offset.return_value = mock_offset
+        mock_offset.all.return_value = products[1:3]
+
+        response = self.business_partners_service.get_all_offered_products(None, 0, 3)
+
+        self.assertEqual(len(response), 2)
+        for product in response:
+            self.assertIn("product_id", product)
+            self.assertIn("category", product)
+            self.assertIn("name", product)
+            self.assertIn("summary", product)
+            self.assertIn("url", product)
+            self.assertIn("price", product)
+            self.assertIn("payment_type", product)
+            self.assertIn("payment_frequency", product)
+            self.assertIn("image_url", product)
+            self.assertIn("description", product)
+            self.assertTrue(product["active"])
+
+    def test_get_all_offered_business_partners_products_with_filter(self):
+        mock_query = MagicMock()
+        mock_filter = MagicMock()
+        mock_order_by = MagicMock()
+        mock_limit = MagicMock()
+        mock_offset = MagicMock()
+
+        business_partner = generate_random_business_partner(fake)
+        products = [generate_random_business_partner_product(fake) for _ in range(3)]
+        products[1].category = "somesearchvalue"
+
+        self.mock_db.query.return_value = mock_query
+        mock_query.filter.return_value = mock_filter
+        mock_filter.order_by.return_value = mock_order_by
+        mock_filter.first.return_value = business_partner
+        mock_order_by.limit.return_value = mock_limit
+        mock_limit.offset.return_value = mock_offset
+        mock_offset.all.return_value = products[1:2]
+
+        query = "somesearchvalue"
+
+        response = self.business_partners_service.get_all_offered_products(query, 0, 3)
+
+        self.assertEqual(len(response), 1)
+        for product in response:
+            self.assertIn("product_id", product)
+            self.assertIn("category", product)
+            self.assertIn("name", product)
+            self.assertIn("summary", product)
+            self.assertIn("url", product)
+            self.assertIn("price", product)
+            self.assertIn("payment_type", product)
+            self.assertIn("payment_frequency", product)
+            self.assertIn("image_url", product)
+            self.assertIn("description", product)
+            self.assertTrue(product["active"])

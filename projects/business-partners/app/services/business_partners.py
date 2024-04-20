@@ -187,16 +187,15 @@ class BusinessPartnersService:
                             cast(BusinessPartnerProduct.category, String).ilike(f"%{search}%"),
                             BusinessPartnerProduct.name.ilike(f"%{search}%"),
                             BusinessPartnerProduct.summary.ilike(f"%{search}%"),
-                            BusinessPartnerProduct.description.ilike(f"%{search}%"),
                         ),
                     ),
                 )
-                .order_by(BusinessPartnerProduct.name.desc())
+                .order_by(BusinessPartnerProduct.name.asc())
                 .limit(limit)
                 .offset(offset)
                 .all()
             )
         else:
-            products = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.active).order_by(BusinessPartnerProduct.name.desc()).limit(limit).offset(offset).all()
+            products = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.active).order_by(BusinessPartnerProduct.name.asc()).limit(limit).offset(offset).all()
 
         return [DataClassMapper.to_dict(product) for product in products]
