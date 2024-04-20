@@ -547,7 +547,7 @@ def test_delete_business_partner_product(test_db):
     assert response.status_code == HTTPStatus.OK
 
 
-def test_update_business_partner_product_business_partner_not_found(test_db):
+def test_update_business_partner_product_partner_not_found(test_db):
     business_partner_create = generate_random_business_partner_create_data(fake)
     business_partner_create_dict = {
         "business_partner_name": business_partner_create.business_partner_name,
@@ -598,7 +598,7 @@ def test_update_business_partner_product_business_partner_not_found(test_db):
     assert response_json["message"] == f"Business partner with id {business_partner_id_fake} not found"
 
 
-def test_update_business_partner_product_product_not_found(test_db):
+def test_update_business_partner_product_not_found(test_db):
     business_partner_create = generate_random_business_partner_create_data(fake)
     business_partner_create_dict = {
         "business_partner_name": business_partner_create.business_partner_name,
@@ -643,3 +643,125 @@ def test_update_business_partner_product_product_not_found(test_db):
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response_json["message"] == f"Product with id {product_id} not found"
+
+
+def test_get_offered_business_partners_products(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = [
+        {
+            "category": fake.enum(ProductCategory).value,
+            "name": fake.word(),
+            "summary": fake.word(),
+            "url": fake.url(),
+            "price": fake.random_number(),
+            "payment_type": fake.enum(PaymentType).value,
+            "payment_frequency": fake.enum(PaymentFrequency).value,
+            "image_url": fake.url(),
+            "description": fake.text(),
+        }
+        for _ in range(3)
+    ]
+
+    product_data[0]["active"] = False
+
+    for product in product_data:
+        response = client.post(
+            f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+            json=product,
+            headers={"user-id": business_partner_id},
+        )
+
+        assert response.status_code == HTTPStatus.CREATED
+
+    response = client.get(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/available")
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert len(response_json) == 2
+    for i, product in enumerate(response_json):
+        assert "product_id" in response_json[i]
+        assert response_json[i]["business_partner_id"] == product["business_partner_id"]
+        assert response_json[i]["category"] == product["category"]
+        assert response_json[i]["name"] == product["name"]
+        assert response_json[i]["url"] == product["url"]
+        assert response_json[i]["price"] == product["price"]
+        assert response_json[i]["payment_type"] == product["payment_type"]
+        assert response_json[i]["payment_frequency"] == product["payment_frequency"]
+        assert response_json[i]["image_url"] == product["image_url"]
+        assert response_json[i]["description"] == product["description"]
+        assert response_json[i]["active"] == product["active"]
+
+
+def test_get_offered_business_partners_products_with_search(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = [
+        {
+            "category": fake.enum(ProductCategory).value,
+            "name": fake.word(),
+            "summary": fake.word(),
+            "url": fake.url(),
+            "price": fake.random_number(),
+            "payment_type": fake.enum(PaymentType).value,
+            "payment_frequency": fake.enum(PaymentFrequency).value,
+            "image_url": fake.url(),
+            "description": fake.text(),
+        }
+        for _ in range(3)
+    ]
+
+    product_data[0]["name"] = "something"
+
+    for product in product_data:
+        response = client.post(
+            f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+            json=product,
+            headers={"user-id": business_partner_id},
+        )
+
+        assert response.status_code == HTTPStatus.CREATED
+
+    search = "SoMeThInG"
+
+    response = client.get(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/available?search={search}")
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert len(response_json) == 1
+    for i, product in enumerate(response_json):
+        assert "product_id" in response_json[i]
+        assert response_json[i]["business_partner_id"] == product["business_partner_id"]
+        assert response_json[i]["category"] == product["category"]
+        assert response_json[i]["name"] == product["name"]
+        assert response_json[i]["url"] == product["url"]
+        assert response_json[i]["price"] == product["price"]
+        assert response_json[i]["payment_type"] == product["payment_type"]
+        assert response_json[i]["payment_frequency"] == product["payment_frequency"]
+        assert response_json[i]["image_url"] == product["image_url"]
+        assert response_json[i]["description"] == product["description"]
+        assert response_json[i]["active"] == product["active"]
