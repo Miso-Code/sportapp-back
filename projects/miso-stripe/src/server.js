@@ -1,5 +1,5 @@
 const app = require('./app');
-const sequelize = require('./db');
+const { sequelize } = require('./db');
 
 async function init() {
   try {

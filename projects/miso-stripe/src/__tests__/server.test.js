@@ -1,9 +1,11 @@
 const init = require('../server');
-const sequelize = require('../db');
+const { sequelize } = require('../db');
 const app = require('../app');
 
 jest.mock('../db', () => ({
-  authenticate: jest.fn()
+  sequelize: {
+    authenticate: jest.fn()
+  }
 }));
 
 jest.mock('../app', () => ({
