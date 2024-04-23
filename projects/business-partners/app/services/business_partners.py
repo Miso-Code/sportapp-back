@@ -140,6 +140,23 @@ class BusinessPartnersService:
         self.db.commit()
         return DataClassMapper.to_dict(product)
 
+    def get_business_partner_product(self, product_id, business_partner_id):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
+        if not business_partner:
+            raise NotFoundError(f"Business partner with id {business_partner_id} not found")
+
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(
+                BusinessPartnerProduct.product_id == product_id,
+            )
+            .first()
+        )
+        if not product:
+            raise NotFoundError(f"Product with id {product_id} not found")
+
+        return DataClassMapper.to_dict(product)
+
     def delete_business_partner_product(self, product_id, business_partner_id):
         business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
         if not business_partner:
