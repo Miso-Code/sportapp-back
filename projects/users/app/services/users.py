@@ -135,6 +135,9 @@ class UsersService:
             sport = self.external_services.get_sport(sports_profile.favourite_sport_id, self.user_token)
             user.favourite_sport_id = sport["sport_id"]
 
+        if sports_profile.available_weekdays:
+            user.available_weekdays = ",".join(sports_profile.available_weekdays)
+
         user.training_limitations = UsersServiceHelpers.process_training_limitations(sports_profile.training_limitations, self.db)
         self.db.commit()
         return DataClassMapper.to_user_sports_profile(user)

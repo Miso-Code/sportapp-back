@@ -4,7 +4,8 @@ from uuid import UUID
 from faker import Faker
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference
+from tests.utils.users_util import week_days
 
 fake = Faker()
 
@@ -47,7 +48,8 @@ class TestUserProfiles(unittest.TestCase):
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
             "available_training_hours": fake.random_int(min=1, max=100),
-            "training_frequency": fake.enum(TrainingFrequency).value,
+            "available_weekdays": list(set(fake.random_choices(week_days, length=fake.random_number(1, 7)))),
+            "preferred_training_start_time": fake.time("%I:%M %p"),
         }
 
         user_sports_profile = UserSportsProfile(**user_sports_profile_data)
@@ -57,7 +59,8 @@ class TestUserProfiles(unittest.TestCase):
         self.assertEqual(user_sports_profile.weight, user_sports_profile_data["weight"])
         self.assertEqual(user_sports_profile.height, user_sports_profile_data["height"])
         self.assertEqual(user_sports_profile.available_training_hours, user_sports_profile_data["available_training_hours"])
-        self.assertEqual(user_sports_profile.training_frequency.value, user_sports_profile_data["training_frequency"])
+        self.assertEqual(user_sports_profile.available_weekdays, set(user_sports_profile_data["available_weekdays"]))
+        self.assertEqual(user_sports_profile.preferred_training_start_time, user_sports_profile_data["preferred_training_start_time"])
 
     def test_user_nutritional_profile(self):
         user_nutritional_profile_data = {
