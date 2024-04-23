@@ -1,10 +1,10 @@
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, confloat, conint
+from pydantic import BaseModel, confloat, conint, constr, conset
 
 from app.models.schemas.schema import CreateTrainingLimitation
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference, WeekDay
 
 
 class UserPersonalProfile(BaseModel):
@@ -28,7 +28,8 @@ class UserSportsProfile(BaseModel):
     weight: Optional[confloat(gt=0)] = None
     height: Optional[confloat(gt=0)] = None
     available_training_hours: Optional[confloat(gt=0)] = None
-    training_frequency: Optional[TrainingFrequency] = None
+    available_weekdays: Optional[conset(item_type=WeekDay, min_length=1)] = []
+    preferred_training_start_time: Optional[constr(pattern=r"^(1[0-2]|0?[1-9]):([0-5][0-9])\s?(AM|PM)$")] = None
 
 
 class UserSportsProfileGet(UserSportsProfile):

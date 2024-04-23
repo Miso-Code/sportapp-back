@@ -91,4 +91,6 @@ class TestDataClassMapper(unittest.TestCase):
         self.assertEqual(user_profile_dict["weight"], user_instance.weight)
         self.assertEqual(user_profile_dict["height"], user_instance.height)
         self.assertEqual(user_profile_dict["available_training_hours"], user_instance.available_training_hours)
-        self.assertEqual(user_profile_dict["training_frequency"], user_instance.training_frequency.value)
+        self.assertEqual(user_profile_dict["available_weekdays"], user_instance.available_weekdays.split(","))
+        self.assertEqual(user_profile_dict["preferred_training_start_time"], user_instance.preferred_training_start_time)
+        self.assertEqual(user_profile_dict["training_limitations"], user_instance.training_limitations)

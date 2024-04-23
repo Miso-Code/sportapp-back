@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency, NutritionalLimitation
+from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, NutritionalLimitation, WeekDay
 from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation
 
 
@@ -68,7 +68,8 @@ def generate_random_user_sports_profile(faker):
         weight=user.weight,
         height=user.height,
         available_training_hours=user.available_training_hours,
-        training_frequency=TrainingFrequency(user.training_frequency),
+        available_week_days=user.available_weekdays,
+        preferred_training_start_time=user.preferred_training_start_time,
     )
 
 
@@ -79,7 +80,8 @@ def generate_random_user_sport_profile_update(faker):
         weight=faker.random_int(40, 120),
         height=faker.random_int(150, 200) / 100,
         available_training_hours=faker.random_number(1, 20),
-        training_frequency=faker.enum(TrainingFrequency),
+        available_week_days=faker.random_choices(week_days, unique=True, length=faker.random_number(1, 7)),
+        preferred_training_start_time=faker.time(),
         training_limitations=[CreateTrainingLimitation(name=faker.word(), description=faker.sentence()) for _ in range(faker.random_number(1, 5))],
     )
 
@@ -89,6 +91,9 @@ def generate_random_user_nutritional_profile(faker):
         food_preference=faker.enum(FoodPreference),
         nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number(1, 5))],
     )
+
+
+week_days: list[WeekDay] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
 def generate_random_user(faker):
@@ -108,10 +113,11 @@ def generate_random_user(faker):
         birth_date=faker.date_of_birth(minimum_age=15).isoformat(),
         favourite_sport_id=faker.uuid4(),
         training_objective=faker.enum(TrainingObjective),
+        available_weekdays=",".join(list(set(faker.random_choices(week_days, length=faker.random_number(1, 7))))),
+        available_training_hours=faker.random_number(1, 20),
+        preferred_training_start_time=faker.time("%I:%M %p"),
         height=faker.random_int(150, 200) / 100,
         weight=faker.random_int(40, 120),
-        available_training_hours=faker.random_number(1, 20),
-        training_frequency=faker.enum(TrainingFrequency),
         training_years=faker.random_number(1, 20),
         food_preference=faker.enum(FoodPreference),
     )

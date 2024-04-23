@@ -14,6 +14,8 @@ class DataClassMapper:
                 return str(obj)
             if isinstance(obj, enum.Enum):
                 return obj.value
+            if isinstance(obj, set):
+                return list(obj)
             return obj
 
         if pydantic:
@@ -56,7 +58,8 @@ class DataClassMapper:
             weight=user.weight,
             height=user.height,
             available_training_hours=user.available_training_hours,
-            training_frequency=user.training_frequency,
+            available_weekdays=user.available_weekdays.split(","),
+            preferred_training_start_time=user.preferred_training_start_time,
             training_limitations=[DataClassMapper.to_dict(limitation) for limitation in user.training_limitations],
         )
 
