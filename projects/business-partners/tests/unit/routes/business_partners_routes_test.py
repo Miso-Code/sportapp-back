@@ -81,6 +81,76 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response_json, business_partner_product_create_dict)
 
+    @patch("app.services.business_partners.BusinessPartnersService.update_business_partner_product")
+    async def test_update_business_partner_product(self, update_product_mock):
+        product_id = fake.uuid4()
+        partner_id = fake.uuid4()
+        business_partner_product_update = generate_random_business_partner_product_create_data(fake)
+        business_partner_product_update_dict = {
+            "category": business_partner_product_update.category.value,
+            "name": business_partner_product_update.name,
+            "summary": fake.word(),
+            "url": business_partner_product_update.url,
+            "price": business_partner_product_update.price,
+            "payment_type": business_partner_product_update.payment_type.value,
+            "payment_frequency": business_partner_product_update.payment_frequency.value,
+            "image_url": business_partner_product_update.image_url,
+            "description": business_partner_product_update.description,
+        }
+        db_mock = MagicMock()
+
+        update_product_mock.return_value = business_partner_product_update_dict
+
+        response = await business_partners_routes.update_business_partner_product(product_id, business_partner_product_update, partner_id, db_mock)
+
+        response_json = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, business_partner_product_update_dict)
+
+    @patch("app.services.business_partners.BusinessPartnersService.get_business_partner_product")
+    async def test_get_business_partner_product(self, get_product_mock):
+        db_mock = MagicMock()
+        product_id = fake.uuid4()
+        business_partner_id = fake.uuid4()
+        business_partner_product_update = generate_random_business_partner_product_create_data(fake)
+        business_partner_product_update_dict = {
+            "category": business_partner_product_update.category.value,
+            "name": business_partner_product_update.name,
+            "summary": fake.word(),
+            "url": business_partner_product_update.url,
+            "price": business_partner_product_update.price,
+            "payment_type": business_partner_product_update.payment_type.value,
+            "payment_frequency": business_partner_product_update.payment_frequency.value,
+            "image_url": business_partner_product_update.image_url,
+            "description": business_partner_product_update.description,
+        }
+
+        get_product_mock.return_value = business_partner_product_update_dict
+
+        response = await business_partners_routes.get_business_partner_product(product_id, business_partner_id, db_mock)
+        response_json = json.loads(response.body)
+
+        get_product_mock.assert_called_once_with(product_id, business_partner_id)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, business_partner_product_update_dict)
+
+    @patch("app.services.business_partners.BusinessPartnersService.delete_business_partner_product")
+    async def test_delete_business_partner_product(self, delete_product_mock):
+        db_mock = MagicMock()
+        product_id = fake.uuid4()
+        business_partner_id = fake.uuid4()
+
+        delete_response = {"message": "Product Deleted"}
+        delete_product_mock.return_value = delete_response
+
+        response = await business_partners_routes.delete_business_partner_product(product_id, business_partner_id, db_mock)
+
+        response_json = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, delete_response)
+
     @patch("app.services.business_partners.BusinessPartnersService.get_business_partner_products")
     async def test_get_all_business_partner_products(self, mock_get_business_partner_products):
         db_mock = MagicMock()
@@ -143,46 +213,3 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         offered_products_mock.assert_called_once_with(None, offset, limit)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_json, business_partner_products)
-
-    @patch("app.services.business_partners.BusinessPartnersService.update_business_partner_product")
-    async def test_update_business_partner_product(self, update_product_mock):
-        product_id = fake.uuid4()
-        partner_id = fake.uuid4()
-        business_partner_product_update = generate_random_business_partner_product_create_data(fake)
-        business_partner_product_update_dict = {
-            "category": business_partner_product_update.category.value,
-            "name": business_partner_product_update.name,
-            "summary": fake.word(),
-            "url": business_partner_product_update.url,
-            "price": business_partner_product_update.price,
-            "payment_type": business_partner_product_update.payment_type.value,
-            "payment_frequency": business_partner_product_update.payment_frequency.value,
-            "image_url": business_partner_product_update.image_url,
-            "description": business_partner_product_update.description,
-        }
-        db_mock = MagicMock()
-
-        update_product_mock.return_value = business_partner_product_update_dict
-
-        response = await business_partners_routes.update_business_partner_product(product_id, business_partner_product_update, partner_id, db_mock)
-
-        response_json = json.loads(response.body)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response_json, business_partner_product_update_dict)
-
-    @patch("app.services.business_partners.BusinessPartnersService.delete_business_partner_product")
-    async def test_delete_business_partner_product(self, delete_product_mock):
-        db_mock = MagicMock()
-        product_id = fake.uuid4()
-        business_partner_id = fake.uuid4()
-
-        delete_response = {"message": "Product Deleted"}
-        delete_product_mock.return_value = delete_response
-
-        response = await business_partners_routes.delete_business_partner_product(product_id, business_partner_id, db_mock)
-
-        response_json = json.loads(response.body)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response_json, delete_response)
