@@ -2,7 +2,7 @@ const request = require('supertest');
 
 const falso = require('@ngneat/falso');
 const app = require('../src/app');
-const sequelize = require('../src/db');
+const { sequelize } = require('../src/db');
 const { Card } = require('../src/models');
 
 const requestWithHeaders = (url, method) => request(app)[method](url)
@@ -211,8 +211,6 @@ describe('Integration Tests', () => {
 
         const response = await requestWithHeaders('/miso-stripe/balances/add', 'post')
           .send(balanceData);
-
-        console.log(response.body);
 
         expect(response.statusCode)
           .toEqual(200);

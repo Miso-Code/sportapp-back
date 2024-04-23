@@ -4,7 +4,8 @@
   "description": "Stripe-like system for MisoTeam payments",
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon ./src/index.js",
+    "start": "node ./src/index.js",
+    "dev": "nodemon ./src/index.js",
     "lint": "eslint .",
     "test:unit": "jest --ci --no-cache --coverage --detectOpenHandles --forceExit src/**",
     "test:integration": "jest --ci --no-cache --detectOpenHandles --forceExit test/**"
@@ -18,6 +19,7 @@
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
     "joi": "^17.12.3",
+    "morgan": "^1.10.0",
     "pg": "^8.11.5",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.3",
