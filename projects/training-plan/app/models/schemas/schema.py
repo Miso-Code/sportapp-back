@@ -1,9 +1,10 @@
-import datetime
 import enum
-from typing import Optional, List, Literal
+from typing import Optional, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, UUID4, conint, confloat, conset, constr
+from pydantic import BaseModel, confloat, conset, constr
+
+from app.config.settings import Config
 
 
 class TrainingObjective(enum.Enum):
@@ -26,7 +27,7 @@ class TrainingPlanCreate(BaseModel):
     training_objective: TrainingObjective
     available_training_hours: confloat(gt=0)
     available_weekdays: conset(item_type=WeekDay, min_length=1)
-    preferred_training_start_time: constr(pattern=r"^(1[0-2]|0?[1-9]):([0-5][0-9])\s?(AM|PM)$")
+    preferred_training_start_time: constr(pattern=Config.HOUR_REGEX)
     favourite_sport_id: Optional[UUID] = None
     weight: Optional[confloat(gt=0)] = None
     height: Optional[confloat(gt=0)] = None

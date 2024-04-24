@@ -1,10 +1,10 @@
-name: Check PRs on <SERVICE> service
+name: Check PRs on Training Plan service
 
 on:
   pull_request:
     branches: [ "develop", "main" ]
     paths:
-      - "projects/<SERVICE>/**"
+      - "projects/training-plan/**"
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry && poetry config virtualenvs.create false
           poetry install
-          cd projects/<SERVICE> && poetry install
+          cd projects/training-plan && poetry install
 
       - name: Run lint
         run: |
@@ -32,24 +32,24 @@ jobs:
 
       - name: Run unit tests and coverage
         run: |
-          cd projects/<SERVICE>
+          cd projects/training-plan
           poetry run coverage run -m pytest tests/unit
           poetry run coverage report -m --fail-under=75
           poetry run coverage xml
 
       - name: fix code coverage paths
         run: |
-          sed -i 's/\/home\/runner\/work\/sportapp-back\/sportapp-back\//\/github\/workspace\//g' projects/<SERVICE>/coverage.xml
+          sed -i 's/\/home\/runner\/work\/sportapp-back\/sportapp-back\//\/github\/workspace\//g' projects/training-plan/coverage.xml
 
       - name: Run integration tests
         run: |
-          cd projects/<SERVICE>
+          cd projects/training-plan
           poetry run pytest tests/integration
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
-          projectBaseDir: projects/<SERVICE>
+          projectBaseDir: projects/training-plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

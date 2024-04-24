@@ -68,7 +68,7 @@ def generate_random_user_sports_profile(faker):
         weight=user.weight,
         height=user.height,
         available_training_hours=user.available_training_hours,
-        available_week_days=user.available_weekdays,
+        available_week_days=set(user.available_weekdays.split(",")),
         preferred_training_start_time=user.preferred_training_start_time,
     )
 

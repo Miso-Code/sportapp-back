@@ -1,6 +1,8 @@
 import unittest
-from app.models.training_plan import TrainingPlanSession
+
 from faker import Faker
+
+from app.models.training_plan import TrainingPlanSession
 
 fake = Faker()
 

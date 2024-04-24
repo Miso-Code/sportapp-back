@@ -1,13 +1,10 @@
 import unittest
-
 from unittest.mock import MagicMock, patch
 
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.models.mappers.training_plan_mapper import DataClassMapper
 from app.services.training_plan import TrainingPlanService
-
 from tests.utils.training_plan_utils import generate_random_training_plan_create_data, generate_random_training_plan_session_dict
 
 fake = Faker()

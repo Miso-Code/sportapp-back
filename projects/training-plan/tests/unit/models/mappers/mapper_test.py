@@ -1,7 +1,7 @@
 import unittest
-import enum
 from dataclasses import dataclass
 from uuid import UUID, uuid4
+
 from faker import Faker
 
 from app.models.mappers.training_plan_mapper import DataClassMapper

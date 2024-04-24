@@ -139,6 +139,12 @@ class UsersService:
             user.available_weekdays = ",".join(sports_profile.available_weekdays)
 
         user.training_limitations = UsersServiceHelpers.process_training_limitations(sports_profile.training_limitations, self.db)
+
+        should_update_training_plan = user.training_objective and user.available_training_hours and user.available_weekdays and user.preferred_training_start_time
+
+        if should_update_training_plan:
+            self.external_services.create_training_plan(DataClassMapper.to_training_plan_create(user), self.user_token)
+
         self.db.commit()
         return DataClassMapper.to_user_sports_profile(user)
 

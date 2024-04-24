@@ -1,4 +1,5 @@
 import unittest
+
 from app.exceptions.exceptions import NotFoundError, EntityExistsError, InvalidValueError
 
 

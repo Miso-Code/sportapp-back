@@ -1,12 +1,10 @@
-import asyncio
-
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.routes import training_plan_routes
+from app.config.db import engine, base
 from app.exceptions.exceptions import NotFoundError, InvalidValueError, InvalidCredentialsError, EntityExistsError
-from app.config.db import engine, base, session_local
+from app.routes import training_plan_routes
 
 app = FastAPI()
 
