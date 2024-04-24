@@ -1,5 +1,5 @@
 import unittest
-from app.models.users import User, UserIdentificationType, Gender, TrainingFrequency, TrainingObjective
+from app.models.users import User, UserIdentificationType, Gender, TrainingObjective
 from faker import Faker
 
 fake = Faker()
@@ -27,8 +27,9 @@ class TestUser(unittest.TestCase):
             "weight": fake.random_int(min=1, max=200),
             "height": fake.random_int(min=1, max=200),
             "available_training_hours": fake.random_int(min=1, max=50),
-            "training_frequency": fake.enum(TrainingFrequency),
             "training_years": fake.random_int(min=1, max=50),
+            "available_weekdays": fake.words(nb=3),
+            "preferred_training_start_time": fake.time("%H:%M:%S"),
         }
 
         user = User(**user_data)
@@ -52,5 +53,6 @@ class TestUser(unittest.TestCase):
         self.assertEqual(user.weight, user_data["weight"])
         self.assertEqual(user.height, user_data["height"])
         self.assertEqual(user.available_training_hours, user_data["available_training_hours"])
-        self.assertEqual(user.training_frequency, user_data["training_frequency"])
         self.assertEqual(user.training_years, user_data["training_years"])
+        self.assertEqual(user.available_weekdays, user_data["available_weekdays"])
+        self.assertEqual(user.preferred_training_start_time, user_data["preferred_training_start_time"])

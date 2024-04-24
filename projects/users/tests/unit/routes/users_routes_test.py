@@ -8,7 +8,7 @@ from faker import Faker
 from app.models.schemas.schema import UserAdditionalInformation, UserCreate, UserCredentials
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference
 from tests.utils.users_util import generate_random_user_personal_profile, generate_random_user_nutritional_profile, generate_random_user_sports_profile
 
 fake = Faker()
@@ -231,7 +231,8 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
             "available_training_hours": fake.random_int(min=1, max=100),
-            "training_frequency": fake.enum(TrainingFrequency).value,
+            "available_weekdays": fake.pylist(value_types=[str]),
+            "preferred_training_start_time": fake.time("%H:%M:%S"),
         }
 
         get_user_sports_information_mock.return_value = user_sports_profile_data
@@ -333,7 +334,8 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
             "weight": fake.random_int(min=1, max=100),
             "height": fake.random_int(min=1, max=100),
             "available_training_hours": fake.random_int(min=1, max=100),
-            "training_frequency": fake.enum(TrainingFrequency).value,
+            "available_weekdays": fake.pylist(value_types=[str]),
+            "preferred_training_start_time": fake.time("%H:%M:%S"),
         }
 
         update_user_sports_information_mock.return_value = sports_profile_output

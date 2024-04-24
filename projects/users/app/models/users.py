@@ -1,5 +1,6 @@
 import enum
 from dataclasses import dataclass
+from typing import Literal
 from uuid import uuid4, UUID
 
 from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey
@@ -19,13 +20,6 @@ class Gender(enum.Enum):
     FEMALE = "F"
     OTHER = "O"
     PREFER_NOT_TO_SAY = "P"
-
-
-class TrainingFrequency(enum.Enum):
-    DAILY = "daily"
-    EVERY_OTHER_DAY = "every_other_day"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
 
 
 class TrainingObjective(enum.Enum):
@@ -80,6 +74,9 @@ class UserNutritionalLimitation(base):
     limitation_id: str = Column(Uuid(as_uuid=True), ForeignKey("nutritional_limitations.limitation_id"))
 
 
+WeekDay = Literal["monday"] | Literal["tuesday"] | Literal["wednesday"] | Literal["thursday"] | Literal["friday"] | Literal["saturday"] | Literal["sunday"]
+
+
 @dataclass
 class User(base):
     __tablename__ = "users"
@@ -104,8 +101,9 @@ class User(base):
     training_objective = Column(Enum(TrainingObjective))
     weight: float = Column(Float)
     height: float = Column(Float)
+    available_weekdays: str = Column(String)
+    preferred_training_start_time: str = Column(String)
     available_training_hours: int = Column(Integer)
-    training_frequency: str = Column(Enum(TrainingFrequency))
     training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations")
     # Additional sport info
     training_years: int = Column(Integer)

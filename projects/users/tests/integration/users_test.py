@@ -373,7 +373,9 @@ async def test_get_user_sports_profile(test_db):
         assert response_json["weight"] == user_created.weight
         assert response_json["height"] == user_created.height
         assert response_json["available_training_hours"] == user_created.available_training_hours
-        assert response_json["training_frequency"] == user_created.training_frequency.value
+        assert response_json["available_weekdays"] == user_created.available_weekdays.split(",")
+        assert response_json["preferred_training_start_time"] == user_created.preferred_training_start_time
+        assert response_json["training_limitations"] == [limitation.name for limitation in user_created.training_limitations]
         assert response_json["bmi"] == utils.calculate_bmi(user_created.weight, user_created.height)
 
         assert getattr(response_json, "email", None) is None
@@ -513,12 +515,16 @@ async def test_update_user_sports_profile(test_db, mocker):
             "weight": new_user_data.weight,
             "height": new_user_data.height,
             "available_training_hours": new_user_data.available_training_hours,
-            "training_frequency": new_user_data.training_frequency.value,
             "training_limitations": [{"name": fake.word(), "description": fake.sentence()} for _ in range(fake.random_int(1, 4))],
+            "available_weekdays": new_user_data.available_weekdays.split(","),
+            "preferred_training_start_time": new_user_data.preferred_training_start_time,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+
+        external_service_create_training_plan = mocker.patch("app.services.external.ExternalServices.create_training_plan")
+        external_service_create_training_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
@@ -532,9 +538,10 @@ async def test_update_user_sports_profile(test_db, mocker):
         assert response_json["weight"] == new_user_data.weight
         assert response_json["height"] == new_user_data.height
         assert response_json["available_training_hours"] == new_user_data.available_training_hours
-        assert response_json["training_frequency"] == new_user_data.training_frequency.value
         assert response_json["bmi"] == utils.calculate_bmi(new_user_data.weight, new_user_data.height)
         assert len(response_json["training_limitations"]) == len(new_user_data_json["training_limitations"])
+        assert response_json["available_weekdays"] == new_user_data.available_weekdays.split(",")
+        assert response_json["preferred_training_start_time"] == new_user_data.preferred_training_start_time
 
 
 @pytest.mark.asyncio
@@ -552,11 +559,10 @@ async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
             "weight": new_user_data.weight,
             "height": new_user_data.height,
             "available_training_hours": new_user_data.available_training_hours,
-            "training_frequency": new_user_data.training_frequency.value,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)

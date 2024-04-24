@@ -14,6 +14,8 @@ class DataClassMapper:
                 return str(obj)
             if isinstance(obj, enum.Enum):
                 return obj.value
+            if isinstance(obj, set):
+                return list(obj)
             return obj
 
         if pydantic:
@@ -56,7 +58,8 @@ class DataClassMapper:
             weight=user.weight,
             height=user.height,
             available_training_hours=user.available_training_hours,
-            training_frequency=user.training_frequency,
+            available_weekdays=user.available_weekdays.split(","),
+            preferred_training_start_time=user.preferred_training_start_time,
             training_limitations=[DataClassMapper.to_dict(limitation) for limitation in user.training_limitations],
         )
 
@@ -65,3 +68,16 @@ class DataClassMapper:
         if "weight" in user_sports_profile_dict and "height" in user_sports_profile_dict:
             user_sports_profile_dict["bmi"] = utils.calculate_bmi(user_sports_profile_dict["weight"], user_sports_profile_dict["height"])
         return user_sports_profile_dict
+
+    @staticmethod
+    def to_training_plan_create(user):
+        return {
+            "training_objective": user.training_objective.value,
+            "available_training_hours": user.available_training_hours,
+            "available_weekdays": user.available_weekdays.split(","),
+            "preferred_training_start_time": user.preferred_training_start_time,
+            "favourite_sport_id": user.favourite_sport_id,
+            "weight": user.weight,
+            "height": user.height,
+            "training_limitations": [DataClassMapper.to_dict(limitation) for limitation in user.training_limitations],
+        }
