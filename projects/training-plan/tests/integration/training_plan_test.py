@@ -1,15 +1,12 @@
-import datetime
 import uuid
 
 from faker import Faker
+from fastapi.testclient import TestClient
 from pytest import fixture
 
-from main import app
-from app.models.training_plan import TrainingPlanSession
 from app.config.db import session_local
-from fastapi.testclient import TestClient
-
-from tests.utils.training_plan_utils import generate_random_training_plan_session, generate_random_training_plan_create_data, generate_random_training_plan_create_data_dict
+from main import app
+from tests.utils.training_plan_utils import generate_random_training_plan_session, generate_random_training_plan_create_data_dict
 
 fake = Faker()
 
@@ -100,6 +97,5 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.get("/training-plans/", headers={"user-id": "invalid_user_id"})
-        json_response = res.json()
 
         assert res.status_code == 400

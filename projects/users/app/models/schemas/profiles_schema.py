@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, confloat, conint, constr, conset
 
+from app.config.settings import Config
 from app.models.schemas.schema import CreateTrainingLimitation
 from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference, WeekDay
 
@@ -29,7 +30,7 @@ class UserSportsProfile(BaseModel):
     height: Optional[confloat(gt=0)] = None
     available_training_hours: Optional[confloat(gt=0)] = None
     available_weekdays: Optional[conset(item_type=WeekDay, min_length=1)] = []
-    preferred_training_start_time: Optional[constr(pattern=r"^(1[0-2]|0?[1-9]):([0-5][0-9])\s?(AM|PM)$")] = None
+    preferred_training_start_time: Optional[constr(pattern=Config.HOUR_REGEX)] = None
 
 
 class UserSportsProfileGet(UserSportsProfile):

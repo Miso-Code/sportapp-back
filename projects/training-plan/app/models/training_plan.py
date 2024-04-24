@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, String, Float, Enum
+from sqlalchemy import Column, Uuid, String, Float
 
 from app.config.db import base
-
 from app.models.schemas.schema import WeekDay
 
 

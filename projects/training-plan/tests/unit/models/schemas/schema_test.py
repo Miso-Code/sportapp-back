@@ -1,10 +1,9 @@
 import unittest
+
 from faker import Faker
 from pydantic import ValidationError
 
 from app.models.schemas.schema import TrainingPlanCreate, TrainingObjective
-
-from app.exceptions.exceptions import InvalidValueError
 
 fake = Faker()
 

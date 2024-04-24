@@ -520,8 +520,11 @@ async def test_update_user_sports_profile(test_db, mocker):
             "preferred_training_start_time": new_user_data.preferred_training_start_time,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+
+        external_service_create_training_plan = mocker.patch("app.services.external.ExternalServices.create_training_plan")
+        external_service_create_training_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
@@ -558,8 +561,8 @@ async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
             "available_training_hours": new_user_data.available_training_hours,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)

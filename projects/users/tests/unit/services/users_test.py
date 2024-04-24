@@ -334,7 +334,8 @@ class TestUsersService(unittest.TestCase):
 
     @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_sports_profile")
     @patch("app.services.external.ExternalServices.get_sport")
-    def test_update_user_sports_profile(self, mock_get_sport, mock_to_user_sports_profile):
+    @patch("app.services.external.ExternalServices.create_training_plan")
+    def test_update_user_sports_profile(self, mock_create_training_plan, mock_get_sport, mock_to_user_sports_profile):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
         user_training_limitations = [
@@ -361,11 +362,52 @@ class TestUsersService(unittest.TestCase):
 
         mock_get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
 
+        mock_create_training_plan.return_value = None
+
         response = self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
 
         self.assertEqual(response, user_sports_profile_updated_dict)
         self.assertEqual(self.mock_db.query.call_count, 2)
         self.assertEqual(self.mock_db.query.return_value.filter.call_count, 2)
+
+    @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_sports_profile")
+    @patch("app.services.external.ExternalServices.get_sport")
+    @patch("app.services.external.ExternalServices.create_training_plan")
+    def test_update_user_sports_profile_not_ready_to_create_training_plan(self, mock_create_training_plan, mock_get_sport, mock_to_user_sports_profile):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user_training_limitations = [
+            TrainingLimitation(limitation_id=fake.uuid4(), name=fake.word(), description=fake.sentence()),
+        ]
+
+        del user.training_objective
+
+        updated_limitations = [
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(name=fake.word(), description=fake.sentence()),
+            CreateTrainingLimitation(limitation_id=user_training_limitations[0].limitation_id, name=fake.word(), description=fake.sentence()),
+        ]
+
+        user_sports_profile_updated = UserSportsProfileUpdate(
+            height=fake.random_int(150, 200) / 100,
+            weight=fake.random_int(40, 120),
+            favourite_sport_id=fake.uuid4(),
+            training_limitations=updated_limitations,
+        )
+
+        user_sports_profile_updated_dict = DataClassMapper.to_dict(user_sports_profile_updated, pydantic=True)
+
+        self.mock_db.query.return_value.filter.return_value.first.side_effect = [user, user_training_limitations[0]]
+        mock_to_user_sports_profile.return_value = user_sports_profile_updated_dict
+
+        mock_get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
+
+        mock_create_training_plan.return_value = None
+
+        self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
+
+        self.assertEqual(mock_get_sport.call_count, 1)
+        self.assertEqual(mock_create_training_plan.call_count, 0)
 
     @patch("app.services.external.ExternalServices.get_sport")
     def test_update_user_sports_profile_invalid_sport(self, mock_get_sport):
