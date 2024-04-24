@@ -26,7 +26,7 @@ jobs:
     needs: resolve-tag
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "miso-stripe" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "miso-stripe", "training-plans" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

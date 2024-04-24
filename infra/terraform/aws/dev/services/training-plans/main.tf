@@ -7,7 +7,7 @@ data "aws_iam_role" "ecs_role" {
 }
 
 data "aws_secretsmanager_secret" "db_credentials" {
-  name = "DB_CREDENTIALS_PROD"
+  name = "DB_CREDENTIALS_DEV"
 }
 
 data "terraform_remote_state" "resources" {
@@ -15,34 +15,34 @@ data "terraform_remote_state" "resources" {
   config = {
     organization = "MisoTeam"
     workspaces = {
-      name = "aws-resources-prod"
+      name = "aws-resources-dev"
     }
   }
 }
 
 // Register target group and listener rule
-module "sport-sessions-tg" {
+module "training-plans-tg" {
   source                         = "../../../modules/elb/target_group"
-  target_group_name              = "sport-sessions-tg"
+  target_group_name              = "training-plans-dev-tg"
   target_group_port              = 8000
   target_group_protocol          = "HTTP"
   target_group_health_check_path = "/ping"
   vpc_id                         = data.terraform_remote_state.resources.outputs.vpc_id
 }
 
-module "sport-sessions-listener-rule" {
+module "training-plans-listener-rule" {
   source                = "../../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  rule_path_pattern     = "/sport-session/*"
-  rule_priority         = 3
-  rule_target_group_arn = module.sport-sessions-tg.tg_arn
+  rule_path_pattern     = "/training-plans/*"
+  rule_priority         = 5
+  rule_target_group_arn = module.training-plans-tg.tg_arn
 }
 
 // Register task definition
-module "sport-sessions-task-def" {
+module "training-plans-task-def" {
   source                = "../../../modules/ecs/task_definition"
-  service_name          = "sport-sessions"
-  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/sport-sessions:latest"
+  service_name          = "training-plans-dev"
+  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/training-plans:develop"
   container_port        = 8000
   cpu                   = 256
   memory                = 512
@@ -73,59 +73,34 @@ module "sport-sessions-task-def" {
   ]
 }
 
-module "sport-sessions-service" {
+// Register service
+module "training-plans-service" {
   source              = "../../../modules/ecs/service"
-  service_name        = "sport-sessions-service"
+  service_name        = "training-plans-dev-service"
   desired_count       = 1
   container_port      = 8000
   cluster_id          = data.terraform_remote_state.resources.outputs.ecs_cluster_id
   security_groups     = data.terraform_remote_state.resources.outputs.security_groups
   subnets             = data.terraform_remote_state.resources.outputs.subnets
-  target_group_arn    = module.sport-sessions-tg.tg_arn
-  task_definition_arn = module.sport-sessions-task-def.task_arn
+  target_group_arn    = module.training-plans-tg.tg_arn
+  task_definition_arn = module.training-plans-task-def.task_arn
 }
 
-module "sport-sessions-register-route-start" {
+
+module "training-plans-create-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "POST"
-  route_path       = "/sport-session"
+  route_path       = "/training-plans"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
 
-module "sport-sessions-get-all-route" {
+module "training-plans-get-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
-  route_path       = "/sport-session"
-  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
-}
-
-module "sport-sessions-register-route-add-location" {
-  source           = "../../../modules/api_gateway/route"
-  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method     = "PUT"
-  route_path       = "/sport-session/{sport-session-id}/location"
-  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
-}
-
-module "sport-sessions-register-route-finish" {
-  source           = "../../../modules/api_gateway/route"
-  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method     = "PATCH"
-  route_path       = "/sport-session/{sport-session-id}"
-  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
-}
-
-module "sport-sessions-register-route-get-by-id" {
-  source           = "../../../modules/api_gateway/route"
-  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method     = "GET"
-  route_path       = "/sport-session/{sport-session-id}"
+  route_path       = "/training-plans"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
