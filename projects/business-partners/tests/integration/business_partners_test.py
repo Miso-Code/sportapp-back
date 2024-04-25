@@ -10,7 +10,7 @@ from app.config.settings import Config
 from app.models.business_partners import ProductCategory, PaymentType, PaymentFrequency
 from main import app
 from app.config.db import base, get_db
-from tests.utils.business_partners_util import generate_random_business_partner_create_data
+from tests.utils.business_partners_util import generate_random_business_partner_create_data, generate_random_product_purchase
 
 
 class Constants:
@@ -794,3 +794,193 @@ def test_get_offered_business_partners_products_with_search(test_db):
         assert response_json[i]["image_url"] == product["image_url"]
         assert response_json[i]["description"] == product["description"]
         assert response_json[i]["active"] == product["active"]
+
+
+def test_purchase_product(test_db, mocker):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    purchase_data = generate_random_product_purchase(fake).dict()
+
+    user_id = fake.uuid4()
+
+    mocker.patch("app.services.external.ExternalServices.process_payment", return_value=(True, {}))
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}/purchase",
+        json=purchase_data,
+        headers={"user-id": user_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert response_json["transaction_id"] is not None
+    assert response_json["transaction_date"] is not None
+    assert response_json["transaction_status"] == "completed"
+    assert response_json["message"] == "Product purchased successfully"
+
+
+def test_purchase_product_payment_failed(test_db, mocker):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    purchase_data = generate_random_product_purchase(fake).dict()
+
+    user_id = fake.uuid4()
+
+    mocker.patch("app.services.external.ExternalServices.process_payment", return_value=(False, {"error": "Payment failed"}))
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}/purchase",
+        json=purchase_data,
+        headers={"user-id": user_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert response_json["transaction_id"] is not None
+    assert response_json["transaction_date"] is not None
+    assert response_json["transaction_status"] == "failed"
+    assert response_json["message"] == "Purchasing product failed. Error: Payment failed"
+
+
+def test_get_business_partner_product_transactions(test_db, mocker):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_id = response_json["product_id"]
+
+    mocker.patch("app.services.external.ExternalServices.process_payment", return_value=(True, {}))
+
+    user_id = fake.uuid4()
+
+    for _ in range(3):
+        purchase_data = generate_random_product_purchase(fake).dict()
+        response = client.post(
+            f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}/purchase",
+            json=purchase_data,
+            headers={"user-id": user_id},
+        )
+
+        assert response.status_code == HTTPStatus.OK
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/{product_id}/purchase",
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert len(response_json) == 3
+    for i, transaction in enumerate(response_json):
+        assert "product_transaction_id" in response_json[i]
+        assert response_json[i]["product_id"] == product_id
+        assert response_json[i]["user_id"] == user_id
+        assert "user_name" in response_json[i]
+        assert "user_email" in response_json[i]
+        assert "transaction_date" in response_json[i]
+        assert response_json[i]["transaction_status"] == "completed"
+        assert "product_data" in response_json[i]
