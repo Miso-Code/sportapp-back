@@ -83,6 +83,10 @@ module "business-partners-task-def" {
       "name" : "DB_PASSWORD"
     },
     {
+      "valueFrom" : "${data.aws_secretsmanager_secret.jwt_secret.arn}:JWT_SECRET::"
+      "name" : "JWT_SECRET_KEY"
+    },
+    {
       "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:MISO_STRIPE::"
       "name" : "MISO_STRIPE_API_KEY"
     },
