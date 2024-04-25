@@ -14,6 +14,14 @@ data "aws_secretsmanager_secret" "jwt_secret" {
   name = "JWT_SECRET"
 }
 
+data "aws_secretsmanager_secret" "api_key" {
+  name = "API_KEY"
+}
+
+data "aws_secretsmanager_secret" "services_urls" {
+  name = "SERVICES_URLS_DEV"
+}
+
 data "terraform_remote_state" "resources" {
   backend = "remote"
   config = {
@@ -75,8 +83,12 @@ module "business-partners-task-def" {
       "name" : "DB_PASSWORD"
     },
     {
-      "valueFrom" : "${data.aws_secretsmanager_secret.jwt_secret.arn}:JWT_SECRET::"
-      "name" : "JWT_SECRET_KEY"
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:MISO_STRIPE::"
+      "name" : "MISO_STRIPE_API_KEY"
+    },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:SPORTAPP_SERVICES_BASE_URL::"
+      "name" : "SPORTAPP_SERVICES_BASE_URL"
     }
   ]
 }
@@ -163,6 +175,24 @@ module "business-partners-get-all-available-products-route" {
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
   route_path       = "/business-partners/products/available"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "business-partners-purchase-product-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "POST"
+  route_path       = "/business-partners/products/{product-id}/purchase"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "business-partners-get-product-transactions-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/business-partners/products/{product-id}/purchase"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }

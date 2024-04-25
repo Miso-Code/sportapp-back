@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 from app.exceptions.exceptions import InvalidValueError
-from app.models.business_partners import ProductCategory, PaymentType, PaymentFrequency
+from app.models.business_partners import ProductCategory, PaymentType, PaymentFrequency, TransactionStatus
 
 
 class BusinessPartnerCredentials(BaseModel):
@@ -55,3 +57,24 @@ class CreateBusinessPartnerProduct(BaseModel):
             raise InvalidValueError("Provide either image_url or image_base64")
 
         return values
+
+
+class PaymentData(BaseModel):
+    card_number: str
+    card_holder: str
+    card_expiration_date: str
+    card_cvv: str
+    amount: float
+
+
+class ProductPurchase(BaseModel):
+    user_name: str
+    user_email: str
+    payment_data: PaymentData
+
+
+class TransactionResponse(BaseModel):
+    transaction_id: UUID
+    transaction_status: TransactionStatus
+    transaction_date: datetime
+    message: str

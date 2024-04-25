@@ -5,9 +5,10 @@ from unittest.mock import patch, MagicMock
 
 from faker import Faker
 
+from app.models.mappers.user_mapper import DataClassMapper
 from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate
 from app.routes import business_partners_routes
-from tests.utils.business_partners_util import generate_random_business_partner_product_create_data
+from tests.utils.business_partners_util import generate_random_business_partner_product_create_data, generate_random_product_purchase, generate_random_product_transaction
 
 fake = Faker()
 
@@ -150,6 +151,43 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_json, delete_response)
+
+    @patch("app.services.business_partners.BusinessPartnersService.purchase_product")
+    async def test_purchase_business_partner_product(self, purchase_product_mock):
+        db_mock = MagicMock()
+        product_id = fake.uuid4()
+        business_partner_id = fake.uuid4()
+
+        purchase_response = {"message": "Product Purchased"}
+        purchase_product_mock.return_value = purchase_response
+
+        product_purchase = generate_random_product_purchase(fake)
+
+        response = await business_partners_routes.purchase_product(product_id, product_purchase, business_partner_id, db_mock)
+
+        response_json = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, purchase_response)
+
+    @patch("app.services.business_partners.BusinessPartnersService.get_product_transactions")
+    async def test_get_product_transactions(self, get_product_transactions_mock):
+        db_mock = MagicMock()
+        product_id = fake.uuid4()
+        business_partner_id = fake.uuid4()
+        limit = fake.random_int(min=1, max=20)
+        offset = fake.random_int(min=0, max=10)
+
+        transactions = [DataClassMapper.to_dict(generate_random_product_transaction(fake)) for _ in range(limit)]
+
+        get_product_transactions_mock.return_value = transactions
+
+        response = await business_partners_routes.get_product_transactions(product_id, business_partner_id, db_mock, offset, limit)
+        response_json = json.loads(response.body)
+
+        get_product_transactions_mock.assert_called_once_with(product_id, business_partner_id, offset, limit)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response_json), len(transactions))
 
     @patch("app.services.business_partners.BusinessPartnersService.get_business_partner_products")
     async def test_get_all_business_partner_products(self, mock_get_business_partner_products):

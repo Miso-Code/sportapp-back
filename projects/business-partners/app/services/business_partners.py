@@ -1,5 +1,6 @@
 import base64
 import time
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 from sqlalchemy import and_, or_, cast, String
@@ -7,12 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.aws.aws_service import AWSClient
 from app.config.settings import Config
-from app.models.business_partners import BusinessPartner, BusinessPartnerProduct
-from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct
+from app.models.business_partners import BusinessPartner, BusinessPartnerProduct, ProductTransaction, TransactionStatus
+from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, TransactionResponse
 from app.security.jwt import JWTManager
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError, NotFoundError
 from app.security.passwords import PasswordManager
+from app.services.external import ExternalServices
 
 
 class BusinessPartnersService:
@@ -26,6 +28,7 @@ class BusinessPartnersService:
             Config.REFRESH_TOKEN_EXPIRE_MINUTES,
         )
         self.aws_service = AWSClient()
+        self.external_services = ExternalServices()
 
     def create_business_partner(self, business_partner: BusinessPartnerCreate):
         existing_business_partner = (
@@ -216,3 +219,68 @@ class BusinessPartnersService:
             products = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.active).order_by(BusinessPartnerProduct.name.asc()).limit(limit).offset(offset).all()
 
         return [DataClassMapper.to_dict(product) for product in products]
+
+    def purchase_product(self, product_id, user_id, product_purchase: ProductPurchase):
+        product = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.product_id == product_id).first()
+        if not product:
+            raise NotFoundError(f"Product with id {product_id} not found")
+
+        payment_approved, error = self.external_services.process_payment(product_purchase.payment_data)
+        product_transaction = ProductTransaction(
+            user_id=user_id,
+            product_id=product_id,
+            user_name=product_purchase.user_name,
+            user_email=product_purchase.user_email,
+            transaction_date=datetime.now(),
+            product_data=DataClassMapper.to_dict(product),
+        )
+
+        if payment_approved:
+            product_transaction.transaction_status = TransactionStatus.COMPLETED
+
+        else:
+            product_transaction.transaction_status = TransactionStatus.FAILED
+
+        self.db.add(product_transaction)
+        self.db.commit()
+
+        if not payment_approved:
+            error_message = error.get("error", "")
+            payment_message = f"Purchasing product failed. Error: {error_message}"
+        else:
+            payment_message = "Product purchased successfully"
+
+        response = TransactionResponse(
+            transaction_id=product_transaction.product_transaction_id,
+            transaction_status=product_transaction.transaction_status.value,
+            transaction_date=product_transaction.transaction_date,
+            message=payment_message,
+        )
+
+        return DataClassMapper.to_dict(response, pydantic=True)
+
+    def get_product_transactions(self, product_id, user_id, offset, limit):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == user_id).first()
+
+        if not business_partner:
+            raise NotFoundError(f"Business partner with id {user_id} not found")
+
+        product = (
+            self.db.query(BusinessPartnerProduct)
+            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
+            .first()
+        )
+
+        if not product:
+            raise NotFoundError(f"Product with id {product_id} not found")
+
+        transactions = (
+            self.db.query(ProductTransaction)
+            .filter(ProductTransaction.product_id == product_id)
+            .order_by(ProductTransaction.transaction_date.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
+
+        return [DataClassMapper.to_dict(transaction) for transaction in transactions]
