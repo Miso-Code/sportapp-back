@@ -34,7 +34,7 @@ module "training-plans-listener-rule" {
   source                = "../../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
   rule_path_pattern     = "/training-plans/*"
-  rule_priority         = 5
+  rule_priority         = 6
   rule_target_group_arn = module.training-plans-tg.tg_arn
 }
 
