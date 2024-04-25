@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.mappers.user_mapper import DataClassMapper
 from app.services.business_partners import BusinessPartnersService
-from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError
+from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError, NotFoundError
 
 from tests.utils.business_partners_util import (
     generate_random_user_login_data,
@@ -219,7 +219,7 @@ class TestBusinessPartnersService(unittest.TestCase):
 
         product_data = generate_random_business_partner_product_create_data(fake)
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.create_business_partner_product(product_data, business_partner_id)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -335,7 +335,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_business_partner_products(business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -416,7 +416,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.update_business_partner_product(product_id, business_partner_id, updated_product)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -431,7 +431,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.side_effect = [business_partner, None]
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.update_business_partner_product(product_id, business_partner.business_partner_id, updated_product)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
 
@@ -473,7 +473,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_business_partner_product(product_id, business_partner_id)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -487,7 +487,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.side_effect = [business_partner, None]
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_business_partner_product(product_id, business_partner.business_partner_id)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
 
@@ -520,7 +520,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.delete_business_partner_product(product_id, business_partner_id)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -534,7 +534,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.side_effect = [business_partner, None]
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.delete_business_partner_product(product_id, business_partner.business_partner_id)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
 
@@ -581,7 +581,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.purchase_product(product_id, user_id, product_purchase)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
 
@@ -659,7 +659,7 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.return_value = None
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_product_transactions(product_id, business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
 
@@ -673,6 +673,6 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_query.filter.return_value = mock_filter
         mock_filter.first.side_effect = [business_partner, None]
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_product_transactions(product_id, business_partner.business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
