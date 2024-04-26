@@ -10,7 +10,7 @@ from sse_starlette import EventSourceResponse
 
 from app.config.db import get_db
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserNutritionalProfile, UserSportsProfileUpdate
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, UpdateSubscriptionType
 from app.services.users import UsersService
 from app.utils.user_cache import UserCache
 
@@ -111,3 +111,9 @@ async def update_user_nutritional_information(nutritional_profile: UserNutrition
 async def get_nutritional_limitations(db: Session = Depends(get_db)):
     nutritional_limitations = UsersService(db).get_nutritional_limitations()
     return JSONResponse(content=nutritional_limitations, status_code=200)
+
+
+@router.patch("/update-plan")
+async def update_user_plan(user_id: Annotated[uuid.UUID, Header()], update_subscription_type: UpdateSubscriptionType, db: Session = Depends(get_db)):
+    user_plan = UsersService(db).update_user_plan(user_id, update_subscription_type)
+    return JSONResponse(content=user_plan, status_code=200)

@@ -1,16 +1,17 @@
 import unittest
 
 from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.models.mappers.user_mapper import DataClassMapper
-from app.models.schemas.profiles_schema import UserSportsProfileUpdate
+from app.models.schemas.profiles_schema import UserSportsProfileUpdate, UserSportsProfile
 from app.models.schemas.schema import CreateTrainingLimitation
 from app.services.users import UsersService
-from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
-from app.models.users import User, NutritionalLimitation, TrainingLimitation
+from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError, PlanPaymentError
+from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType
 
 from tests.utils.users_util import (
     generate_random_user_create_data,
@@ -20,6 +21,7 @@ from tests.utils.users_util import (
     generate_random_user_personal_profile,
     generate_random_user_sports_profile,
     generate_random_user_nutritional_profile,
+    generate_random_update_user_plan,
 )
 
 fake = Faker()
@@ -29,8 +31,10 @@ class TestUsersService(unittest.TestCase):
     def setUp(self):
         self.mock_jwt = MagicMock()
         self.mock_db = MagicMock(spec=Session)
+        self.external_services = MagicMock()
         self.users_service = UsersService(db=self.mock_db)
         self.users_service.jwt_manager = self.mock_jwt
+        self.users_service.external_services = self.external_services
 
     @patch("bcrypt.hashpw")
     @patch("bcrypt.gensalt")
@@ -371,9 +375,7 @@ class TestUsersService(unittest.TestCase):
         self.assertEqual(self.mock_db.query.return_value.filter.call_count, 2)
 
     @patch("app.models.mappers.user_mapper.DataClassMapper.to_user_sports_profile")
-    @patch("app.services.external.ExternalServices.get_sport")
-    @patch("app.services.external.ExternalServices.create_training_plan")
-    def test_update_user_sports_profile_not_ready_to_create_training_plan(self, mock_create_training_plan, mock_get_sport, mock_to_user_sports_profile):
+    def test_update_user_sports_profile_not_ready_to_create_training_plan(self, mock_to_user_sports_profile):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
         user_training_limitations = [
@@ -400,23 +402,22 @@ class TestUsersService(unittest.TestCase):
         self.mock_db.query.return_value.filter.return_value.first.side_effect = [user, user_training_limitations[0]]
         mock_to_user_sports_profile.return_value = user_sports_profile_updated_dict
 
-        mock_get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
+        self.external_services.get_sport.return_value = {"sport_id": user_sports_profile_updated.favourite_sport_id}
 
-        mock_create_training_plan.return_value = None
+        self.external_services.create_training_plan.return_value = None
 
         self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
 
-        self.assertEqual(mock_get_sport.call_count, 1)
-        self.assertEqual(mock_create_training_plan.call_count, 0)
+        self.assertEqual(self.external_services.get_sport.call_count, 1)
+        self.assertEqual(self.external_services.create_training_plan.call_count, 0)
 
-    @patch("app.services.external.ExternalServices.get_sport")
-    def test_update_user_sports_profile_invalid_sport(self, mock_get_sport):
+    def test_update_user_sports_profile_invalid_sport(self):
         user_id = fake.uuid4()
         user = generate_random_user(fake)
-        user_sports_profile_updated = UserSportsProfileUpdate(favourite_sport_id=fake.uuid4())
+        user_sports_profile_updated = UserSportsProfileUpdate(favourite_sport_id=UUID(fake.uuid4()))
 
         self.mock_db.query.return_value.filter.return_value.first.return_value = user
-        mock_get_sport.side_effect = NotFoundError(f"Sport with id {user_sports_profile_updated.favourite_sport_id} not found")
+        self.external_services.get_sport.side_effect = NotFoundError(f"Sport with id {user_sports_profile_updated.favourite_sport_id} not found")
 
         with self.assertRaises(NotFoundError) as context:
             self.users_service.update_user_sports_information(user_id, user_sports_profile_updated)
@@ -486,3 +487,68 @@ class TestUsersService(unittest.TestCase):
         with self.assertRaises(NotFoundError) as context:
             self.users_service.update_user_nutritional_information(user_id, user_nutritional_profile_updated)
         self.assertEqual(str(context.exception), f"Nutritional limitation with id {user_nutritional_profile_updated.nutritional_limitations[0]} not found")
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_update_user_plan_type(self, mock_get_user_by_id):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user.plan_type = UserSubscriptionType.FREE
+
+        mock_get_user_by_id.return_value = user
+
+        self.external_services.process_payment.return_value = (True, {})
+
+        update_user_plan_type = generate_random_update_user_plan(fake)
+        update_user_plan_type.subscription_type = UserSubscriptionType.PREMIUM
+
+        response = self.users_service.update_user_plan(user_id, update_user_plan_type)
+
+        self.assertEqual(response["status"], "success")
+        self.assertEqual(response["message"], "Subscription updated successfully")
+        self.assertIn("subscription_start_date", response)
+        self.assertIn("subscription_end_date", response)
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_update_user_plan_type_free(self, mock_get_user_by_id):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user.plan_type = UserSubscriptionType.PREMIUM
+
+        mock_get_user_by_id.return_value = user
+
+        update_user_plan_type = generate_random_update_user_plan(fake)
+        update_user_plan_type.subscription_type = UserSubscriptionType.FREE
+
+        response = self.users_service.update_user_plan(user_id, update_user_plan_type)
+
+        self.assertEqual(response["status"], "success")
+        self.assertEqual(response["message"], "Subscription updated successfully")
+        self.assertNotIn("subscription_start_date", response)
+        self.assertNotIn("subscription_end_date", response)
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_update_user_plan_type_invalid_user(self, mock_get_user_by_id):
+        user_id = fake.uuid4()
+
+        mock_get_user_by_id.side_effect = NotFoundError(f"User with id {user_id} not found")
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.update_user_plan(user_id, generate_random_update_user_plan(fake))
+        self.assertEqual(str(context.exception), f"User with id {user_id} not found")
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_update_user_plan_type_payment_failed(self, mock_get_user_by_id):
+        user_id = fake.uuid4()
+        user = generate_random_user(fake)
+        user.plan_type = UserSubscriptionType.FREE
+
+        mock_get_user_by_id.return_value = user
+
+        self.external_services.process_payment.return_value = (False, {"error": "Invalid card number"})
+
+        update_user_plan_type = generate_random_update_user_plan(fake)
+        update_user_plan_type.subscription_type = UserSubscriptionType.PREMIUM
+
+        with self.assertRaises(PlanPaymentError) as context:
+            self.users_service.update_user_plan(user_id, update_user_plan_type)
+        self.assertEqual(str(context.exception), "Failed to process payment. Invalid card number")

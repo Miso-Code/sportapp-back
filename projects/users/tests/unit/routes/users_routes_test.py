@@ -9,7 +9,12 @@ from app.models.schemas.schema import UserAdditionalInformation, UserCreate, Use
 from app.routes import users_routes
 from app.utils.user_cache import UserCache
 from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference
-from tests.utils.users_util import generate_random_user_personal_profile, generate_random_user_nutritional_profile, generate_random_user_sports_profile
+from tests.utils.users_util import (
+    generate_random_user_personal_profile,
+    generate_random_user_nutritional_profile,
+    generate_random_user_sports_profile,
+    generate_random_update_user_plan,
+)
 
 fake = Faker()
 
@@ -380,3 +385,23 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         update_user_nutritional_information_mock.assert_called_once()
         self.assertEqual(response_body, nutritional_profile_output)
+
+    @patch("app.services.users.UsersService.update_user_plan")
+    async def test_update_user_plan(self, update_user_plan_mock):
+        user_id = fake.uuid4()
+        update_user_plan_type = generate_random_update_user_plan(fake)
+
+        db = MagicMock()
+
+        update_user_plan_response = {
+            "subscription_type": fake.word(),
+            "subscription_start_date": fake.date_time_this_decade().strftime("%Y-%m-%d"),
+            "subscription_end_date": fake.date_time_this_decade().strftime("%Y-%m-%d"),
+        }
+
+        update_user_plan_mock.return_value = update_user_plan_response
+        response = await users_routes.update_user_plan(user_id, update_user_plan_type, db)
+        response_body = json.loads(response.body)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_body, update_user_plan_response)

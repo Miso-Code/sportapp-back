@@ -1,12 +1,14 @@
+from datetime import datetime, timedelta
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
+from app.models.schemas.schema import SubscriptionPaymentStatus, UpdateSubscriptionTypeResponse, UpdateSubscriptionType
 from app.security.jwt import JWTManager
-from app.models.users import User, NutritionalLimitation, TrainingLimitation
+from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType
 from app.models.mappers.user_mapper import DataClassMapper
-from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError
+from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError, PlanPaymentError
 from app.security.passwords import PasswordManager
 from app.services.external import ExternalServices
 
@@ -160,3 +162,33 @@ class UsersService:
             raise InvalidCredentialsError("Invalid email or password")
 
         return self.jwt_manager.process_email_password_login(user.user_id, user_credentials_password, user.hashed_password, user.subscription_type)
+
+    def update_user_plan(self, user_id, update_subscription_type: UpdateSubscriptionType):
+        user = self.get_user_by_id(user_id)
+
+        if update_subscription_type.subscription_type == UserSubscriptionType.FREE:
+            user.subscription_type = update_subscription_type.subscription_type
+            user.subscription_start_date = None
+            user.subscription_end_date = None
+            self.db.commit()
+            return DataClassMapper.to_dict(UpdateSubscriptionTypeResponse(status=SubscriptionPaymentStatus.SUCCESS, message="Subscription updated successfully"), pydantic=True)
+        else:
+            payment_approved, error = self.external_services.process_payment(update_subscription_type.payment_data)
+
+            if payment_approved:
+                user.subscription_type = update_subscription_type.subscription_type
+                user.subscription_start_date = datetime.now()
+                user.subscription_end_date = user.subscription_start_date + timedelta(days=30)
+                self.db.commit()
+                response = UpdateSubscriptionTypeResponse(
+                    status=SubscriptionPaymentStatus.SUCCESS,
+                    message="Subscription updated successfully",
+                    subscription_start_date=user.subscription_start_date,
+                    subscription_end_date=user.subscription_end_date,
+                )
+
+                return DataClassMapper.to_dict(response, pydantic=True)
+            else:
+                error = error["error"]
+                message = f"Failed to process payment. {error}"
+                raise PlanPaymentError(message)

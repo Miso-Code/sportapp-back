@@ -12,3 +12,7 @@ class InvalidValueError(Exception):
 
 class InvalidCredentialsError(Exception):
     pass
+
+
+class PlanPaymentError(Exception):
+    pass
