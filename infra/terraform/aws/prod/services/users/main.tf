@@ -207,3 +207,12 @@ module "users-get-all-nutritional-limitations-route" {
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
+
+module "users-update-user-plan-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "PATCH"
+  route_path       = "/update-plan"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
