@@ -170,8 +170,8 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_json, purchase_response)
 
-    @patch("app.services.business_partners.BusinessPartnersService.get_product_transactions")
-    async def test_get_product_transactions(self, get_product_transactions_mock):
+    @patch("app.services.business_partners.BusinessPartnersService.get_products_transactions")
+    async def test_get_products_transactions(self, get_products_transactions_mock):
         db_mock = MagicMock()
         product_id = fake.uuid4()
         business_partner_id = fake.uuid4()
@@ -180,12 +180,12 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
 
         transactions = [DataClassMapper.to_dict(generate_random_product_transaction(fake)) for _ in range(limit)]
 
-        get_product_transactions_mock.return_value = transactions
+        get_products_transactions_mock.return_value = transactions
 
-        response = await business_partners_routes.get_product_transactions(product_id, business_partner_id, db_mock, offset, limit)
+        response = await business_partners_routes.get_products_transactions(business_partner_id, db_mock, offset, limit)
         response_json = json.loads(response.body)
 
-        get_product_transactions_mock.assert_called_once_with(product_id, business_partner_id, offset, limit)
+        get_products_transactions_mock.assert_called_once_with(business_partner_id, offset, limit)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response_json), len(transactions))
 

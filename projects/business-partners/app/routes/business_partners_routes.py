@@ -56,6 +56,17 @@ async def get_all_offered_products(
     return JSONResponse(content=get_offered_products_response, status_code=200)
 
 
+@router.get("/products/purchase")
+async def get_products_transactions(
+    user_id: Annotated[UUID, Header()],
+    db: Session = Depends(get_db),
+    offset: int = Query(0, ge=0, le=1000),
+    limit: int = Query(10, gt=0, le=100),
+):
+    get_product_transactions_response = BusinessPartnersService(db).get_products_transactions(user_id, offset, limit)
+    return JSONResponse(content=get_product_transactions_response, status_code=200)
+
+
 @router.patch("/products/{product_id}")
 async def update_business_partner_product(product_id: UUID, update_product: UpdateBusinessPartnerProduct, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
     update_product_response = BusinessPartnersService(db).update_business_partner_product(product_id, user_id, update_product)
@@ -81,15 +92,3 @@ async def delete_business_partner_product(product_id: UUID, user_id: Annotated[U
 async def purchase_product(product_id: UUID, product_purchase: ProductPurchase, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
     purchase_product_response = BusinessPartnersService(db).purchase_product(product_id, user_id, product_purchase)
     return JSONResponse(content=purchase_product_response, status_code=200)
-
-
-@router.get("/products/{product_id}/purchase")
-async def get_product_transactions(
-    product_id: UUID,
-    user_id: Annotated[UUID, Header()],
-    db: Session = Depends(get_db),
-    offset: int = Query(0, ge=0, le=1000),
-    limit: int = Query(10, gt=0, le=100),
-):
-    get_product_transactions_response = BusinessPartnersService(db).get_product_transactions(product_id, user_id, offset, limit)
-    return JSONResponse(content=get_product_transactions_response, status_code=200)
