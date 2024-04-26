@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.config.db import get_db
-from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase
+from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, UpdateBusinessPartnerProduct
 from app.services.business_partners import BusinessPartnersService
 
 router = APIRouter(
@@ -57,8 +57,8 @@ async def get_all_offered_products(
 
 
 @router.patch("/products/{product_id}")
-async def update_business_partner_product(product_id: UUID, create_product: CreateBusinessPartnerProduct, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
-    update_product_response = BusinessPartnersService(db).update_business_partner_product(product_id, user_id, create_product)
+async def update_business_partner_product(product_id: UUID, update_product: UpdateBusinessPartnerProduct, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
+    update_product_response = BusinessPartnersService(db).update_business_partner_product(product_id, user_id, update_product)
     return JSONResponse(content=update_product_response, status_code=200)
 
 

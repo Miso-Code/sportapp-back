@@ -44,7 +44,7 @@ class CreateBusinessPartnerProduct(BaseModel):
     image_url: Optional[str] = None
     image_base64: Optional[str] = None
     description: str
-    active: Optional[bool] = True
+    active: Optional[bool] = None
 
     @model_validator(mode="before")
     def validate_image_source(cls, values):
@@ -57,6 +57,20 @@ class CreateBusinessPartnerProduct(BaseModel):
             raise InvalidValueError("Provide either image_url or image_base64")
 
         return values
+
+
+class UpdateBusinessPartnerProduct(BaseModel):
+    category: Optional[ProductCategory] = None
+    name: Optional[str] = None
+    summary: Optional[str] = None
+    url: Optional[str] = None
+    price: Optional[float] = None
+    payment_type: Optional[PaymentType] = None
+    payment_frequency: Optional[PaymentFrequency] = None
+    image_url: Optional[str] = None
+    image_base64: Optional[str] = None
+    description: Optional[str] = None
+    active: Optional[bool] = None
 
 
 class PaymentData(BaseModel):
