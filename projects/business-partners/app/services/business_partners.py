@@ -9,7 +9,14 @@ from sqlalchemy.orm import Session
 from app.aws.aws_service import AWSClient
 from app.config.settings import Config
 from app.models.business_partners import BusinessPartner, BusinessPartnerProduct, ProductTransaction, TransactionStatus
-from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, TransactionResponse
+from app.models.schemas.schema import (
+    BusinessPartnerCredentials,
+    BusinessPartnerCreate,
+    CreateBusinessPartnerProduct,
+    ProductPurchase,
+    TransactionResponse,
+    UpdateBusinessPartnerProduct,
+)
 from app.security.jwt import JWTManager
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import InvalidCredentialsError, EntityExistsError, NotFoundError
@@ -116,7 +123,7 @@ class BusinessPartnersService:
             )
         return image_url
 
-    def update_business_partner_product(self, product_id, business_partner_id, update_product):
+    def update_business_partner_product(self, product_id, business_partner_id, update_product: UpdateBusinessPartnerProduct):
         business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
         if not business_partner:
             raise NotFoundError(f"Business partner with id {business_partner_id} not found")
