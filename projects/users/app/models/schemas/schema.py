@@ -1,11 +1,18 @@
+import enum
 import re
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
-from app.models.users import UserIdentificationType, Gender
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, SubscriptionFrequency
 from app.config.settings import Config
 from app.exceptions.exceptions import InvalidValueError
+
+
+class SubscriptionPaymentStatus(enum.Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
 
 
 class UserCreate(BaseModel):
@@ -75,3 +82,23 @@ class CreateTrainingLimitation(BaseModel):
     limitation_id: Optional[UUID] = None
     name: str
     description: str
+
+
+class PaymentData(BaseModel):
+    card_number: str
+    card_holder: str
+    card_expiration_date: str
+    card_cvv: str
+    amount: float
+
+
+class UpdateSubscriptionType(BaseModel):
+    subscription_type: UserSubscriptionType
+    payment_data: PaymentData
+
+
+class UpdateSubscriptionTypeResponse(BaseModel):
+    status: SubscriptionPaymentStatus
+    message: str
+    subscription_start_date: Optional[datetime] = None
+    subscription_end_date: Optional[datetime] = None

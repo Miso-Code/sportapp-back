@@ -1,8 +1,9 @@
 import enum
 from dataclasses import asdict
+from datetime import datetime
 from uuid import UUID
 
-from app.models.schemas.profiles_schema import UserPersonalProfile, UserNutritionalProfile, UserSportsProfileGet
+from app.models.schemas.profiles_schema import UserPersonalProfile, UserNutritionalProfile, UserSportsProfileGet, UserPersonalProfileGet
 from app.utils import utils
 
 
@@ -14,6 +15,8 @@ class DataClassMapper:
                 return str(obj)
             if isinstance(obj, enum.Enum):
                 return obj.value
+            if isinstance(obj, datetime):
+                return obj.isoformat()
             if isinstance(obj, set):
                 return list(obj)
             return obj
@@ -33,7 +36,7 @@ class DataClassMapper:
 
     @staticmethod
     def to_user_personal_profile(user):
-        user_personal_profile = UserPersonalProfile(
+        user_personal_profile = UserPersonalProfileGet(
             email=user.email,
             first_name=user.first_name,
             last_name=user.last_name,
@@ -46,6 +49,9 @@ class DataClassMapper:
             city_of_residence=user.city_of_residence,
             residence_age=user.residence_age,
             birth_date=user.birth_date,
+            subscription_type=user.subscription_type,
+            subscription_start_date=user.subscription_start_date,
+            subscription_end_date=user.subscription_end_date,
         )
 
         return DataClassMapper.to_dict(user_personal_profile, pydantic=True)

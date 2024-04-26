@@ -1,12 +1,18 @@
 import enum
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
 from app.config.db import base
+
+
+class SubscriptionFrequency(enum.Enum):
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
 
 
 class FoodPreference(enum.Enum):
@@ -112,3 +118,5 @@ class User(base):
     nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations")
     # Subscription info
     subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
+    subscription_start_date: datetime = Column(DateTime, nullable=True)
+    subscription_end_date: datetime = Column(DateTime, nullable=True)

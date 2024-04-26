@@ -1,6 +1,7 @@
 import unittest
 import enum
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID, uuid4
 from faker import Faker
 
@@ -26,6 +27,7 @@ class FakeUserClass:
     last_name: str
     id_type: UserIdentificationType
     gender: Gender
+    some_date: datetime
 
 
 @dataclass
@@ -44,6 +46,7 @@ class TestDataClassMapper(unittest.TestCase):
             last_name=fake.last_name(),
             id_type=fake.random_element(elements=UserIdentificationType),
             gender=fake.random_element(elements=Gender),
+            some_date=fake.date_time_this_decade(),
         )
 
         user_dict = DataClassMapper.to_dict(user_instance)

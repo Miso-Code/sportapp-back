@@ -3,6 +3,7 @@ import os
 
 class Config:
     SPORTAPP_SERVICES_BASE_URL = os.getenv("SPORTAPP_SERVICES_BASE_URL", "http://localhost:8001")
+    MISO_STRIPE_API_KEY = os.getenv("MISO_STRIPE_API_KEY", "secret")
     SYNC_USERS = os.getenv("SYNC_USERS", True)
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     REFRESH_TOKEN_EXPIRE_MINUTES = int(os.getenv("REFRESH_TOKEN_EXPIRE_MINUTES", 10080))

@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, NutritionalLimitation, WeekDay
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation
+from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, NutritionalLimitation, WeekDay, UserSubscriptionType
+from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation, UpdateSubscriptionType, PaymentData
 
 
 def generate_random_users_create_data(faker, count):
@@ -120,6 +120,9 @@ def generate_random_user(faker):
         weight=faker.random_int(40, 120),
         training_years=faker.random_number(1, 20),
         food_preference=faker.enum(FoodPreference),
+        subscription_type=faker.enum(UserSubscriptionType),
+        subscription_start_date=faker.date_time_this_decade(),
+        subscription_end_date=faker.date_time_this_decade(),
     )
 
 
@@ -128,4 +131,17 @@ def generate_random_user_nutritional_limitation(faker):
         limitation_id=UUID(faker.uuid4()),
         name=faker.word(),
         description=faker.sentence(),
+    )
+
+
+def generate_random_update_user_plan(faker):
+    return UpdateSubscriptionType(
+        subscription_type=faker.enum(UserSubscriptionType),
+        payment_data=PaymentData(
+            card_number=faker.credit_card_number(),
+            card_holder=faker.name(),
+            card_expiration_date=faker.credit_card_expire(),
+            card_cvv=faker.credit_card_security_code(),
+            amount=faker.random_number(1, 1000),
+        ),
     )
