@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 
-from sqlalchemy import and_, or_, cast, String
+from sqlalchemy import and_, or_, cast, String, Uuid
 from sqlalchemy.orm import Session
 
 from app.aws.aws_service import AWSClient
@@ -266,28 +266,14 @@ class BusinessPartnersService:
 
         return DataClassMapper.to_dict(response, pydantic=True)
 
-    def get_product_transactions(self, product_id, user_id, offset, limit):
-        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == user_id).first()
+    def get_products_transactions(self, business_partner_id, offset, limit):
+        business_partner = self.db.query(BusinessPartner).filter(BusinessPartner.business_partner_id == business_partner_id).first()
 
         if not business_partner:
-            raise NotFoundError(f"Business partner with id {user_id} not found")
-
-        product = (
-            self.db.query(BusinessPartnerProduct)
-            .filter(BusinessPartnerProduct.product_id == product_id, BusinessPartnerProduct.business_partner_id == business_partner.business_partner_id)
-            .first()
-        )
-
-        if not product:
-            raise NotFoundError(f"Product with id {product_id} not found")
+            raise NotFoundError(f"Business partner with id {business_partner_id} not found")
 
         transactions = (
-            self.db.query(ProductTransaction)
-            .filter(ProductTransaction.product_id == product_id)
-            .order_by(ProductTransaction.transaction_date.desc())
-            .limit(limit)
-            .offset(offset)
-            .all()
+            self.db.query(ProductTransaction).filter(ProductTransaction.product_data["business_partner_id"].astext == str(business_partner_id)).limit(limit).offset(offset).all()
         )
 
         return [DataClassMapper.to_dict(transaction) for transaction in transactions]

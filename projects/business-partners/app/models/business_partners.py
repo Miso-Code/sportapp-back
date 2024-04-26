@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean, Text, DateTime, JSON
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy import Column, Uuid, String, Enum, Float, ForeignKey, Boolean, Text, DateTime
 from sqlalchemy.orm import relationship
 
 from app.config.db import base

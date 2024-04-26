@@ -16,6 +16,7 @@ from tests.utils.business_partners_util import (
     generate_random_business_partner_product_create_data,
     generate_random_business_partner_product,
     generate_random_product_purchase,
+    generate_random_product_transaction,
 )
 
 fake = Faker()
@@ -616,17 +617,15 @@ class TestBusinessPartnersService(unittest.TestCase):
         self.assertTrue(response["transaction_date"] is not None)
         self.assertEqual(response["message"], "Purchasing product failed. Error: Payment failed")
 
-    def test_get_product_transactions(self):
+    def test_get_products_transactions(self):
         business_partner = generate_random_business_partner(fake)
-        existing_product = generate_random_business_partner_product(fake)
-        existing_product.business_partner_id = business_partner.business_partner_id
 
         mock_query = MagicMock()
         mock_filter = MagicMock()
         mock_limit = MagicMock()
         mock_offset = MagicMock()
 
-        product_transactions = [generate_random_product_purchase(fake) for _ in range(3)]
+        product_transactions = [generate_random_product_transaction(fake) for _ in range(3)]
 
         self.mock_db.query.return_value = mock_query
         mock_query.filter.return_value = mock_filter
@@ -635,21 +634,23 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_limit.offset.return_value = mock_offset
         mock_offset.all.return_value = product_transactions
 
-        response = self.business_partners_service.get_product_transactions(
-            existing_product.product_id,
+        response = self.business_partners_service.get_products_transactions(
             business_partner.business_partner_id,
             0,
             3,
         )
 
         for transaction in response:
-            self.assertIn("transaction_id", transaction)
-            self.assertIn("user_id", transaction)
+            self.assertIn("product_transaction_id", transaction)
             self.assertIn("product_id", transaction)
-            self.assertIn("transaction_status", transaction)
+            self.assertIn("user_id", transaction)
+            self.assertIn("user_name", transaction)
+            self.assertIn("user_email", transaction)
             self.assertIn("transaction_date", transaction)
+            self.assertIn("transaction_status", transaction)
+            self.assertIn("product_data", transaction)
 
-    def test_get_product_transactions_partner_not_found(self):
+    def test_get_products_transactions_partner_not_found(self):
         business_partner_id = fake.uuid4()
         product_id = fake.uuid4()
         mock_query = MagicMock()
@@ -660,19 +661,5 @@ class TestBusinessPartnersService(unittest.TestCase):
         mock_filter.first.return_value = None
 
         with self.assertRaises(NotFoundError) as context:
-            self.business_partners_service.get_product_transactions(product_id, business_partner_id, 0, 3)
+            self.business_partners_service.get_products_transactions(business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
-
-    def test_get_product_transactions_product_not_found(self):
-        business_partner = generate_random_business_partner(fake)
-        product_id = fake.uuid4()
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-
-        self.mock_db.query.return_value = mock_query
-        mock_query.filter.return_value = mock_filter
-        mock_filter.first.side_effect = [business_partner, None]
-
-        with self.assertRaises(NotFoundError) as context:
-            self.business_partners_service.get_product_transactions(product_id, business_partner.business_partner_id, 0, 3)
-        self.assertEqual(str(context.exception), f"Product with id {product_id} not found")
