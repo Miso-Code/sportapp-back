@@ -1,8 +1,28 @@
 from uuid import UUID
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, NutritionalLimitation, WeekDay, UserSubscriptionType
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation, UpdateSubscriptionType, PaymentData
+from app.models.users import (
+    User,
+    UserIdentificationType,
+    FoodPreference,
+    Gender,
+    TrainingObjective,
+    NutritionalLimitation,
+    WeekDay,
+    UserSubscriptionType,
+    Trainer,
+    PremiumAppointmentType,
+    UserSportsmanAppointment,
+)
+from app.models.schemas.schema import (
+    UserCreate,
+    UserAdditionalInformation,
+    UserCredentials,
+    CreateTrainingLimitation,
+    UpdateSubscriptionType,
+    PaymentData,
+    PremiumSportsmanAppointment,
+)
 
 
 def generate_random_users_create_data(faker, count):
@@ -144,4 +164,34 @@ def generate_random_update_user_plan(faker):
             card_cvv=faker.credit_card_security_code(),
             amount=faker.random_number(1, 1000),
         ),
+    )
+
+
+def generate_random_trainer(faker):
+    return Trainer(
+        trainer_id=faker.uuid4(),
+        first_name=faker.first_name(),
+        last_name=faker.last_name(),
+    )
+
+
+def generate_random_appointment_data(faker, trainer_id, address: bool = False):
+    address = faker.address() if address else None
+    return PremiumSportsmanAppointment(
+        appointment_date=faker.date_time_this_year(),
+        appointment_type=faker.enum(PremiumAppointmentType),
+        appointment_location=address,
+        trainer_id=trainer_id,
+        appointment_reason=faker.sentence(),
+    )
+
+
+def generate_random_appointment(faker):
+    return UserSportsmanAppointment(
+        user_id=faker.uuid4(),
+        appointment_date=faker.date_time_this_year(),
+        appointment_type=faker.enum(PremiumAppointmentType),
+        appointment_location=faker.address(),
+        trainer_id=faker.uuid4(),
+        appointment_reason=faker.sentence(),
     )

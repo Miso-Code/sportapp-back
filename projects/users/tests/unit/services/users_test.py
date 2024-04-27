@@ -11,7 +11,7 @@ from app.models.schemas.profiles_schema import UserSportsProfileUpdate, UserSpor
 from app.models.schemas.schema import CreateTrainingLimitation
 from app.services.users import UsersService
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError, PlanPaymentError
-from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType
+from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType, PremiumAppointmentType
 
 from tests.utils.users_util import (
     generate_random_user_create_data,
@@ -22,6 +22,9 @@ from tests.utils.users_util import (
     generate_random_user_sports_profile,
     generate_random_user_nutritional_profile,
     generate_random_update_user_plan,
+    generate_random_trainer,
+    generate_random_appointment_data,
+    generate_random_appointment,
 )
 
 fake = Faker()
@@ -552,3 +555,97 @@ class TestUsersService(unittest.TestCase):
         with self.assertRaises(PlanPaymentError) as context:
             self.users_service.update_user_plan(user_id, update_user_plan_type)
         self.assertEqual(str(context.exception), "Failed to process payment. Invalid card number")
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_schedule_premium_sportsman_appointment_in_person(self, mock_get_user_by_id):
+        user = generate_random_user(fake)
+        trainer = generate_random_trainer(fake)
+
+        appointment_data = generate_random_appointment_data(fake, trainer.trainer_id, address=True)
+        appointment_data.appointment_type = PremiumAppointmentType.IN_PERSON
+
+        mock_get_user_by_id.return_value = user
+
+        self.mock_db.query.return_value.filter.return_value.first.return_value = trainer
+
+        response = self.users_service.schedule_premium_sportsman_appointment(user_id=user.user_id, appointment_data=appointment_data)
+
+        self.assertIn("appointment_date", response)
+        self.assertEqual(response["appointment_type"], appointment_data.appointment_type.value)
+        self.assertEqual(response["appointment_location"], appointment_data.appointment_location)
+        self.assertEqual(response["trainer_id"], str(appointment_data.trainer_id))
+        self.assertEqual(response["appointment_reason"], appointment_data.appointment_reason)
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_schedule_premium_sportsman_appointment_virtual(self, mock_get_user_by_id):
+        user = generate_random_user(fake)
+        trainer = generate_random_trainer(fake)
+
+        appointment_data = generate_random_appointment_data(fake, trainer.trainer_id)
+        appointment_data.appointment_type = PremiumAppointmentType.VIRTUAL
+
+        mock_get_user_by_id.return_value = user
+
+        self.mock_db.query.return_value.filter.return_value.first.return_value = trainer
+
+        response = self.users_service.schedule_premium_sportsman_appointment(user_id=user.user_id, appointment_data=appointment_data)
+
+        self.assertIn("appointment_date", response)
+        self.assertEqual(response["appointment_type"], appointment_data.appointment_type.value)
+        self.assertNotIn("appointment_location", response)
+        self.assertEqual(response["trainer_id"], str(appointment_data.trainer_id))
+        self.assertEqual(response["appointment_reason"], appointment_data.appointment_reason)
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_schedule_premium_sportsman_appointment_trainer_not_found(self, mock_get_user_by_id):
+        user = generate_random_user(fake)
+        appointment_data = generate_random_appointment_data(fake, fake.uuid4())
+
+        mock_get_user_by_id.return_value = user
+        self.mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.schedule_premium_sportsman_appointment(user_id=user.user_id, appointment_data=appointment_data)
+        self.assertEqual(str(context.exception), f"Trainer with id {appointment_data.trainer_id} not found")
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_get_scheduled_appointments(self, mock_get_user_by_id):
+        user = generate_random_user(fake)
+        appointment_1 = generate_random_appointment(fake)
+        appointment_2 = generate_random_appointment(fake)
+
+        mock_get_user_by_id.return_value = user
+        self.mock_db.query.return_value.filter.return_value.all.return_value = [appointment_1, appointment_2]
+
+        response = self.users_service.get_scheduled_appointments(user_id=user.user_id)
+
+        self.assertEqual(len(response), 2)
+        for appointment in response:
+            self.assertIn("appointment_date", appointment)
+            self.assertIn("appointment_type", appointment)
+            self.assertIn("appointment_location", appointment)
+            self.assertIn("trainer_id", appointment)
+            self.assertIn("appointment_reason", appointment)
+
+    @patch("app.services.users.UsersService.get_user_by_id")
+    def test_get_scheduled_appointments_user_not_found(self, mock_get_user_by_id):
+        user_id = fake.uuid4()
+
+        mock_get_user_by_id.side_effect = NotFoundError(f"User with id {user_id} not found")
+
+        with self.assertRaises(NotFoundError) as context:
+            self.users_service.get_scheduled_appointments(user_id)
+        self.assertEqual(str(context.exception), f"User with id {user_id} not found")
+
+    def test_get_premium_trainers(self):
+        trainers = [generate_random_trainer(fake) for _ in range(3)]
+
+        self.mock_db.query.return_value.all.return_value = trainers
+
+        response = self.users_service.get_premium_trainers()
+
+        self.assertEqual(len(response), 3)
+        for trainer in response:
+            self.assertIn("trainer_id", trainer)
+            self.assertIn("first_name", trainer)
+            self.assertIn("last_name", trainer)
