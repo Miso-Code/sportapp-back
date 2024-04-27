@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 
 from app.config.settings import Config
-from app.models.schemas.schema import SubscriptionPaymentStatus, UpdateSubscriptionTypeResponse, UpdateSubscriptionType
+from app.models.schemas.schema import SubscriptionPaymentStatus, UpdateSubscriptionTypeResponse, UpdateSubscriptionType, PremiumSportsmanAppointment
 from app.security.jwt import JWTManager
-from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType
+from app.models.users import User, NutritionalLimitation, TrainingLimitation, UserSubscriptionType, Trainer, UserSportsmanAppointment
 from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError, PlanPaymentError
 from app.security.passwords import PasswordManager
@@ -192,3 +192,35 @@ class UsersService:
                 error = error["error"]
                 message = f"Failed to process payment. {error}"
                 raise PlanPaymentError(message)
+
+    def schedule_premium_sportsman_appointment(self, user_id, appointment_data: PremiumSportsmanAppointment):
+        user = self.get_user_by_id(user_id)
+
+        trainer = self.db.query(Trainer).filter(Trainer.trainer_id == appointment_data.trainer_id).first()
+
+        if not trainer:
+            raise NotFoundError(f"Trainer with id {appointment_data.trainer_id} not found")
+
+        appointment = UserSportsmanAppointment(
+            user_id=user.user_id,
+            appointment_date=appointment_data.appointment_date,
+            appointment_type=appointment_data.appointment_type,
+            appointment_location=appointment_data.appointment_location,
+            trainer_id=trainer.trainer_id,
+            appointment_reason=appointment_data.appointment_reason,
+        )
+
+        self.db.add(appointment)
+        self.db.commit()
+
+        return DataClassMapper.to_dict(appointment)
+
+    def get_scheduled_appointments(self, user_id):
+        user = self.get_user_by_id(user_id)
+        appointments = self.db.query(UserSportsmanAppointment).filter(UserSportsmanAppointment.user_id == user.user_id).all()
+        return [DataClassMapper.to_dict(appointment) for appointment in appointments]
+
+    def get_premium_trainers(self):
+        trainers = self.db.query(Trainer).all()
+
+        return [DataClassMapper.to_dict(trainer) for trainer in trainers]

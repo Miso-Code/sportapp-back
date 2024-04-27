@@ -48,6 +48,31 @@ class UserSubscriptionType(enum.Enum):
     PREMIUM = "premium"
 
 
+class PremiumAppointmentType(enum.Enum):
+    VIRTUAL = "virtual"
+    IN_PERSON = "in_person"
+
+
+@dataclass
+class Trainer(base):
+    __tablename__ = "trainers"
+    trainer_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    first_name: str = Column(String, nullable=False)
+    last_name: str = Column(String, nullable=False)
+
+
+@dataclass
+class UserSportsmanAppointment(base):
+    __tablename__ = "user_sportsman_appointments"
+    appointment_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: UUID = Column(Uuid(as_uuid=True), nullable=False)
+    appointment_date: datetime = Column(DateTime, nullable=False)
+    appointment_type: PremiumAppointmentType = Column(Enum(PremiumAppointmentType), nullable=False)
+    appointment_location: str = Column(String, nullable=True)
+    trainer_id: UUID = Column(Uuid(as_uuid=True), nullable=False)
+    appointment_reason: str = Column(String, nullable=False)
+
+
 @dataclass
 class TrainingLimitation(base):
     __tablename__ = "training_limitations"

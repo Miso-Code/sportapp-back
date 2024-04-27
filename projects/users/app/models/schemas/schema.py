@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
-from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, SubscriptionFrequency
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, SubscriptionFrequency, PremiumAppointmentType
 from app.config.settings import Config
 from app.exceptions.exceptions import InvalidValueError
 
@@ -102,3 +102,11 @@ class UpdateSubscriptionTypeResponse(BaseModel):
     message: str
     subscription_start_date: Optional[datetime] = None
     subscription_end_date: Optional[datetime] = None
+
+
+class PremiumSportsmanAppointment(BaseModel):
+    appointment_date: datetime
+    appointment_type: PremiumAppointmentType
+    appointment_location: Optional[str] = None
+    trainer_id: UUID = None
+    appointment_reason: str
