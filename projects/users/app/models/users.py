@@ -10,11 +10,6 @@ from sqlalchemy.orm import relationship
 from app.config.db import base
 
 
-class SubscriptionFrequency(enum.Enum):
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-
-
 class FoodPreference(enum.Enum):
     VEGETARIAN = "vegetarian"
     VEGAN = "vegan"
@@ -142,6 +137,6 @@ class User(base):
     food_preference: str = Column(Enum(FoodPreference))
     nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations")
     # Subscription info
-    subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
+    subscription_type: UserSubscriptionType = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
     subscription_start_date: datetime = Column(DateTime, nullable=True)
     subscription_end_date: datetime = Column(DateTime, nullable=True)
