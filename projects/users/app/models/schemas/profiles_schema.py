@@ -1,10 +1,12 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, confloat, conint
+from pydantic import BaseModel, confloat, conint, constr, conset
 
+from app.config.settings import Config
 from app.models.schemas.schema import CreateTrainingLimitation
-from app.models.users import UserIdentificationType, Gender, TrainingObjective, TrainingFrequency, FoodPreference
+from app.models.users import UserIdentificationType, Gender, TrainingObjective, FoodPreference, WeekDay, UserSubscriptionType
 
 
 class UserPersonalProfile(BaseModel):
@@ -22,13 +24,20 @@ class UserPersonalProfile(BaseModel):
     birth_date: Optional[str] = None
 
 
+class UserPersonalProfileGet(UserPersonalProfile):
+    subscription_type: UserSubscriptionType
+    subscription_start_date: Optional[datetime] = None
+    subscription_end_date: Optional[datetime] = None
+
+
 class UserSportsProfile(BaseModel):
     favourite_sport_id: Optional[UUID] = None
     training_objective: Optional[TrainingObjective] = None
     weight: Optional[confloat(gt=0)] = None
     height: Optional[confloat(gt=0)] = None
     available_training_hours: Optional[confloat(gt=0)] = None
-    training_frequency: Optional[TrainingFrequency] = None
+    available_weekdays: Optional[conset(item_type=WeekDay, min_length=1)] = []
+    preferred_training_start_time: Optional[constr(pattern=Config.HOUR_REGEX)] = None
 
 
 class UserSportsProfileGet(UserSportsProfile):

@@ -2,7 +2,7 @@
 name = "users"
 version = "0.1.0"
 description = ""
-authors = ["Brayan Henao <b.henaoc@uniandes.edu.co>"]
+authors = ["Miso Team"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -19,6 +19,7 @@ bcrypt = "^4.1.2"
 python-dotenv = "^1.0.1"
 alembic = "^1.13.1"
 pytest-mock = "^3.14.0"
+pyhumps = "^3.8.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.1.1"

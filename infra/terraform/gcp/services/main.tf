@@ -75,3 +75,17 @@ module "sport_sessions_service" {
   db_instance = data.terraform_remote_state.resources.outputs.instance_connection_name
   depends_on  = [data.terraform_remote_state.resources]
 }
+
+module "training_plan_service" {
+  source          = "../modules/cloud_run_service"
+  name            = "training-plan-service"
+  location        = "us-central1"
+  image           = "us-central1-docker.pkg.dev/sportapp-417820/sportapp/training-plans:develop"
+  service_account = data.google_service_account.develop_service_account.email
+  port            = 8000
+  env = {
+    DATABASE_URL = "postgresql+psycopg2://${data.google_secret_manager_secret_version.db_username.secret_data}:${data.google_secret_manager_secret_version.db_password.secret_data}@/${data.terraform_remote_state.resources.outputs.database_name}?host=/cloudsql/${data.terraform_remote_state.resources.outputs.instance_connection_name}",
+  }
+  db_instance = data.terraform_remote_state.resources.outputs.instance_connection_name
+  depends_on  = [data.terraform_remote_state.resources]
+}

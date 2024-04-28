@@ -1,8 +1,10 @@
 import enum
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Literal
 from uuid import uuid4, UUID
 
-from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, Uuid, Enum, String, Integer, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 
 from app.config.db import base
@@ -19,13 +21,6 @@ class Gender(enum.Enum):
     FEMALE = "F"
     OTHER = "O"
     PREFER_NOT_TO_SAY = "P"
-
-
-class TrainingFrequency(enum.Enum):
-    DAILY = "daily"
-    EVERY_OTHER_DAY = "every_other_day"
-    WEEKLY = "weekly"
-    MONTHLY = "monthly"
 
 
 class TrainingObjective(enum.Enum):
@@ -46,6 +41,31 @@ class UserSubscriptionType(enum.Enum):
     FREE = "free"
     INTERMEDIATE = "intermediate"
     PREMIUM = "premium"
+
+
+class PremiumAppointmentType(enum.Enum):
+    VIRTUAL = "virtual"
+    IN_PERSON = "in_person"
+
+
+@dataclass
+class Trainer(base):
+    __tablename__ = "trainers"
+    trainer_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    first_name: str = Column(String, nullable=False)
+    last_name: str = Column(String, nullable=False)
+
+
+@dataclass
+class UserSportsmanAppointment(base):
+    __tablename__ = "user_sportsman_appointments"
+    appointment_id: UUID = Column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: UUID = Column(Uuid(as_uuid=True), nullable=False)
+    appointment_date: datetime = Column(DateTime, nullable=False)
+    appointment_type: PremiumAppointmentType = Column(Enum(PremiumAppointmentType), nullable=False)
+    appointment_location: str = Column(String, nullable=True)
+    trainer_id: UUID = Column(Uuid(as_uuid=True), nullable=False)
+    appointment_reason: str = Column(String, nullable=False)
 
 
 @dataclass
@@ -80,6 +100,9 @@ class UserNutritionalLimitation(base):
     limitation_id: str = Column(Uuid(as_uuid=True), ForeignKey("nutritional_limitations.limitation_id"))
 
 
+WeekDay = Literal["monday"] | Literal["tuesday"] | Literal["wednesday"] | Literal["thursday"] | Literal["friday"] | Literal["saturday"] | Literal["sunday"]
+
+
 @dataclass
 class User(base):
     __tablename__ = "users"
@@ -104,8 +127,9 @@ class User(base):
     training_objective = Column(Enum(TrainingObjective))
     weight: float = Column(Float)
     height: float = Column(Float)
+    available_weekdays: str = Column(String, default="")
+    preferred_training_start_time: str = Column(String)
     available_training_hours: int = Column(Integer)
-    training_frequency: str = Column(Enum(TrainingFrequency))
     training_limitations = relationship("TrainingLimitation", secondary="user_training_limitations")
     # Additional sport info
     training_years: int = Column(Integer)
@@ -113,4 +137,6 @@ class User(base):
     food_preference: str = Column(Enum(FoodPreference))
     nutritional_limitations = relationship("NutritionalLimitation", secondary="user_nutritional_limitations")
     # Subscription info
-    subscription_type: str = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
+    subscription_type: UserSubscriptionType = Column(Enum(UserSubscriptionType), default=UserSubscriptionType.FREE)
+    subscription_start_date: datetime = Column(DateTime, nullable=True)
+    subscription_end_date: datetime = Column(DateTime, nullable=True)

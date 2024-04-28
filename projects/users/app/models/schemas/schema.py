@@ -1,11 +1,18 @@
+import enum
 import re
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
-from app.models.users import UserIdentificationType, Gender
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, PremiumAppointmentType
 from app.config.settings import Config
 from app.exceptions.exceptions import InvalidValueError
+
+
+class SubscriptionPaymentStatus(enum.Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
 
 
 class UserCreate(BaseModel):
@@ -75,3 +82,42 @@ class CreateTrainingLimitation(BaseModel):
     limitation_id: Optional[UUID] = None
     name: str
     description: str
+
+
+class PaymentData(BaseModel):
+    card_number: str
+    card_holder: str
+    card_expiration_date: str
+    card_cvv: str
+    amount: float
+
+
+class UpdateSubscriptionType(BaseModel):
+    subscription_type: UserSubscriptionType
+    payment_data: Optional[PaymentData] = None
+
+    @model_validator(mode="before")
+    def validate_payment_data(cls, values):
+        subscription_type = values.get("subscription_type")
+        payment_data = values.get("payment_data")
+
+        if subscription_type == UserSubscriptionType.PREMIUM.value or subscription_type == UserSubscriptionType.INTERMEDIATE.value:
+            if payment_data is None:
+                raise InvalidValueError("Payment data is required for premium and intermediate subscriptions")
+
+        return values
+
+
+class UpdateSubscriptionTypeResponse(BaseModel):
+    status: SubscriptionPaymentStatus
+    message: str
+    subscription_start_date: Optional[datetime] = None
+    subscription_end_date: Optional[datetime] = None
+
+
+class PremiumSportsmanAppointment(BaseModel):
+    appointment_date: datetime
+    appointment_type: PremiumAppointmentType
+    appointment_location: Optional[str] = None
+    trainer_id: UUID = None
+    appointment_reason: str

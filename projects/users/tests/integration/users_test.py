@@ -1,5 +1,7 @@
 import json
 from asyncio import get_event_loop
+from datetime import timedelta
+from uuid import UUID
 
 import faker
 import pytest
@@ -11,12 +13,21 @@ from http import HTTPStatus
 
 from app.config.settings import Config
 from app.exceptions.exceptions import NotFoundError
+from app.models.mappers.user_mapper import DataClassMapper
 from app.models.users import User
 from app.security.passwords import PasswordManager
 from app.utils import utils
 from main import app
 from app.config.db import base, get_db
-from tests.utils.users_util import generate_random_user_create_data, generate_random_user_additional_information, generate_random_user, generate_random_user_nutritional_limitation
+from tests.utils.users_util import (
+    generate_random_user_create_data,
+    generate_random_user_additional_information,
+    generate_random_user,
+    generate_random_user_nutritional_limitation,
+    generate_random_trainer,
+    generate_random_appointment_data,
+    generate_random_appointment,
+)
 
 
 class Constants:
@@ -373,7 +384,8 @@ async def test_get_user_sports_profile(test_db):
         assert response_json["weight"] == user_created.weight
         assert response_json["height"] == user_created.height
         assert response_json["available_training_hours"] == user_created.available_training_hours
-        assert response_json["training_frequency"] == user_created.training_frequency.value
+        assert response_json["preferred_training_start_time"] == user_created.preferred_training_start_time
+        assert response_json["training_limitations"] == [limitation.name for limitation in user_created.training_limitations]
         assert response_json["bmi"] == utils.calculate_bmi(user_created.weight, user_created.height)
 
         assert getattr(response_json, "email", None) is None
@@ -382,6 +394,10 @@ async def test_get_user_sports_profile(test_db):
         assert getattr(response_json, "identification_type", None) is None
         assert getattr(response_json, "identification_number", None) is None
         assert getattr(response_json, "gender", None) is None
+
+        response_available_weekdays = response_json["available_weekdays"]
+        for weekday in response_available_weekdays:
+            assert weekday in user_created.available_weekdays.split(",")
 
 
 @pytest.mark.asyncio
@@ -513,12 +529,16 @@ async def test_update_user_sports_profile(test_db, mocker):
             "weight": new_user_data.weight,
             "height": new_user_data.height,
             "available_training_hours": new_user_data.available_training_hours,
-            "training_frequency": new_user_data.training_frequency.value,
             "training_limitations": [{"name": fake.word(), "description": fake.sentence()} for _ in range(fake.random_int(1, 4))],
+            "available_weekdays": new_user_data.available_weekdays.split(","),
+            "preferred_training_start_time": new_user_data.preferred_training_start_time,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.return_value = {"sport_id": new_user_data.favourite_sport_id, "name": "Some sport"}
+
+        external_service_create_training_plan = mocker.patch("app.services.external.ExternalServices.create_training_plan")
+        external_service_create_training_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
@@ -532,9 +552,13 @@ async def test_update_user_sports_profile(test_db, mocker):
         assert response_json["weight"] == new_user_data.weight
         assert response_json["height"] == new_user_data.height
         assert response_json["available_training_hours"] == new_user_data.available_training_hours
-        assert response_json["training_frequency"] == new_user_data.training_frequency.value
         assert response_json["bmi"] == utils.calculate_bmi(new_user_data.weight, new_user_data.height)
         assert len(response_json["training_limitations"]) == len(new_user_data_json["training_limitations"])
+        assert response_json["preferred_training_start_time"] == new_user_data.preferred_training_start_time
+
+        response_available_weekdays = response_json["available_weekdays"]
+        for weekday in response_available_weekdays:
+            assert weekday in new_user_data.available_weekdays.split(",")
 
 
 @pytest.mark.asyncio
@@ -552,11 +576,10 @@ async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
             "weight": new_user_data.weight,
             "height": new_user_data.height,
             "available_training_hours": new_user_data.available_training_hours,
-            "training_frequency": new_user_data.training_frequency.value,
         }
 
-        external_service = mocker.patch("app.services.external.ExternalServices.get_sport")
-        external_service.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
+        external_service_get_sport = mocker.patch("app.services.external.ExternalServices.get_sport")
+        external_service_get_sport.side_effect = NotFoundError(f"Sport with id {new_user_data.favourite_sport_id} not found")
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
@@ -619,3 +642,112 @@ async def test_update_user_nutritional_profile_not_found_limitation_id(test_db):
         assert response.status_code == HTTPStatus.NOT_FOUND
         assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert response_json["message"] == f"Nutritional limitation with id {new_user_data_json['nutritional_limitations'][1]} not found"
+
+
+@pytest.mark.asyncio
+async def test_schedule_premium_sportsman_appointment(test_db):
+    async with TestClient(app) as client:
+        trainer_id = UUID(fake.uuid4())
+        helper_db = TestingSessionLocal()
+        trainer = generate_random_trainer(fake)
+        trainer.trainer_id = trainer_id
+        helper_db.add(trainer)
+        helper_db.commit()
+
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        appointment_data = DataClassMapper.to_dict(generate_random_appointment_data(fake, trainer_id), pydantic=True)
+
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.post(f"{Constants.USERS_BASE_PATH}/premium/sportsman-appointment", json=appointment_data)
+        response_json = response.json()
+        print(response_json)
+
+        assert response.status_code == HTTPStatus.CREATED
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert "appointment_id" in response_json
+        assert "appointment_date" in response_json
+        assert response_json["trainer_id"] == str(trainer_id)
+        assert response_json["user_id"] == str(user_created.user_id)
+        assert response_json["appointment_type"] == appointment_data["appointment_type"]
+        assert response_json["appointment_reason"] == appointment_data["appointment_reason"]
+
+
+@pytest.mark.asyncio
+async def test_get_scheduled_premium_appointments(test_db):
+    async with TestClient(app) as client:
+        trainer_id = UUID(fake.uuid4())
+        helper_db = TestingSessionLocal()
+        trainer = generate_random_trainer(fake)
+        trainer.trainer_id = trainer_id
+        helper_db.add(trainer)
+        helper_db.commit()
+
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        date_1 = fake.date_time_this_month()
+        date_2 = date_1 + timedelta(days=1)
+
+        appointment_1 = generate_random_appointment(fake)
+        appointment_1.user_id = user_created.user_id
+        appointment_1.trainer_id = trainer_id
+        appointment_1.appointment_date = date_1
+
+        appointment_2 = generate_random_appointment(fake)
+        appointment_2.user_id = user_created.user_id
+        appointment_2.trainer_id = trainer_id
+        appointment_2.appointment_date = date_2
+
+        helper_db.add(appointment_1)
+        helper_db.add(appointment_2)
+        helper_db.commit()
+
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/premium/sportsman-appointment")
+        response_json = response.json()
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert len(response_json) == 2
+        assert response_json[0]["appointment_id"] == str(appointment_2.appointment_id)
+        assert response_json[0]["appointment_date"] == appointment_2.appointment_date.isoformat()
+        assert response_json[0]["trainer_id"] == str(trainer_id)
+        assert response_json[0]["appointment_type"] == appointment_2.appointment_type.value
+        assert response_json[0]["appointment_reason"] == appointment_2.appointment_reason
+        assert response_json[1]["appointment_id"] == str(appointment_1.appointment_id)
+        assert response_json[1]["appointment_date"] == appointment_1.appointment_date.isoformat()
+        assert response_json[1]["trainer_id"] == str(trainer_id)
+        assert response_json[1]["appointment_type"] == appointment_1.appointment_type.value
+        assert response_json[1]["appointment_reason"] == appointment_1.appointment_reason
+
+
+@pytest.mark.asyncio
+async def test_get_premium_trainers(test_db):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        trainer_1 = generate_random_trainer(fake)
+        trainer_1.trainer_id = UUID(trainer_1.trainer_id)
+        trainer_2 = generate_random_trainer(fake)
+        trainer_2.trainer_id = UUID(trainer_2.trainer_id)
+        helper_db.add(trainer_1)
+        helper_db.add(trainer_2)
+        helper_db.commit()
+
+        client.headers["user-id"] = fake.uuid4()
+        response = await client.get(f"{Constants.USERS_BASE_PATH}/premium/trainers")
+        response_json = response.json()
+        print(response_json)
+
+        assert response.status_code == HTTPStatus.OK
+        assert Constants.APPLICATION_JSON in response.headers["content-type"]
+        assert len(response_json) == 2
+        assert response_json[0]["trainer_id"] == str(trainer_1.trainer_id)
+        assert response_json[0]["first_name"] == trainer_1.first_name
+        assert response_json[0]["last_name"] == trainer_1.last_name
+        assert response_json[1]["trainer_id"] == str(trainer_2.trainer_id)
+        assert response_json[1]["first_name"] == trainer_2.first_name
+        assert response_json[1]["last_name"] == trainer_2.last_name

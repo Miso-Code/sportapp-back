@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 data "aws_iam_role" "ecs_role" {
   name = "ecsTaskExecutionRole"
 }
@@ -12,6 +16,10 @@ data "aws_secretsmanager_secret" "jwt_secret" {
 
 data "aws_secretsmanager_secret" "services_urls" {
   name = "SERVICES_URLS_PROD"
+}
+
+data "aws_secretsmanager_secret" "api_key" {
+  name = "API_KEY"
 }
 
 data "terraform_remote_state" "resources" {
@@ -90,6 +98,10 @@ module "users-task-def" {
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.jwt_secret.arn}:JWT_SECRET::"
       "name" : "JWT_SECRET_KEY"
+    },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:MISO_STRIPE::"
+      "name" : "MISO_STRIPE_API_KEY"
     },
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:SPORTAPP_SERVICES_BASE_URL::"
@@ -200,6 +212,44 @@ module "users-get-all-nutritional-limitations-route" {
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
   route_path       = "/users/nutritional-limitations"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "users-update-user-plan-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "PATCH"
+  route_path       = "/users/update-plan"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+# Premium
+
+module "users-schedule-premium-sportsman-appointment-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "POST"
+  route_path       = "/users/premium/sportsman-appointment"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "users-get-scheduled-premium-sportsman-appointments-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/users/premium/sportsman-appointment"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "users-get-premium-trainers-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/users/premium/trainers"
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }

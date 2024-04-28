@@ -1,8 +1,28 @@
 from uuid import UUID
 
 from app.models.schemas.profiles_schema import UserPersonalProfile, UserSportsProfile, UserNutritionalProfile, UserSportsProfileUpdate
-from app.models.users import User, UserIdentificationType, FoodPreference, Gender, TrainingObjective, TrainingFrequency, NutritionalLimitation
-from app.models.schemas.schema import UserCreate, UserAdditionalInformation, UserCredentials, CreateTrainingLimitation
+from app.models.users import (
+    User,
+    UserIdentificationType,
+    FoodPreference,
+    Gender,
+    TrainingObjective,
+    NutritionalLimitation,
+    WeekDay,
+    UserSubscriptionType,
+    Trainer,
+    PremiumAppointmentType,
+    UserSportsmanAppointment,
+)
+from app.models.schemas.schema import (
+    UserCreate,
+    UserAdditionalInformation,
+    UserCredentials,
+    CreateTrainingLimitation,
+    UpdateSubscriptionType,
+    PaymentData,
+    PremiumSportsmanAppointment,
+)
 
 
 def generate_random_users_create_data(faker, count):
@@ -68,7 +88,8 @@ def generate_random_user_sports_profile(faker):
         weight=user.weight,
         height=user.height,
         available_training_hours=user.available_training_hours,
-        training_frequency=TrainingFrequency(user.training_frequency),
+        available_week_days=set(user.available_weekdays.split(",")),
+        preferred_training_start_time=user.preferred_training_start_time,
     )
 
 
@@ -79,7 +100,8 @@ def generate_random_user_sport_profile_update(faker):
         weight=faker.random_int(40, 120),
         height=faker.random_int(150, 200) / 100,
         available_training_hours=faker.random_number(1, 20),
-        training_frequency=faker.enum(TrainingFrequency),
+        available_week_days=faker.random_choices(week_days, unique=True, length=faker.random_number(1, 7)),
+        preferred_training_start_time=faker.time(),
         training_limitations=[CreateTrainingLimitation(name=faker.word(), description=faker.sentence()) for _ in range(faker.random_number(1, 5))],
     )
 
@@ -89,6 +111,9 @@ def generate_random_user_nutritional_profile(faker):
         food_preference=faker.enum(FoodPreference),
         nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number(1, 5))],
     )
+
+
+week_days: list[WeekDay] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
 def generate_random_user(faker):
@@ -108,12 +133,16 @@ def generate_random_user(faker):
         birth_date=faker.date_of_birth(minimum_age=15).isoformat(),
         favourite_sport_id=faker.uuid4(),
         training_objective=faker.enum(TrainingObjective),
+        available_weekdays=",".join(list(set(faker.random_choices(week_days, length=faker.random_number(1, 7))))),
+        available_training_hours=faker.random_number(1, 20),
+        preferred_training_start_time=faker.time("%I:%M %p"),
         height=faker.random_int(150, 200) / 100,
         weight=faker.random_int(40, 120),
-        available_training_hours=faker.random_number(1, 20),
-        training_frequency=faker.enum(TrainingFrequency),
         training_years=faker.random_number(1, 20),
         food_preference=faker.enum(FoodPreference),
+        subscription_type=faker.enum(UserSubscriptionType),
+        subscription_start_date=faker.date_time_this_decade(),
+        subscription_end_date=faker.date_time_this_decade(),
     )
 
 
@@ -122,4 +151,47 @@ def generate_random_user_nutritional_limitation(faker):
         limitation_id=UUID(faker.uuid4()),
         name=faker.word(),
         description=faker.sentence(),
+    )
+
+
+def generate_random_update_user_plan(faker):
+    return UpdateSubscriptionType(
+        subscription_type=faker.enum(UserSubscriptionType),
+        payment_data=PaymentData(
+            card_number=faker.credit_card_number(),
+            card_holder=faker.name(),
+            card_expiration_date=faker.credit_card_expire(),
+            card_cvv=faker.credit_card_security_code(),
+            amount=faker.random_number(1, 1000),
+        ),
+    )
+
+
+def generate_random_trainer(faker):
+    return Trainer(
+        trainer_id=faker.uuid4(),
+        first_name=faker.first_name(),
+        last_name=faker.last_name(),
+    )
+
+
+def generate_random_appointment_data(faker, trainer_id, address: bool = False):
+    address = faker.address() if address else None
+    return PremiumSportsmanAppointment(
+        appointment_date=faker.date_time_this_year(),
+        appointment_type=faker.enum(PremiumAppointmentType),
+        appointment_location=address,
+        trainer_id=trainer_id,
+        appointment_reason=faker.sentence(),
+    )
+
+
+def generate_random_appointment(faker):
+    return UserSportsmanAppointment(
+        user_id=faker.uuid4(),
+        appointment_date=faker.date_time_this_year(),
+        appointment_type=faker.enum(PremiumAppointmentType),
+        appointment_location=faker.address(),
+        trainer_id=faker.uuid4(),
+        appointment_reason=faker.sentence(),
     )

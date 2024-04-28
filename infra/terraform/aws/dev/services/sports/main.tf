@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 data "aws_iam_role" "ecs_role" {
   name = "ecsTaskExecutionRole"
 }
@@ -85,19 +89,19 @@ module "sports-service" {
 // User Service API Gateway endpoints
 
 module "sports-get-all-route" {
-  source                   = "../../../modules/api_gateway/route"
-  api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method             = "GET"
-  route_path               = "/sports"
-  elb_listener_arn         = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id              = data.terraform_remote_state.resources.outputs.vpc_link_id
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/sports"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
 
 module "sports-get-by-id-route" {
-  source                   = "../../../modules/api_gateway/route"
-  api_id                   = data.terraform_remote_state.resources.outputs.api_gateway_id
-  route_method             = "GET"
-  route_path               = "/sports/{id}"
-  elb_listener_arn         = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  vpc_link_id              = data.terraform_remote_state.resources.outputs.vpc_link_id
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/sports/{id}"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
