@@ -8,7 +8,7 @@ const authMiddleware = async (req, res, next) => {
     const requestApiKey = req.get('api_key');
     if (apiKey !== requestApiKey) {
       return res.status(HTTP_STATUS_UNAUTHORIZED)
-        .send('Not authenticated');
+        .send({ error: 'Unauthorized' });
     }
   }
 

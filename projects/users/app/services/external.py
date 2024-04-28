@@ -2,7 +2,7 @@ import requests
 import humps
 
 from app.config.settings import Config
-from app.exceptions.exceptions import NotFoundError
+from app.exceptions.exceptions import NotFoundError, ExternalServiceError
 from app.models.schemas.schema import PaymentData
 
 
@@ -34,4 +34,6 @@ class ExternalServices:
         )
         if response.status_code == 200:
             return True, {}
+        elif response.status_code == 401:
+            raise ExternalServiceError("Miso Stripe API key is invalid")
         return False, response.json()

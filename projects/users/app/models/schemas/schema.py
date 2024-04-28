@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
-from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, SubscriptionFrequency, PremiumAppointmentType
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, PremiumAppointmentType
 from app.config.settings import Config
 from app.exceptions.exceptions import InvalidValueError
 

@@ -45,7 +45,7 @@ describe('authMiddleware', () => {
     expect(res.status)
       .toHaveBeenCalledWith(HTTP_STATUS_UNAUTHORIZED);
     expect(res.send)
-      .toHaveBeenCalledWith('Not authenticated');
+      .toHaveBeenCalledWith({ error: 'Unauthorized' });
     expect(next)
       .not
       .toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe('authMiddleware', () => {
     expect(res.status)
       .toHaveBeenCalledWith(HTTP_STATUS_UNAUTHORIZED);
     expect(res.send)
-      .toHaveBeenCalledWith('Not authenticated');
+      .toHaveBeenCalledWith({ error: 'Unauthorized' });
     expect(next)
       .not
       .toHaveBeenCalled();

@@ -83,7 +83,7 @@ class UsersService:
 
     def authenticate_user(self, user_credentials):
         if user_credentials.refresh_token:
-            return self.jwt_manager.process_refresh_token_login(user_credentials.refresh_token)
+            return self._process_refresh_token_login(user_credentials.refresh_token)
         else:
             return self._process_email_password_login(user_credentials.email, user_credentials.password)
 
@@ -161,7 +161,17 @@ class UsersService:
         if not user:
             raise InvalidCredentialsError("Invalid email or password")
 
-        return self.jwt_manager.process_email_password_login(user.user_id, user_credentials_password, user.hashed_password, user.subscription_type)
+        if not PasswordManager.verify_password(user_credentials_password, user.hashed_password):
+            raise InvalidCredentialsError("Invalid email or password")
+
+        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
+
+    def _process_refresh_token_login(self, refresh_token):
+        user_id = self.jwt_manager.decode_refresh_token(refresh_token)
+
+        user = self.db.query(User).filter(User.user_id == UUID(user_id)).first()
+
+        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
 
     def update_user_plan(self, user_id, update_subscription_type: UpdateSubscriptionType):
         user = self.get_user_by_id(user_id)

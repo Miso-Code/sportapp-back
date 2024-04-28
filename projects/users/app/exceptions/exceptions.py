@@ -16,3 +16,7 @@ class InvalidCredentialsError(Exception):
 
 class PlanPaymentError(Exception):
     pass
+
+
+class ExternalServiceError(Exception):
+    pass

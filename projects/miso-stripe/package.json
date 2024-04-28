@@ -7,6 +7,7 @@
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js",
     "lint": "eslint .",
+    "test": "yarn test:unit && yarn test:integration",
     "test:unit": "jest --ci --no-cache --coverage --detectOpenHandles --forceExit src/**",
     "test:integration": "jest --ci --no-cache --detectOpenHandles --forceExit test/**"
   },
