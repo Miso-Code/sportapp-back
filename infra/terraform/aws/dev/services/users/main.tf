@@ -18,6 +18,10 @@ data "aws_secretsmanager_secret" "services_urls" {
   name = "SERVICES_URLS_DEV"
 }
 
+data "aws_secretsmanager_secret" "api_key" {
+  name = "API_KEY"
+}
+
 data "terraform_remote_state" "resources" {
   backend = "remote"
   config = {
@@ -94,6 +98,10 @@ module "users-task-def" {
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.jwt_secret.arn}:JWT_SECRET::"
       "name" : "JWT_SECRET_KEY"
+    },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:MISO_STRIPE::"
+      "name" : "MISO_STRIPE_API_KEY"
     },
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:SPORTAPP_SERVICES_BASE_URL::"
@@ -219,7 +227,7 @@ module "users-update-user-plan-route" {
 
 # Premium
 
-module "users-schedule-premium-sportsman-appoitnment-route" {
+module "users-schedule-premium-sportsman-appointment-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "POST"

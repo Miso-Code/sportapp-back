@@ -1,7 +1,7 @@
 import unittest
 from faker import Faker
-from app.models.schemas.schema import UserCreate, UserCredentials, UserAdditionalInformation
-from app.models.users import UserIdentificationType, Gender
+from app.models.schemas.schema import UserCreate, UserCredentials, UserAdditionalInformation, UpdateSubscriptionType
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType
 
 from app.exceptions.exceptions import InvalidValueError
 
@@ -149,3 +149,63 @@ class TestUserCredentials(unittest.TestCase):
         with self.assertRaises(InvalidValueError) as context:
             UserCredentials(email=email, password=password)
         self.assertEqual(str(context.exception), "Invalid email address")
+
+
+class TestUpdateSubscriptionType(unittest.TestCase):
+    def test_valid_body_update_subscription_type_free(self):
+        update = UpdateSubscriptionType(
+            subscription_type=UserSubscriptionType.FREE,
+        )
+
+        self.assertEqual(update.subscription_type, UserSubscriptionType.FREE)
+
+    def test_valid_body_update_subscription_type_premium(self):
+        card_number = fake.credit_card_number()
+        card_holder = fake.name()
+        card_expiration_date = fake.credit_card_expire()
+        card_cvv = fake.credit_card_security_code()
+        amount = fake.random_int(min=1, max=1000)
+
+        update = UpdateSubscriptionType(
+            subscription_type=UserSubscriptionType.PREMIUM,
+            payment_data={"card_number": card_number, "card_holder": card_holder, "card_expiration_date": card_expiration_date, "card_cvv": card_cvv, "amount": amount},
+        )
+
+        self.assertEqual(update.subscription_type, UserSubscriptionType.PREMIUM)
+        self.assertEqual(update.payment_data.card_number, card_number)
+        self.assertEqual(update.payment_data.card_holder, card_holder)
+        self.assertEqual(update.payment_data.card_expiration_date, card_expiration_date)
+        self.assertEqual(update.payment_data.card_cvv, card_cvv)
+        self.assertEqual(update.payment_data.amount, amount)
+
+    def test_valid_body_update_subscription_type_intermediate(self):
+        card_number = fake.credit_card_number()
+        card_holder = fake.name()
+        card_expiration_date = fake.credit_card_expire()
+        card_cvv = fake.credit_card_security_code()
+        amount = fake.random_int(min=1, max=1000)
+
+        update = UpdateSubscriptionType(
+            subscription_type=UserSubscriptionType.INTERMEDIATE,
+            payment_data={"card_number": card_number, "card_holder": card_holder, "card_expiration_date": card_expiration_date, "card_cvv": card_cvv, "amount": amount},
+        )
+
+        self.assertEqual(update.subscription_type, UserSubscriptionType.INTERMEDIATE)
+        self.assertEqual(update.payment_data.card_number, card_number)
+        self.assertEqual(update.payment_data.card_holder, card_holder)
+        self.assertEqual(update.payment_data.card_expiration_date, card_expiration_date)
+        self.assertEqual(update.payment_data.card_cvv, card_cvv)
+        self.assertEqual(update.payment_data.amount, amount)
+
+    def test_invalid_body_update_non_free_subscriptions(self):
+        with self.assertRaises(InvalidValueError) as context:
+            UpdateSubscriptionType(
+                subscription_type=UserSubscriptionType.PREMIUM.value,
+            )
+        self.assertEqual(str(context.exception), "Payment data is required for premium and intermediate subscriptions")
+
+        with self.assertRaises(InvalidValueError) as context:
+            UpdateSubscriptionType(
+                subscription_type=UserSubscriptionType.INTERMEDIATE.value,
+            )
+        self.assertEqual(str(context.exception), "Payment data is required for premium and intermediate subscriptions")

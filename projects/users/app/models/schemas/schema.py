@@ -94,7 +94,18 @@ class PaymentData(BaseModel):
 
 class UpdateSubscriptionType(BaseModel):
     subscription_type: UserSubscriptionType
-    payment_data: PaymentData
+    payment_data: Optional[PaymentData] = None
+
+    @model_validator(mode="before")
+    def validate_payment_data(cls, values):
+        subscription_type = values.get("subscription_type")
+        payment_data = values.get("payment_data")
+
+        if subscription_type == UserSubscriptionType.PREMIUM.value or subscription_type == UserSubscriptionType.INTERMEDIATE.value:
+            if payment_data is None:
+                raise InvalidValueError("Payment data is required for premium and intermediate subscriptions")
+
+        return values
 
 
 class UpdateSubscriptionTypeResponse(BaseModel):
