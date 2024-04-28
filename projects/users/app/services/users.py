@@ -227,7 +227,9 @@ class UsersService:
 
     def get_scheduled_appointments(self, user_id):
         user = self.get_user_by_id(user_id)
-        appointments = self.db.query(UserSportsmanAppointment).filter(UserSportsmanAppointment.user_id == user.user_id).all()
+        appointments = (
+            self.db.query(UserSportsmanAppointment).filter(UserSportsmanAppointment.user_id == user.user_id).order_by(UserSportsmanAppointment.appointment_date.desc()).all()
+        )
         return [DataClassMapper.to_dict(appointment) for appointment in appointments]
 
     def get_premium_trainers(self):

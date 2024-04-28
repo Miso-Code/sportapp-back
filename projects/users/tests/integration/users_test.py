@@ -1,5 +1,6 @@
 import json
 from asyncio import get_event_loop
+from datetime import timedelta
 from uuid import UUID
 
 import faker
@@ -688,13 +689,18 @@ async def test_get_scheduled_premium_appointments(test_db):
         helper_db.add(user_created)
         helper_db.commit()
 
+        date_1 = fake.date_time_this_month()
+        date_2 = date_1 + timedelta(days=1)
+
         appointment_1 = generate_random_appointment(fake)
         appointment_1.user_id = user_created.user_id
         appointment_1.trainer_id = trainer_id
+        appointment_1.appointment_date = date_1
 
         appointment_2 = generate_random_appointment(fake)
         appointment_2.user_id = user_created.user_id
         appointment_2.trainer_id = trainer_id
+        appointment_2.appointment_date = date_2
 
         helper_db.add(appointment_1)
         helper_db.add(appointment_2)
@@ -707,16 +713,16 @@ async def test_get_scheduled_premium_appointments(test_db):
         assert response.status_code == HTTPStatus.OK
         assert Constants.APPLICATION_JSON in response.headers["content-type"]
         assert len(response_json) == 2
-        assert response_json[0]["appointment_id"] == str(appointment_1.appointment_id)
-        assert response_json[0]["appointment_date"] == appointment_1.appointment_date.isoformat()
+        assert response_json[0]["appointment_id"] == str(appointment_2.appointment_id)
+        assert response_json[0]["appointment_date"] == appointment_2.appointment_date.isoformat()
         assert response_json[0]["trainer_id"] == str(trainer_id)
-        assert response_json[0]["appointment_type"] == appointment_1.appointment_type.value
-        assert response_json[0]["appointment_reason"] == appointment_1.appointment_reason
-        assert response_json[1]["appointment_id"] == str(appointment_2.appointment_id)
-        assert response_json[1]["appointment_date"] == appointment_2.appointment_date.isoformat()
+        assert response_json[0]["appointment_type"] == appointment_2.appointment_type.value
+        assert response_json[0]["appointment_reason"] == appointment_2.appointment_reason
+        assert response_json[1]["appointment_id"] == str(appointment_1.appointment_id)
+        assert response_json[1]["appointment_date"] == appointment_1.appointment_date.isoformat()
         assert response_json[1]["trainer_id"] == str(trainer_id)
-        assert response_json[1]["appointment_type"] == appointment_2.appointment_type.value
-        assert response_json[1]["appointment_reason"] == appointment_2.appointment_reason
+        assert response_json[1]["appointment_type"] == appointment_1.appointment_type.value
+        assert response_json[1]["appointment_reason"] == appointment_1.appointment_reason
 
 
 @pytest.mark.asyncio
