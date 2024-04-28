@@ -64,7 +64,7 @@ class DataClassMapper:
             weight=user.weight,
             height=user.height,
             available_training_hours=user.available_training_hours,
-            available_weekdays=user.available_weekdays.split(","),
+            available_weekdays=user.available_weekdays.split(",") if user.available_weekdays else None,
             preferred_training_start_time=user.preferred_training_start_time,
             training_limitations=[DataClassMapper.to_dict(limitation) for limitation in user.training_limitations],
         )
@@ -80,7 +80,7 @@ class DataClassMapper:
         return {
             "training_objective": user.training_objective.value,
             "available_training_hours": user.available_training_hours,
-            "available_weekdays": user.available_weekdays.split(","),
+            "available_weekdays": user.available_weekdays.split(",") if user.available_weekdays else [],
             "preferred_training_start_time": user.preferred_training_start_time,
             "favourite_sport_id": user.favourite_sport_id,
             "weight": user.weight,

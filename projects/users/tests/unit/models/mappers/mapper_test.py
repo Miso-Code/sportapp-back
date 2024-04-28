@@ -97,3 +97,18 @@ class TestDataClassMapper(unittest.TestCase):
         self.assertEqual(user_profile_dict["available_weekdays"].sort(), user_instance.available_weekdays.split(",").sort())
         self.assertEqual(user_profile_dict["preferred_training_start_time"], user_instance.preferred_training_start_time)
         self.assertEqual(user_profile_dict["training_limitations"], user_instance.training_limitations)
+
+    def test_to_sports_profile_no_available_weekdays(self):
+        user_instance = generate_random_user(fake)
+        del user_instance.available_weekdays
+
+        user_profile_dict = DataClassMapper.to_user_sports_profile(user_instance)
+
+        self.assertEqual(user_profile_dict["favourite_sport_id"], user_instance.favourite_sport_id)
+        self.assertEqual(user_profile_dict["training_objective"], user_instance.training_objective.value)
+        self.assertEqual(user_profile_dict["weight"], user_instance.weight)
+        self.assertEqual(user_profile_dict["height"], user_instance.height)
+        self.assertEqual(user_profile_dict["available_training_hours"], user_instance.available_training_hours)
+        self.assertEqual(user_profile_dict["preferred_training_start_time"], user_instance.preferred_training_start_time)
+        self.assertEqual(user_profile_dict["training_limitations"], user_instance.training_limitations)
+        self.assertNotIn("available_weekdays", user_profile_dict)
