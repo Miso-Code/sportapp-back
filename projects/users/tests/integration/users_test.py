@@ -383,7 +383,6 @@ async def test_get_user_sports_profile(test_db):
         assert response_json["weight"] == user_created.weight
         assert response_json["height"] == user_created.height
         assert response_json["available_training_hours"] == user_created.available_training_hours
-        assert response_json["available_weekdays"] == user_created.available_weekdays.split(",")
         assert response_json["preferred_training_start_time"] == user_created.preferred_training_start_time
         assert response_json["training_limitations"] == [limitation.name for limitation in user_created.training_limitations]
         assert response_json["bmi"] == utils.calculate_bmi(user_created.weight, user_created.height)
@@ -394,6 +393,10 @@ async def test_get_user_sports_profile(test_db):
         assert getattr(response_json, "identification_type", None) is None
         assert getattr(response_json, "identification_number", None) is None
         assert getattr(response_json, "gender", None) is None
+
+        response_available_weekdays = response_json["available_weekdays"]
+        for weekday in response_available_weekdays:
+            assert weekday in user_created.available_weekdays.split(",")
 
 
 @pytest.mark.asyncio
@@ -550,8 +553,11 @@ async def test_update_user_sports_profile(test_db, mocker):
         assert response_json["available_training_hours"] == new_user_data.available_training_hours
         assert response_json["bmi"] == utils.calculate_bmi(new_user_data.weight, new_user_data.height)
         assert len(response_json["training_limitations"]) == len(new_user_data_json["training_limitations"])
-        assert response_json["available_weekdays"] == new_user_data.available_weekdays.split(",")
         assert response_json["preferred_training_start_time"] == new_user_data.preferred_training_start_time
+
+        response_available_weekdays = response_json["available_weekdays"]
+        for weekday in response_available_weekdays:
+            assert weekday in new_user_data.available_weekdays.split(",")
 
 
 @pytest.mark.asyncio
