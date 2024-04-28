@@ -623,7 +623,7 @@ class TestUsersService(unittest.TestCase):
         appointment_2 = generate_random_appointment(fake)
 
         mock_get_user_by_id.return_value = user
-        self.mock_db.query.return_value.filter.return_value.all.return_value = [appointment_1, appointment_2]
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [appointment_1, appointment_2]
 
         response = self.users_service.get_scheduled_appointments(user_id=user.user_id)
 
