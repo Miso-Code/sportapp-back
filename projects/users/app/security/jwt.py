@@ -18,7 +18,7 @@ class JWTManager:
         self._refresh_token_expiry = refresh_token_expiry_minutes
 
     def generate_tokens(self, user_id: UUID, user_subscription_type: UserSubscriptionType) -> Dict[str, str]:
-        scopes = utils.get_user_scopes(user_subscription_type)
+        scopes = utils.get_user_scopes(user_subscription_type.value)
         payload = {"user_id": str(user_id), "scopes": scopes}
         return {
             "user_id": str(user_id),
