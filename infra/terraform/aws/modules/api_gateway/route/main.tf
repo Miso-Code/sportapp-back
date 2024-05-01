@@ -9,7 +9,7 @@ resource "aws_apigatewayv2_integration" "integration" {
 
   request_parameters = {
     "append:header.user-id" = "$context.authorizer.user_id"
-    "overwrite:path"        = "$request.path"
+    "overwrite:path"        = var.special_path ? "${var.route_path}/" : "$request.path"
   }
 }
 

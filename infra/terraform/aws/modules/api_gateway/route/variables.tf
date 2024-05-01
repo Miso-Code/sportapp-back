@@ -22,3 +22,9 @@ variable "elb_listener_arn" {
   description = "ELB Listener ARN"
   type        = string
 }
+
+variable "special_path" {
+  description = "Special case to append '/' to the end of the path"
+  type        = bool
+  default     = false
+}

@@ -90,6 +90,7 @@ module "sport-sessions-register-route-start" {
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "POST"
   route_path       = "/sport-session"
+  special_path     = true
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
@@ -99,6 +100,7 @@ module "sport-sessions-get-all-route" {
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
   route_path       = "/sport-session"
+  special_path     = true
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
