@@ -112,7 +112,6 @@ module "sport-events-get-event-route" {
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
   route_path       = "/sport-events/{id}"
-  special_path     = true
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }

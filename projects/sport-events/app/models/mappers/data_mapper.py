@@ -1,4 +1,3 @@
-import enum
 from dataclasses import asdict
 from datetime import datetime
 from uuid import UUID
@@ -6,7 +5,7 @@ from uuid import UUID
 
 class DataClassMapper:
     @staticmethod
-    def to_dict(instance, pydantic=False):
+    def to_dict(instance):
         def custom_encoder(obj):
             if isinstance(obj, UUID):
                 return str(obj)
