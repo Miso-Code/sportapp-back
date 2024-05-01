@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "training-plans" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "training-plans", "sport-events" ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
