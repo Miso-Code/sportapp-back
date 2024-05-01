@@ -7,7 +7,7 @@ data "aws_iam_role" "ecs_role" {
 }
 
 data "aws_secretsmanager_secret" "db_credentials" {
-  name = "DB_CREDENTIALS_PROD"
+  name = "DB_CREDENTIALS_DEV"
 }
 
 data "terraform_remote_state" "resources" {
@@ -15,34 +15,34 @@ data "terraform_remote_state" "resources" {
   config = {
     organization = "MisoTeam"
     workspaces = {
-      name = "aws-resources-prod"
+      name = "aws-resources-dev"
     }
   }
 }
 
 // Register target group and listener rule
-module "training-plans-tg" {
+module "sport-events-tg" {
   source                         = "../../../modules/elb/target_group"
-  target_group_name              = "training-plans-tg"
+  target_group_name              = "sport-events-dev-tg"
   target_group_port              = 8000
   target_group_protocol          = "HTTP"
   target_group_health_check_path = "/ping"
   vpc_id                         = data.terraform_remote_state.resources.outputs.vpc_id
 }
 
-module "training-plans-listener-rule" {
+module "sport-events-listener-rule" {
   source                = "../../../modules/elb/listener_rule"
   listener_arn          = data.terraform_remote_state.resources.outputs.elb_listener_arn
-  rule_path_pattern     = "/training-plans/*"
-  rule_priority         = 6
-  rule_target_group_arn = module.training-plans-tg.tg_arn
+  rule_path_pattern     = "/sport-events/*"
+  rule_priority         = 7
+  rule_target_group_arn = module.sport-events-tg.tg_arn
 }
 
 // Register task definition
-module "training-plans-task-def" {
+module "sport-events-task-def" {
   source                = "../../../modules/ecs/task_definition"
-  service_name          = "training-plans"
-  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/training-plans:latest"
+  service_name          = "sport-events-dev"
+  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/sport-events:develop"
   container_port        = 8000
   cpu                   = 256
   memory                = 512
@@ -74,34 +74,44 @@ module "training-plans-task-def" {
 }
 
 // Register service
-module "training-plans-service" {
+module "sport-events-service" {
   source              = "../../../modules/ecs/service"
-  service_name        = "training-plans-service"
+  service_name        = "sport-events-dev-service"
   desired_count       = 1
   container_port      = 8000
   cluster_id          = data.terraform_remote_state.resources.outputs.ecs_cluster_id
   security_groups     = data.terraform_remote_state.resources.outputs.security_groups
   subnets             = data.terraform_remote_state.resources.outputs.subnets
-  target_group_arn    = module.training-plans-tg.tg_arn
-  task_definition_arn = module.training-plans-task-def.task_arn
+  target_group_arn    = module.sport-events-tg.tg_arn
+  task_definition_arn = module.sport-events-task-def.task_arn
 }
 
 
-module "training-plans-create-route" {
+module "sport-events-create-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "POST"
-  route_path       = "/training-plans"
+  route_path       = "/sport-events"
   special_path     = true
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
 
-module "training-plans-get-route" {
+module "sport-events-get-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
-  route_path       = "/training-plans"
+  route_path       = "/sport-events"
+  special_path     = true
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
+module "sport-events-get-event-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/sport-events/{id}"
   special_path     = true
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id

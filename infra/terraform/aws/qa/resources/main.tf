@@ -124,7 +124,7 @@ module "authorizer_role" {
 
 module "api_gateway_free_plan_authorizer" {
   source             = "../../modules/api_gateway/authorizer"
-  authorizer_name    = "FreePlanAuthorizer-Dev"
+  authorizer_name    = "FreePlanAuthorizer-Qa"
   authorizer_scope   = "free"
   lambda_role_arn    = module.authorizer_role.role_arn
   authorizer_version = "develop"
@@ -132,7 +132,7 @@ module "api_gateway_free_plan_authorizer" {
 
 module "api_gateway_intermediate_plan_authorizer" {
   source             = "../../modules/api_gateway/authorizer"
-  authorizer_name    = "IntermediatePlanAuthorizer-Dev"
+  authorizer_name    = "IntermediatePlanAuthorizer-Qa"
   authorizer_scope   = "intermediate"
   lambda_role_arn    = module.authorizer_role.role_arn
   authorizer_version = "develop"
@@ -140,7 +140,7 @@ module "api_gateway_intermediate_plan_authorizer" {
 
 module "api_gateway_premium_plan_authorizer" {
   source             = "../../modules/api_gateway/authorizer"
-  authorizer_name    = "PremiumPlanAuthorizer-Dev"
+  authorizer_name    = "PremiumPlanAuthorizer-Qa"
   authorizer_scope   = "premium"
   lambda_role_arn    = module.authorizer_role.role_arn
   authorizer_version = "develop"
@@ -148,7 +148,7 @@ module "api_gateway_premium_plan_authorizer" {
 
 module "api_gateway_business_partner_authorizer" {
   source             = "../../modules/api_gateway/authorizer"
-  authorizer_name    = "BusinessPartnerAuthorizer-Dev"
+  authorizer_name    = "BusinessPartnerAuthorizer-Qa"
   authorizer_scope   = "business_partner"
   lambda_role_arn    = module.authorizer_role.role_arn
   authorizer_version = "develop"
@@ -166,10 +166,10 @@ module "ecs_cluster" {
 
 module "nutritional_queue" {
   source     = "../../modules/sqs"
-  queue_name = "nutritional_plan_queue_dev.fifo"
+  queue_name = "nutritional_plan_queue_qa.fifo"
 }
 
 module "adverse_incidents_queue" {
   source     = "../../modules/sqs"
-  queue_name = "adverse_incidents_queue_dev.fifo"
+  queue_name = "adverse_incidents_queue_qa.fifo"
 }
