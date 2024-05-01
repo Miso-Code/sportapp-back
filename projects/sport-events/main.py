@@ -19,11 +19,12 @@ app.include_router(sport_events_routes.router)
 
 
 @app.middleware("http")
-async def add_custom_headers(request: Request, call_next):
-    try:
-        request = await api_key_middleware(request)
-    except HTTPException as e:
-        return JSONResponse(status_code=403, content={"message": "Wrong API Key"})
+async def validate_api_key(request: Request, call_next):
+    if request.url.path != "/ping":
+        try:
+            request = await api_key_middleware(request)
+        except HTTPException:
+            return JSONResponse(status_code=403, content={"message": "Wrong API Key"})
     return await call_next(request)
 
 
