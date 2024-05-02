@@ -50,6 +50,9 @@ class MockFirebaseWrapper:
         self.credentials = MagicMock()
         self.initialize_app = MagicMock()
 
+    def generate_credentials(self):
+        return MagicMock()
+
 
 def test_register_device(db_fixture, mocker):
     mocker.patch("app.wrapper.firebase_wrapper.FirebaseWrapper", MockFirebaseWrapper)
