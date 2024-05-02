@@ -42,7 +42,7 @@ if [ "$CLOUD_PROVIDER" == "gcp" ]; then
 fi
 
 # Define allowed folder names
-ALLOWED_FOLDERS=("users" "sports" "sport-sessions" "authorizer" "business-partners" "miso-stripe" "training-plans" "sport-events")
+ALLOWED_FOLDERS=("users" "sports" "sport-sessions" "authorizer" "business-partners" "miso-stripe" "training-plans" "sport-events", "alerts")
 
 # Function to check if a folder name is allowed
 is_allowed_folder() {
