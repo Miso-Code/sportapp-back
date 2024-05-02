@@ -33,3 +33,11 @@ output "api_gateway_stage_id" {
 output "vpc_link_id" {
   value = module.api_gateway.vpc_link_id
 }
+
+output "nutritional_queue_name" {
+  value = module.nutritional_queue.name
+}
+
+output "adverse_incidents_queue_name" {
+  value = module.adverse_incidents_queue.name
+}
