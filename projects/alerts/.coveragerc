@@ -3,7 +3,6 @@ branch = True
 omit =
     **/__init__.py
     app/config/settings.py
-    app/utils/user_cache.py
 source =
     app
 
