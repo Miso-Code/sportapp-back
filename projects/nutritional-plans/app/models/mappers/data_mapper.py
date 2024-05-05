@@ -1,4 +1,5 @@
 import enum
+from dataclasses import asdict
 from uuid import UUID
 
 import sqlalchemy
@@ -17,4 +18,4 @@ class DataClassMapper:
         if isinstance(instance, sqlalchemy.engine.row.Row):
             return {k: custom_encoder(v) for k, v in instance._asdict().items() if v is not None}
         else:
-            return {k: custom_encoder(v) for k, v in instance.dict().items() if v is not None}
+            return {k: custom_encoder(v) for k, v in asdict(instance).items() if v is not None}

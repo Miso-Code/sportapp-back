@@ -1,4 +1,4 @@
-name: Check PRs on Sport Events service
+name: Check PRs on Nutritional Plans service
 
 on:
   pull_request:

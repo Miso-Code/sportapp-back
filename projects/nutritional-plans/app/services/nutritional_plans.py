@@ -128,7 +128,10 @@ class NutritionalPlansService:
         return round(portions * 2) / 2
 
     def _notify_user(self, user_id: UUID, message: str):
-        sqs_message = DataClassMapper.to_dict(CaloricIntakeSQSMessage(user_id=user_id, message=message))
+        sqs_message = {
+            "user_id": str(user_id),
+            "message": message,
+        }
         self.sqs.send_message(self.notification_queue, json.dumps(sqs_message))
 
     def _calculate_basal_metabolism(self, nutritional_plan_create: NutritionalPlanCreate) -> float:
@@ -143,7 +146,9 @@ class NutritionalPlansService:
         query = self.db.query(Dish).filter(
             Dish.objective == nutritional_plan_create.training_objective,
         )
-        if nutritional_plan_create.food_preference != FoodType.EVERYTHING:
+        if nutritional_plan_create.food_preference == FoodType.VEGETARIAN:
+            query = query.filter(Dish.food_type == nutritional_plan_create.food_preference, Dish.category == FoodType.VEGAN)
+        elif nutritional_plan_create.food_preference == FoodType.VEGAN:
             query = query.filter(Dish.food_type == nutritional_plan_create.food_preference)
         return query.all()
 
