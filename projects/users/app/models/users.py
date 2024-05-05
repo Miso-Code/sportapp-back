@@ -121,7 +121,7 @@ class User(base):
     country_of_residence: str = Column(String)
     city_of_residence: str = Column(String)
     residence_age: int = Column(Integer)
-    birth_date: str = Column(String)
+    birth_date: datetime = Column(DateTime)
     # Sport profile
     favourite_sport_id = Column(String)
     training_objective = Column(Enum(TrainingObjective))
