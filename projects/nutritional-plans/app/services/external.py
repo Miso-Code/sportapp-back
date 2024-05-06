@@ -8,7 +8,7 @@ from app.exceptions.exceptions import NotFoundError
 
 class ExternalServices:
     def __init__(self):
-        self.users_base_url = "http://localhost:8002/users"
+        self.users_base_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/users"
         self.training_plan_base_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/training-plans"
 
     def get_user_sport_profile(self, user_id: UUID, user_auth_token: str) -> dict:

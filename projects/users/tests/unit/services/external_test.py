@@ -5,8 +5,9 @@ from unittest.mock import patch
 from faker import Faker
 
 from app.models.schemas.schema import PaymentData
+from app.models.users import FoodPreference, TrainingObjective
 from app.services.external import ExternalServices
-from app.exceptions.exceptions import NotFoundError
+from app.exceptions.exceptions import NotFoundError, ExternalServiceError
 
 fake = Faker()
 
@@ -146,3 +147,61 @@ class TestExternalService(unittest.TestCase):
 
         self.assertFalse(response[0])
         self.assertEqual(response[1], {"error": "Invalid card number"})
+
+    @patch("requests.post")
+    def test_process_payment_apikey_error(self, mock_post):
+        payment_data = PaymentData(
+            card_number=fake.credit_card_number(),
+            card_holder=fake.name(),
+            card_expiration_date=fake.credit_card_expire(),
+            card_cvv=fake.credit_card_security_code(),
+            amount=fake.random_number(digits=5),
+        )
+
+        mock_post.return_value.status_code = 401
+
+        with self.assertRaises(ExternalServiceError) as context:
+            response = ExternalServices().process_payment(payment_data)
+        self.assertEqual(str(context.exception), "Miso Stripe API key is invalid")
+
+    @patch("requests.post")
+    def test_create_nutritional_plan(self, mock_post):
+        user_data = {
+            "age": fake.random_int(min=18, max=50),
+            "gender": fake.random.choice(["M", "F", "O"]),
+            "training_objective": fake.enum(TrainingObjective).value,
+            "weight": fake.random_int(min=1, max=200),
+            "height": fake.random_int(min=1, max=200),
+            "food_preference": fake.enum(FoodPreference).value,
+            "training_limitations": [{"name": fake.word(), "description": fake.sentence()} for _ in range(fake.random_int(min=1, max=5))],
+        }
+        user_token = f"Bearer {fake.sha256()}"
+        external_service = ExternalServices()
+        mock_post.return_value.status_code = 201
+        mock_post.return_value.json.return_value = user_data
+
+        response = external_service.create_nutritional_plan(user_data, user_token)
+
+        self.assertEqual(response, user_data)
+        self.assertTrue(mock_post.called)
+
+    @patch("requests.post")
+    def test_create_nutritional_plan_error(self, mock_post):
+        user_data = {
+            "age": fake.random_int(min=18, max=50),
+            "gender": fake.random.choice(["M", "F", "O"]),
+            "training_objective": fake.enum(TrainingObjective).value,
+            "weight": fake.random_int(min=1, max=200),
+            "height": fake.random_int(min=1, max=200),
+            "food_preference": fake.enum(FoodPreference).value,
+            "training_limitations": [{"name": fake.word(), "description": fake.sentence()} for _ in range(fake.random_int(min=1, max=5))],
+        }
+
+        user_token = f"Bearer {fake.sha256()}"
+        external_service = ExternalServices()
+        mock_post.return_value.status_code = 400
+        mock_post.return_value.json.return_value = user_data
+
+        with self.assertRaises(ExternalServiceError) as context:
+            external_service.create_nutritional_plan(user_data, user_token)
+        self.assertEqual(str(context.exception), "Failed to create nutritional plan")

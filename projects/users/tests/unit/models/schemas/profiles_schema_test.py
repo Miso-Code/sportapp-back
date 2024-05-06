@@ -24,7 +24,7 @@ class TestUserProfiles(unittest.TestCase):
             "country_of_residence": fake.country(),
             "city_of_residence": fake.city(),
             "residence_age": fake.random_int(min=1, max=100),
-            "birth_date": fake.date_of_birth(minimum_age=18).strftime("%Y-%m-%d"),
+            "birth_date": fake.date_time_this_decade(),
         }
 
         user_personal_profile = UserPersonalProfile(**user_personal_profile_data)

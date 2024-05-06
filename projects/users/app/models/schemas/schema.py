@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator, field_validator
-from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, PremiumAppointmentType
+from app.models.users import UserIdentificationType, Gender, UserSubscriptionType, PremiumAppointmentType, FoodPreference, TrainingObjective
 from app.config.settings import Config
 from app.exceptions.exceptions import InvalidValueError
 
@@ -41,14 +41,7 @@ class UserAdditionalInformation(BaseModel):
     country_of_residence: str
     city_of_residence: str
     residence_age: int
-    birth_date: str
-
-    @field_validator("birth_date")
-    @classmethod
-    def validate_birth_date(cls, value):
-        if not re.match(Config.BIRTH_DATE_REGEX, value):
-            raise InvalidValueError("Birth date must be in the format YYYY-MM-DD")
-        return value
+    birth_date: datetime
 
 
 class UserCredentials(BaseModel):
@@ -121,3 +114,13 @@ class PremiumSportsmanAppointment(BaseModel):
     appointment_location: Optional[str] = None
     trainer_id: UUID = None
     appointment_reason: str
+
+
+class NutritionalPlanCreate(BaseModel):
+    age: int
+    gender: Gender
+    training_objective: TrainingObjective
+    weight: float
+    height: float
+    food_preference: FoodPreference
+    nutritional_limitations: list[str]

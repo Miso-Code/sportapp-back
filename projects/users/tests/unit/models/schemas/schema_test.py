@@ -1,5 +1,7 @@
 import unittest
 from faker import Faker
+from pydantic import ValidationError
+
 from app.models.schemas.schema import UserCreate, UserCredentials, UserAdditionalInformation, UpdateSubscriptionType
 from app.models.users import UserIdentificationType, Gender, UserSubscriptionType
 
@@ -50,7 +52,7 @@ class TestUserAdditionalInformation(unittest.TestCase):
         country_of_residence = fake.country()
         city_of_residence = fake.city()
         residence_age = fake.random_int(min=1, max=100)
-        birth_date = fake.date_of_birth(minimum_age=18).strftime("%Y-%m-%d")
+        birth_date = fake.date_time_this_decade()
 
         user_data = {
             "identification_type": identification_type,
@@ -99,9 +101,9 @@ class TestUserAdditionalInformation(unittest.TestCase):
             "birth_date": birth_date,
         }
 
-        with self.assertRaises(InvalidValueError) as context:
+        with self.assertRaises(ValidationError) as context:
             UserAdditionalInformation(**user_data)
-        self.assertEqual(str(context.exception), "Birth date must be in the format YYYY-MM-DD")
+        self.assertIn("Input should be a valid datetime or date", context.exception.errors()[0]["msg"])
 
 
 class TestUserCredentials(unittest.TestCase):

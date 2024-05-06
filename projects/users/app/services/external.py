@@ -11,6 +11,7 @@ class ExternalServices:
         self.sports_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/sports"
         self.training_plans_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/training-plans"
         self.miso_stripe_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/miso-stripe"
+        self.nutritional_plan_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/nutritional-plans"
 
     def get_sport(self, sport_id: str, user_token: str):
         if not user_token:
@@ -37,3 +38,9 @@ class ExternalServices:
         elif response.status_code == 401:
             raise ExternalServiceError("Miso Stripe API key is invalid")
         return False, response.json()
+
+    def create_nutritional_plan(self, user_data: dict, user_token):
+        response = requests.post(self.nutritional_plan_url, headers={"Authorization": user_token}, json=user_data)
+        if response.status_code == 201:
+            return response.json()
+        raise ExternalServiceError("Failed to create nutritional plan")

@@ -472,7 +472,18 @@ class TestUsersService(unittest.TestCase):
         user_nutritional_profile_updated = generate_random_user_nutritional_profile(fake)
         user_nutritional_profile_updated_dict = DataClassMapper.to_dict(user_nutritional_profile_updated, pydantic=True)
 
-        self.mock_db.query.return_value.filter.return_value.first.return_value = user
+        nutritional_limitation = NutritionalLimitation(
+            limitation_id=fake.uuid4(),
+            name=fake.word(),
+            description=fake.sentence(),
+        )
+
+        nutritional_limitation_2 = NutritionalLimitation(
+            limitation_id=fake.uuid4(),
+            name=fake.word(),
+            description=fake.sentence(),
+        )
+        self.mock_db.query.return_value.filter.return_value.first.side_effect = [user, nutritional_limitation, nutritional_limitation_2]
         mock_to_user_nutritional_profile.return_value = user_nutritional_profile_updated_dict
 
         response = self.users_service.update_user_nutritional_information(user_id, user_nutritional_profile_updated)
