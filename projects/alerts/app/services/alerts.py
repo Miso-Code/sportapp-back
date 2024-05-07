@@ -4,9 +4,10 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.exceptions.exceptions import NotFoundError
+from app.firebase.firebase import FirebaseClient
 from app.models.mappers.data_mapper import DataClassMapper
 from app.models.model import UserAlertDevice
-from app.models.schemas.schema import UserAlertDeviceCreate
+from app.models.schemas.schema import UserAlertDeviceCreate, TestAlert
 
 
 class AlertsService:
@@ -40,3 +41,8 @@ class AlertsService:
         self.db.commit()
 
         return DataClassMapper.to_dict(device)
+
+    def send_test_alert(self, alert_data: TestAlert):
+        FirebaseClient.send_fcm_alert(alert_data.device_token, alert_data.priority, alert_data.title, alert_data.message)
+
+        return {"message": "Test alert sent", "alert": alert_data.dict()}

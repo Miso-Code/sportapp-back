@@ -131,3 +131,12 @@ module "alerts-get-device-route" {
   elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
+
+module "alerts-send-test-alert-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "POST"
+  route_path       = "/alerts/send-test-alert"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}

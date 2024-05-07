@@ -15,8 +15,8 @@ class QueueProcessor:
 
     def process_queues(self):
         while not self.stop_thread:
-            self.process_queue(self.nutritional_plan_queue_name, "Nutritional Plan", "normal")
-            self.process_queue(self.adverse_incidents_queue_name, "Adverse Incident", "high")
+            self.process_queue(self.nutritional_plan_queue_name, "Nutritional Plan", "info")
+            self.process_queue(self.adverse_incidents_queue_name, "Adverse Incident", "warning")
             sleep(0.5)
 
     def process_queue(self, queue_name: str, alert_type: str, alert_priority: str):

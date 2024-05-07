@@ -1,12 +1,12 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.exceptions.exceptions import NotFoundError
 from app.models.model import UserAlertDevice
-from app.models.schemas.schema import UserAlertDeviceCreate
+from app.models.schemas.schema import UserAlertDeviceCreate, TestAlert
 from app.services.alerts import AlertsService
 
 fake = Faker()
@@ -84,3 +84,17 @@ class TestAlertsService(unittest.TestCase):
         with self.assertRaises(NotFoundError) as context:
             self.alerts_service.disable_device(user_id)
         self.assertEqual(str(context.exception), f"User {user_id} has no registered devices")
+
+    @patch("app.firebase.firebase.FirebaseClient.send_fcm_alert")
+    def test_send_test_alert(self, mock_send_fcm_alert):
+        device_token = fake.uuid4()
+
+        alert_data = TestAlert(device_token=device_token, priority="high", title=fake.word(), message=fake.sentence())
+
+        mock_send_fcm_alert.return_value = None
+
+        response = self.alerts_service.send_test_alert(alert_data)
+
+        self.assertEqual(response["message"], "Test alert sent")
+        self.assertEqual(response["alert"], alert_data.dict())
+        mock_send_fcm_alert.assert_called_once_with(alert_data.device_token, alert_data.priority, alert_data.title, alert_data.message)
