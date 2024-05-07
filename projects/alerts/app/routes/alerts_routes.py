@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 
 from app.config.db import get_db
-from app.models.schemas.schema import UserAlertDeviceCreate
+from app.models.schemas.schema import UserAlertDeviceCreate, TestAlert
 from app.services.alerts import AlertsService
 
 router = APIRouter(
@@ -33,3 +33,9 @@ async def disable_device(user_id: Annotated[UUID, Header()], db: Session = Depen
 async def get_user_device(user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
     get_device_response = AlertsService(db).get_user_device(user_id)
     return JSONResponse(content=get_device_response, status_code=HTTPStatus.OK)
+
+
+@router.post("/send-test-alert")
+async def send_test_alert(user_id: Annotated[UUID, Header()], message_data: TestAlert, db: Session = Depends(get_db)):
+    test_alert_response = AlertsService(db).send_test_alert(message_data)
+    return JSONResponse(content=test_alert_response, status_code=HTTPStatus.OK)
