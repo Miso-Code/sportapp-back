@@ -31,7 +31,7 @@ class TestSportEventsService(unittest.TestCase):
 
     def test_get_sport_events_no_search(self):
         mocked_events = [generate_random_sport_event(fake) for _ in range(3)]
-        self.mock_db.query.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mocked_events
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mocked_events
 
         response = self.sport_events_service.get_sport_events(None, 0, 3)
 
@@ -54,6 +54,25 @@ class TestSportEventsService(unittest.TestCase):
         self.mock_db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mocked_events
 
         response = self.sport_events_service.get_sport_events(search, 0, 3)
+
+        self.assertEqual(len(response), len(mocked_events))
+        for event in response:
+            self.assertIn("title", event)
+            self.assertIn("sport_id", event)
+            self.assertIn("event_id", event)
+            self.assertIn("description", event)
+            self.assertIn("start_date", event)
+            self.assertIn("end_date", event)
+            self.assertIn("location_latitude", event)
+            self.assertIn("location_longitude", event)
+            self.assertIn("capacity", event)
+
+    def test_get_sport_events_with_latitude_and_longitude(self):
+        search = fake.word()
+        mocked_events = [generate_random_sport_event(fake) for _ in range(3)]
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mocked_events
+
+        response = self.sport_events_service.get_sport_events(None, 0, 3, 0.0, 0.0)
 
         self.assertEqual(len(response), len(mocked_events))
         for event in response:

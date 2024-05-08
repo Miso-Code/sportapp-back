@@ -28,8 +28,10 @@ async def get_sport_events(
     search: Annotated[str | None, Query(max_length=50)] = None,
     offset: int = Query(0, ge=0, le=1000),
     limit: int = Query(10, gt=0, le=100),
+    latitude: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    longitude: Annotated[float | None, Query(ge=-180, le=180)] = None,
 ):
-    sport_events = SportEventsService(db).get_sport_events(search, offset, limit)
+    sport_events = SportEventsService(db).get_sport_events(search, offset, limit, latitude, longitude)
     return JSONResponse(content=sport_events, status_code=200)
 
 

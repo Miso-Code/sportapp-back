@@ -20,7 +20,7 @@ app.include_router(sport_events_routes.router)
 
 @app.middleware("http")
 async def validate_api_key(request: Request, call_next):
-    if request.url.path != "/ping":
+    if request.url.path != "/ping" and request.method != "GET":
         try:
             request = await api_key_middleware(request)
         except HTTPException:

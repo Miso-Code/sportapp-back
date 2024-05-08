@@ -42,19 +42,20 @@ class TestSportEventsRoutes(unittest.IsolatedAsyncioTestCase):
         db_mock = MagicMock()
         limit = fake.random_int(min=1, max=20)
         offset = fake.random_int(min=0, max=10)
+        latitude = fake.latitude()
+        longitude = fake.longitude()
 
         sport_events = [DataClassMapper.to_dict(generate_random_sport_event(fake)) for _ in range(limit)]
 
         mock_get_sport_events.return_value = sport_events
 
-        response = await sport_events_routes.get_sport_events(db_mock, None, offset, limit)
+        response = await sport_events_routes.get_sport_events(db_mock, None, offset, limit, latitude, longitude)
         response_json = json.loads(response.body)
 
-        mock_get_sport_events.assert_called_once_with(None, offset, limit)
+        mock_get_sport_events.assert_called_once_with(None, offset, limit, latitude, longitude)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response_json), len(sport_events))
         for i in range(len(sport_events)):
-            print(response_json[i])
             self.assertEqual(response_json[i]["event_id"], str(sport_events[i]["event_id"]))
             self.assertEqual(response_json[i]["sport_id"], str(sport_events[i]["sport_id"]))
             self.assertEqual(response_json[i]["location_latitude"], sport_events[i]["location_latitude"])

@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.config.settings import Config
 from app.exceptions.exceptions import NotFoundError
 from app.models.mappers.data_mapper import DataClassMapper
 from app.models.model import SportEvent
@@ -20,23 +21,25 @@ class SportEventsService:
 
         return DataClassMapper.to_dict(sport_event)
 
-    def get_sport_events(self, search, offset, limit):
+    def get_sport_events(self, search, offset=None, limit=None, latitude=None, longitude=None):
+        radius = Config.EVENT_LOCATION_RADIUS
+        filters = []
+        print(f"Latitude: {latitude}, Longitude: {longitude}")
         if search:
-            events = (
-                self.db.query(SportEvent)
-                .filter(
-                    or_(
-                        SportEvent.title.ilike(f"%{search}%"),
-                        SportEvent.description.ilike(f"%{search}%"),
-                    ),
-                )
-                .order_by(SportEvent.start_date.desc())
-                .offset(offset)
-                .limit(limit)
-                .all()
+            filters.append(
+                or_(
+                    SportEvent.title.ilike(f"%{search}%"),
+                    SportEvent.description.ilike(f"%{search}%"),
+                ),
             )
-        else:
-            events = self.db.query(SportEvent).order_by(SportEvent.start_date.desc()).offset(offset).limit(limit).all()
+        if latitude and longitude:
+            filters.append(
+                or_(
+                    SportEvent.location_latitude.between(latitude - radius, latitude + radius),
+                    SportEvent.location_longitude.between(longitude - radius, longitude + radius),
+                ),
+            )
+        events = self.db.query(SportEvent).filter(*filters).order_by(SportEvent.start_date.desc()).offset(offset).limit(limit).all()
 
         return [DataClassMapper.to_dict(event) for event in events]
 
