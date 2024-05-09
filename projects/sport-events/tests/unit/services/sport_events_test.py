@@ -68,7 +68,6 @@ class TestSportEventsService(unittest.TestCase):
             self.assertIn("capacity", event)
 
     def test_get_sport_events_with_latitude_and_longitude(self):
-        search = fake.word()
         mocked_events = [generate_random_sport_event(fake) for _ in range(3)]
         self.mock_db.query.return_value.filter.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = mocked_events
 
