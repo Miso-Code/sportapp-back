@@ -1,6 +1,7 @@
 import datetime
 import uuid
 
+import faker
 import pytest
 from unittest.mock import patch, MagicMock
 from sqlalchemy.orm import Session
@@ -9,6 +10,8 @@ from app.exceptions.exceptions import NotFoundError, NotActiveError
 from app.models.model import SportSession
 from app.services.sport_sessions import SportSessionService
 from app.services.sport_sessions import SportSessionStart, SportSessionLocationCreate, SportSessionFinish
+
+fake = faker.Faker()
 
 
 class TestSportSessionService:
@@ -337,3 +340,45 @@ class TestSportSessionService:
 
         # Then
         assert len(sport_sessions) == 0
+
+    def test_get_active_sport_sessions(self):
+        db_mock = MagicMock(spec=Session)
+        user_id_1 = fake.uuid4()
+        user_id_2 = fake.uuid4()
+        user_id_3 = fake.uuid4()
+
+        class CMock:
+            user_id = MagicMock()
+            latest_created_at = MagicMock()
+
+        class SubqueryMock:
+            c = CMock()
+
+        class LocationMock:
+            def __init__(self, user_id, latitude, longitude):
+                self.user_id = user_id
+                self.latitude = latitude
+                self.longitude = longitude
+
+        fake_locations = [
+            LocationMock(user_id_1, fake.latitude(), fake.longitude()),
+            LocationMock(user_id_2, fake.latitude(), fake.longitude()),
+            LocationMock(user_id_3, fake.latitude(), fake.longitude()),
+        ]
+
+        first_query_mock = MagicMock()
+        second_query_mock = MagicMock()
+
+        db_mock.query.side_effect = [first_query_mock, second_query_mock]
+
+        first_query_mock.join.return_value.filter.return_value.group_by.return_value.subquery.return_value = SubqueryMock()
+        second_query_mock.join.return_value.join.return_value.filter.return_value.all.return_value = fake_locations
+
+        sport_service = SportSessionService(db_mock)
+        sport_sessions = sport_service.get_active_sport_sessions()
+
+        assert len(sport_sessions) == 3
+        for sport_session in sport_sessions:
+            assert "user_id" in sport_session
+            assert "latitude" in sport_session
+            assert "longitude" in sport_session

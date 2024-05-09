@@ -2,11 +2,21 @@ import json
 import uuid
 from unittest.mock import patch, MagicMock
 
+import faker
 from sqlalchemy.orm import Session
 
-from app.routes.sport_sessions import start_sport_session, add_locations_to_sport_session, finish_sport_session, get_sport_session, get_all_sport_sessions
+from app.routes.sport_sessions import (
+    start_sport_session,
+    add_locations_to_sport_session,
+    finish_sport_session,
+    get_sport_session,
+    get_all_sport_sessions,
+    get_active_sport_sessions,
+)
 
 from app.models.schemas.schema import SportSessionStart
+
+fake = faker.Faker()
 
 
 class TestSportRoutes:
@@ -75,3 +85,22 @@ class TestSportRoutes:
 
         assert response.status_code == 200
         assert len(json_response) == 2
+
+    @patch("app.services.sport_sessions.SportSessionService.get_active_sport_sessions")
+    @patch("app.utils.utils.validate_api_key")
+    async def test_get_active_sport_sessions(self, mocked_validate_api_key, mocked_get_active_sport_sessions):
+        api_key = fake.sha256()
+        mocked_validate_api_key.side_effect = lambda x: x
+
+        fake_users = [
+            {"user_id": fake.uuid4(), "latitude": float(fake.latitude()), "longitude": float(fake.longitude())},
+            {"user_id": fake.uuid4(), "latitude": float(fake.latitude()), "longitude": float(fake.longitude())},
+            {"user_id": fake.uuid4(), "latitude": float(fake.latitude()), "longitude": float(fake.longitude())},
+        ]
+        mocked_get_active_sport_sessions.return_value = fake_users
+
+        response = await get_active_sport_sessions(db=MagicMock(spec=Session), x_api_key=api_key)
+        response_json = json.loads(response.body)
+
+        assert response.status_code == 200
+        assert response_json == fake_users
