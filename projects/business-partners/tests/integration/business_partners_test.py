@@ -1159,8 +1159,6 @@ def test_get_business_partner_suggested_product_not_found(test_db):
 
     assert response.status_code == HTTPStatus.CREATED
 
-    business_partner_id = response.json()["business_partner_id"]
-
     response = client.get(
         f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/suggested",
     )
