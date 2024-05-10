@@ -912,3 +912,258 @@ def test_purchase_product_payment_failed(test_db, mocker):
     assert response_json["transaction_date"] is not None
     assert response_json["transaction_status"] == "failed"
     assert response_json["message"] == "Purchasing product failed. Error: Payment failed"
+
+
+def test_get_business_partner_suggested_product_no_filters(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/suggested",
+        headers={"user-id": business_partner_id},
+    )
+
+    response_json = response.json()
+
+    # since the suggested product is random we can't assert the exact values
+    assert response.status_code == HTTPStatus.OK
+    assert response_json["product_id"] is not None
+    assert response_json["business_partner_id"] == business_partner_id
+    assert response_json["category"] is not None
+    assert response_json["name"] is not None
+    assert response_json["url"] is not None
+    assert response_json["price"] is not None
+    assert response_json["payment_type"] is not None
+    assert response_json["payment_frequency"] is not None
+    assert response_json["image_url"] is not None
+    assert response_json["description"] is not None
+
+
+def test_get_business_partner_suggested_product_category_filter(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": ProductCategory.WELLNESS.value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_data = {
+        "category": ProductCategory.EQUIPMENT.value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    product_id = response.json()["product_id"]
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/suggested",
+        params={"category": product_data["category"]},
+    )
+
+    response_json = response.json()
+
+    # since the suggested product is random we can't assert the exact values
+    assert response.status_code == HTTPStatus.OK
+    assert response_json["product_id"] == product_id
+    assert response_json["business_partner_id"] == business_partner_id
+    assert response_json["category"] == product_data["category"]
+    assert response_json["name"] == product_data["name"]
+    assert response_json["url"] == product_data["url"]
+    assert response_json["price"] == product_data["price"]
+    assert response_json["payment_type"] == product_data["payment_type"]
+    assert response_json["payment_frequency"] == product_data["payment_frequency"]
+    assert response_json["image_url"] == product_data["image_url"]
+    assert response_json["description"] == product_data["description"]
+    assert response_json["active"] is True
+
+
+def test_get_business_partner_suggested_product_sport_filter(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    business_partner_id = response.json()["business_partner_id"]
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+        "sport_id": str(fake.uuid4()),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    product_data = {
+        "category": fake.enum(ProductCategory).value,
+        "name": fake.word(),
+        "summary": fake.word(),
+        "url": fake.url(),
+        "price": fake.random_number(),
+        "payment_type": fake.enum(PaymentType).value,
+        "payment_frequency": fake.enum(PaymentFrequency).value,
+        "image_url": fake.url(),
+        "description": fake.text(),
+        "sport_id": str(fake.uuid4()),
+    }
+
+    response = client.post(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products",
+        json=product_data,
+        headers={"user-id": business_partner_id},
+    )
+
+    product_id = response.json()["product_id"]
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/suggested",
+        params={"sport_id": product_data["sport_id"]},
+    )
+
+    response_json = response.json()
+
+    # since the suggested product is random we can't assert the exact values
+    assert response.status_code == HTTPStatus.OK
+    assert response_json["product_id"] == product_id
+    assert response_json["business_partner_id"] == business_partner_id
+    assert response_json["category"] == product_data["category"]
+    assert response_json["name"] == product_data["name"]
+    assert response_json["url"] == product_data["url"]
+    assert response_json["price"] == product_data["price"]
+    assert response_json["payment_type"] == product_data["payment_type"]
+    assert response_json["payment_frequency"] == product_data["payment_frequency"]
+    assert response_json["image_url"] == product_data["image_url"]
+    assert response_json["description"] == product_data["description"]
+    assert response_json["active"] is True
+
+
+def test_get_business_partner_suggested_product_not_found(test_db):
+    business_partner_create = generate_random_business_partner_create_data(fake)
+    business_partner_create_dict = {
+        "business_partner_name": business_partner_create.business_partner_name,
+        "email": business_partner_create.email,
+        "password": business_partner_create.password,
+    }
+
+    response = client.post(f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/registration", json=business_partner_create_dict)
+
+    assert response.status_code == HTTPStatus.CREATED
+
+    response = client.get(
+        f"{Constants.BUSINESS_PARTNERS_BASE_PATH}/products/suggested",
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response_json["message"] == "No suggested product found"

@@ -45,6 +45,7 @@ class CreateBusinessPartnerProduct(BaseModel):
     image_base64: Optional[str] = None
     description: str
     active: Optional[bool] = None
+    sport_id: Optional[UUID] = None
 
     @model_validator(mode="before")
     def validate_image_source(cls, values):
@@ -71,6 +72,12 @@ class UpdateBusinessPartnerProduct(BaseModel):
     image_base64: Optional[str] = None
     description: Optional[str] = None
     active: Optional[bool] = None
+    sport_id: Optional[UUID] = None
+
+
+class SuggestBusinessPartnerProduct(BaseModel):
+    category: Optional[ProductCategory] = None
+    sport_id: Optional[UUID] = None
 
 
 class PaymentData(BaseModel):

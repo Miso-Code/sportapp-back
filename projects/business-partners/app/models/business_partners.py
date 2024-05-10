@@ -1,6 +1,7 @@
 import enum
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 from uuid import uuid4, UUID
 
 from sqlalchemy.dialects.postgresql import JSON
@@ -80,3 +81,4 @@ class BusinessPartnerProduct(base):
     image_url: str = Column(String, nullable=True)
     description: str = Column(Text, nullable=False)
     active: bool = Column(Boolean, nullable=False, default=True)
+    sport_id: Optional[UUID] = Column(Uuid(as_uuid=True), nullable=True)
