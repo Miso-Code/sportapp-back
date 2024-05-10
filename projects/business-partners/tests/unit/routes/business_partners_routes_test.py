@@ -8,12 +8,17 @@ from faker import Faker
 from app.models.mappers.user_mapper import DataClassMapper
 from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate
 from app.routes import business_partners_routes
-from tests.utils.business_partners_util import generate_random_business_partner_product_create_data, generate_random_product_purchase, generate_random_product_transaction
+from tests.utils.business_partners_util import (
+    generate_random_business_partner_product_create_data,
+    generate_random_product_purchase,
+    generate_random_product_transaction,
+    generate_random_business_partner_suggested_filter,
+)
 
 fake = Faker()
 
 
-class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
+class TestBusinessPartnerRoutes(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.services.business_partners.BusinessPartnersService.create_business_partner")
     async def test_register_business_partner(self, mock_create_business_partner):
@@ -251,3 +256,57 @@ class TestUsersRoutes(unittest.IsolatedAsyncioTestCase):
         offered_products_mock.assert_called_once_with(None, offset, limit)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_json, business_partner_products)
+
+    @patch("app.services.business_partners.BusinessPartnersService.get_suggested_product")
+    async def test_get_business_partner_suggested_product(self, get_suggested_product_mock):
+        db_mock = MagicMock()
+        business_partner_product_update = generate_random_business_partner_product_create_data(fake)
+        business_partner_product_update_dict = {
+            "category": business_partner_product_update.category.value,
+            "name": business_partner_product_update.name,
+            "summary": fake.word(),
+            "url": business_partner_product_update.url,
+            "price": business_partner_product_update.price,
+            "payment_type": business_partner_product_update.payment_type.value,
+            "payment_frequency": business_partner_product_update.payment_frequency.value,
+            "image_url": business_partner_product_update.image_url,
+            "description": business_partner_product_update.description,
+            "sport_id": str(business_partner_product_update.sport_id),
+        }
+
+        get_suggested_product_mock.return_value = business_partner_product_update_dict
+
+        response = await business_partners_routes.get_suggested_product(db_mock, None, None)
+        response_json = json.loads(response.body)
+
+        get_suggested_product_mock.assert_called_once_with(None)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, business_partner_product_update_dict)
+
+    @patch("app.services.business_partners.BusinessPartnersService.get_suggested_product")
+    async def test_get_business_partner_suggested_product_with_filters(self, get_suggested_product_mock):
+        db_mock = MagicMock()
+        business_partner_product_update = generate_random_business_partner_product_create_data(fake)
+        business_partner_product_update_dict = {
+            "category": business_partner_product_update.category.value,
+            "name": business_partner_product_update.name,
+            "summary": fake.word(),
+            "url": business_partner_product_update.url,
+            "price": business_partner_product_update.price,
+            "payment_type": business_partner_product_update.payment_type.value,
+            "payment_frequency": business_partner_product_update.payment_frequency.value,
+            "image_url": business_partner_product_update.image_url,
+            "description": business_partner_product_update.description,
+            "sport_id": str(business_partner_product_update.sport_id),
+        }
+
+        get_suggested_product_mock.return_value = business_partner_product_update_dict
+
+        suggested_product_filter = generate_random_business_partner_suggested_filter(fake)
+
+        response = await business_partners_routes.get_suggested_product(db_mock, suggested_product_filter.category, suggested_product_filter.sport_id)
+        response_json = json.loads(response.body)
+
+        get_suggested_product_mock.assert_called_once_with(suggested_product_filter)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_json, business_partner_product_update_dict)

@@ -35,6 +35,7 @@ class TestBusinessPartner(unittest.TestCase):
             "payment_frequency": fake.enum(PaymentFrequency),
             "image_url": fake.url(),
             "description": fake.text(),
+            "sport_id": fake.uuid4(),
         }
 
         business_partner_product = BusinessPartnerProduct(**product_data)
@@ -50,3 +51,4 @@ class TestBusinessPartner(unittest.TestCase):
         self.assertEqual(business_partner_product.payment_frequency, product_data["payment_frequency"])
         self.assertEqual(business_partner_product.image_url, product_data["image_url"])
         self.assertEqual(business_partner_product.description, product_data["description"])
+        self.assertEqual(business_partner_product.sport_id, product_data["sport_id"])

@@ -1,5 +1,5 @@
 from app.models.business_partners import BusinessPartner, ProductCategory, PaymentFrequency, PaymentType, BusinessPartnerProduct, ProductTransaction, TransactionStatus
-from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, PaymentData
+from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, PaymentData, SuggestBusinessPartnerProduct
 
 
 def generate_random_user_login_data(faker, token=False):
@@ -38,6 +38,14 @@ def generate_random_business_partner_product_create_data(faker):
         image_url=faker.url(),
         description=faker.text(),
         active=True,
+        sport_id=str(faker.uuid4()),
+    )
+
+
+def generate_random_business_partner_suggested_filter(faker):
+    return SuggestBusinessPartnerProduct(
+        category=faker.enum(ProductCategory),
+        sport_id=str(faker.uuid4()),
     )
 
 
