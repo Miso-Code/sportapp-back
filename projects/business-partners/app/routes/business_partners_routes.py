@@ -69,14 +69,9 @@ async def get_suggested_product(
     category: Annotated[str | None, Query(max_length=50)] = None,
     sport_id: Annotated[UUID | None, Query()] = None,
 ):
-    suggested_product_filter = (
-        SuggestBusinessPartnerProduct(
-            category=category,
-            sport_id=sport_id,
-        )
-        if category is not None or sport_id is not None
-        else None
-    )
+    suggested_product_filter = None
+    if category is not None or sport_id is not None:
+        suggested_product_filter = SuggestBusinessPartnerProduct(category=category, sport_id=sport_id)
     get_suggested_product_response = BusinessPartnersService(db).get_suggested_product(suggested_product_filter)
     return JSONResponse(content=get_suggested_product_response, status_code=200)
 
