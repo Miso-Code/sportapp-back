@@ -3,7 +3,7 @@ from uuid import UUID
 import requests
 
 from app.config.settings import Config
-from app.exceptions.exceptions import NotFoundError
+from app.exceptions.exceptions import ExternalServiceError
 
 
 class ExternalServices:
@@ -15,10 +15,10 @@ class ExternalServices:
         response = requests.get(f"{self.users_base_url}/profiles/sports", headers={"Authorization": user_auth_token})
         if response.status_code == 200:
             return response.json()
-        raise NotFoundError(f"User with id {str(user_id)} not found")
+        raise ExternalServiceError(f"Error calling user_sport_profile for user {user_id}: {response.status_code} - {response.json()}")
 
     def get_training_plan(self, user_id, user_auth_token):
         response = requests.get(f"{self.training_plan_base_url}", headers={"Authorization": user_auth_token})
         if response.status_code == 200:
             return response.json()
-        raise NotFoundError(f"User with id {str(user_id)} not found")
+        raise ExternalServiceError(f"Error calling training_plan for user {user_id}: {response.status_code} - {response.json()}")
