@@ -184,7 +184,7 @@ module "business-partners-get-all-available-products-route" {
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
 
-module "business-partners-get-all-available-products-route" {
+module "business-partners-get-all-suggested-products-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
   route_method     = "GET"
