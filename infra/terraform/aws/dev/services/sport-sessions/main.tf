@@ -20,6 +20,10 @@ data "terraform_remote_state" "resources" {
   }
 }
 
+data "aws_secretsmanager_secret" "api_key" {
+  name = "API_KEY"
+}
+
 // Register target group and listener rule
 module "sport-sessions-tg" {
   source                         = "../../../modules/elb/target_group"
@@ -69,6 +73,10 @@ module "sport-sessions-task-def" {
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.db_credentials.arn}:PASSWORD::"
       "name" : "DB_PASSWORD"
+    },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:SPORT_SESSIONS::"
+      "name" : "SPORT_SESSIONS_API_KEY"
     }
   ]
 }

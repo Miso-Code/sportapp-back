@@ -65,7 +65,7 @@ module "adverse-incidents-task-def" {
   ]
   secrets = [
     {
-      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:ADVERSE_INCIDENTS::"
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:INCIDENTS::"
       "name" : "ADVERSE_INCIDENTS_PROVIDER_API_KEY"
     },
     {
@@ -73,7 +73,7 @@ module "adverse-incidents-task-def" {
       "name" : "SPORT_SESSIONS_API_KEY"
     },
     {
-      "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:PASSWORD::"
+      "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:SPORTAPP_SERVICES_BASE_URL::"
       "name" : "SPORTAPP_SERVICES_BASE_URL"
     }
   ]

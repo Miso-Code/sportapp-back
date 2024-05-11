@@ -10,6 +10,10 @@ data "aws_secretsmanager_secret" "db_credentials" {
   name = "DB_CREDENTIALS_QA"
 }
 
+data "aws_secretsmanager_secret" "api_key" {
+  name = "API_KEY"
+}
+
 data "terraform_remote_state" "resources" {
   backend = "remote"
   config = {
@@ -69,6 +73,10 @@ module "sport-sessions-task-def" {
     {
       "valueFrom" : "${data.aws_secretsmanager_secret.db_credentials.arn}:PASSWORD::"
       "name" : "DB_PASSWORD"
+    },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.api_key.arn}:SPORT_SESSIONS::"
+      "name" : "SPORT_SESSIONS_API_KEY"
     }
   ]
 }
