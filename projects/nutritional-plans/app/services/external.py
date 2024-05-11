@@ -21,4 +21,4 @@ class ExternalServices:
         response = requests.get(f"{self.training_plan_base_url}", headers={"Authorization": user_auth_token})
         if response.status_code == 200:
             return response.json()
-        raise ExternalServiceError(f"Error calling training_plan for user {user_id}: {response.status_code} - {response.json()}")
+        raise ExternalServiceError(f"Error calling get_training_plan for user {user_id}: {response.status_code} - {response.json()}")

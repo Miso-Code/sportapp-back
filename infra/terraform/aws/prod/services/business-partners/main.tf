@@ -184,6 +184,15 @@ module "business-partners-get-all-available-products-route" {
   vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
 }
 
+module "business-partners-get-all-available-products-route" {
+  source           = "../../../modules/api_gateway/route"
+  api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id
+  route_method     = "GET"
+  route_path       = "/business-partners/products/suggested"
+  elb_listener_arn = data.terraform_remote_state.resources.outputs.elb_listener_arn
+  vpc_link_id      = data.terraform_remote_state.resources.outputs.vpc_link_id
+}
+
 module "business-partners-purchase-product-route" {
   source           = "../../../modules/api_gateway/route"
   api_id           = data.terraform_remote_state.resources.outputs.api_gateway_id

@@ -112,8 +112,13 @@ async def get_user_nutritional_information(user_id: Annotated[UUID, Header()], d
 
 
 @router.patch("/profiles/personal")
-async def update_user_personal_information(personal_profile: UserPersonalProfile, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
-    user_personal_information = UsersService(db).update_user_personal_information(user_id, personal_profile)
+async def update_user_personal_information(
+    personal_profile: UserPersonalProfile,
+    user_id: Annotated[UUID, Header()],
+    db: Session = Depends(get_db),
+    authorization: Annotated[str, Header()] = None,
+):
+    user_personal_information = UsersService(db, authorization).update_user_personal_information(user_id, personal_profile)
     return JSONResponse(content=user_personal_information, status_code=200)
 
 
@@ -121,16 +126,21 @@ async def update_user_personal_information(personal_profile: UserPersonalProfile
 async def update_user_sports_information(
     sports_profile: UserSportsProfileUpdate,
     user_id: Annotated[UUID, Header()],
-    authorization: Annotated[str, Header()] = None,
     db: Session = Depends(get_db),
+    authorization: Annotated[str, Header()] = None,
 ):
     user_sports_information = UsersService(db, authorization).update_user_sports_information(user_id, sports_profile)
     return JSONResponse(content=user_sports_information, status_code=200)
 
 
 @router.patch("/profiles/nutritional")
-async def update_user_nutritional_information(nutritional_profile: UserNutritionalProfile, user_id: Annotated[UUID, Header()], db: Session = Depends(get_db)):
-    user_nutritional_information = UsersService(db).update_user_nutritional_information(user_id, nutritional_profile)
+async def update_user_nutritional_information(
+    nutritional_profile: UserNutritionalProfile,
+    user_id: Annotated[UUID, Header()],
+    db: Session = Depends(get_db),
+    authorization: Annotated[str, Header()] = None,
+):
+    user_nutritional_information = UsersService(db, authorization).update_user_nutritional_information(user_id, nutritional_profile)
     return JSONResponse(content=user_nutritional_information, status_code=200)
 
 

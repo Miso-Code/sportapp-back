@@ -787,9 +787,10 @@ async def test_generate_nutritional_plan(test_db, mocker):
         assert response.status_code == HTTPStatus.OK
         assert external_service_create_nutritional_plan.called is True
         assert external_service_create_nutritional_plan.call_count == 1
-        assert external_service_create_nutritional_plan.call_args.args[0]["gender"] == user_created.gender.value
-        assert external_service_create_nutritional_plan.call_args.args[0]["training_objective"] == user_created.training_objective.value
-        assert external_service_create_nutritional_plan.call_args.args[0]["weight"] == user_created.weight
-        assert external_service_create_nutritional_plan.call_args.args[0]["height"] == user_created.height
-        assert external_service_create_nutritional_plan.call_args.args[0]["food_preference"] == user_created.food_preference.value
-        assert external_service_create_nutritional_plan.call_args.args[0]["nutritional_limitations"] == []
+        assert external_service_create_nutritional_plan.call_args.args[0] == user_created.user_id
+        assert external_service_create_nutritional_plan.call_args.args[1]["gender"] == user_created.gender.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["training_objective"] == user_created.training_objective.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["weight"] == user_created.weight
+        assert external_service_create_nutritional_plan.call_args.args[1]["height"] == user_created.height
+        assert external_service_create_nutritional_plan.call_args.args[1]["food_preference"] == user_created.food_preference.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["nutritional_limitations"] == []

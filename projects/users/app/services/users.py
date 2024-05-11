@@ -156,7 +156,7 @@ class UsersService:
         self.db.commit()
 
         if should_update_training_plan:
-            self.external_services.create_training_plan(DataClassMapper.to_training_plan_create(user), self.user_token)
+            self.external_services.create_training_plan(user.user_id, DataClassMapper.to_training_plan_create(user), self.user_token)
 
         if self._should_create_nutritional_plan(user):
             self.generate_nutritional_plan(user)
@@ -274,4 +274,4 @@ class UsersService:
             "nutritional_limitations": [limitation.name for limitation in user.nutritional_limitations],
         }
 
-        self.external_services.create_nutritional_plan(data, self.user_token)
+        self.external_services.create_nutritional_plan(user.user_id, data, self.user_token)
