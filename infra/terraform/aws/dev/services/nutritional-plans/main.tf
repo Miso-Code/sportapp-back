@@ -10,6 +10,10 @@ data "aws_secretsmanager_secret" "db_credentials" {
   name = "DB_CREDENTIALS_DEV"
 }
 
+data "aws_secretsmanager_secret" "services_urls" {
+  name = "SERVICES_URLS_DEV"
+}
+
 
 data "terraform_remote_state" "resources" {
   backend = "remote"
@@ -76,6 +80,10 @@ module "nutritional-plans-task-def" {
       "valueFrom" : "${data.aws_secretsmanager_secret.db_credentials.arn}:PASSWORD::"
       "name" : "DB_PASSWORD"
     },
+    {
+      "valueFrom" : "${data.aws_secretsmanager_secret.services_urls.arn}:SPORTAPP_SERVICES_BASE_URL::"
+      "name" : "SPORTAPP_SERVICES_BASE_URL"
+    }
   ]
 }
 
