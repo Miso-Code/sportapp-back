@@ -6,6 +6,10 @@ COPY pyproject.toml poetry.lock main.py /service/
 
 COPY app/ /service/app/
 
+COPY alembic.ini /service/
+
+COPY migrations/ /service/migrations/
+
 WORKDIR /service
 
 RUN pip install poetry && poetry config virtualenvs.create false
