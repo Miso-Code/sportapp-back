@@ -28,7 +28,7 @@ data "terraform_remote_state" "resources" {
 // Register target group and listener rule
 module "adverse-incidents-provider-tg" {
   source                         = "../../../modules/elb/target_group"
-  target_group_name              = "adverse-incidents-provider-dev-tg"
+  target_group_name              = "incidents-provider-dev-tg"
   target_group_port              = 8000
   target_group_protocol          = "HTTP"
   target_group_health_check_path = "/ping"
