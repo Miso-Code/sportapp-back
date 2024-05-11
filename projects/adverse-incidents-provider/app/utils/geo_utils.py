@@ -14,9 +14,9 @@ def generate_random_points(num_points, boundary_coords: List[Coordinate]):
 
     boundaries_formatted = [[cords.latitude, cords.longitude] for cords in boundary_coords]
     boundary_polygon = Polygon(boundaries_formatted)
+    min_x, min_y, max_x, max_y = boundary_polygon.bounds
     points = []
     while len(points) < num_points:
-        min_x, min_y, max_x, max_y = boundary_polygon.bounds
         random_point = Point(np.random.uniform(min_x, max_x), np.random.uniform(min_y, max_y))
         if random_point.within(boundary_polygon):
             points.append(random_point)

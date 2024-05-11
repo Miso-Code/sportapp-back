@@ -12,8 +12,11 @@ class Processor:
 
     def process_incidents(self):
         while not self.stop_thread:
-            message = self.adverse_incidents_service.process_incidents()
-            self.logger.info(message)
+            try:
+                message = self.adverse_incidents_service.process_incidents()
+                self.logger.info(message)
+            except Exception as e:
+                self.logger.error(f"Error processing incidents: {str(e)}")
             self.logger.warning(f"Waiting {Config.NOTIFIER_SLEEP_TIME_SECONDS} seconds before processing next incidents")
             sleep(Config.NOTIFIER_SLEEP_TIME_SECONDS)
 

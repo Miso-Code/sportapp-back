@@ -55,6 +55,13 @@ class TestSportSessions:
         self.active_session_id = active_session.session_id
         self.finished_session_id = finished_session.session_id
 
+        yield
+
+        session = session_local()
+        session.query(SportSession).delete()
+        session.query(Location).delete()
+        session.commit()
+
     def test_should_create_sport_session(self):
         client = TestClient(app)
 

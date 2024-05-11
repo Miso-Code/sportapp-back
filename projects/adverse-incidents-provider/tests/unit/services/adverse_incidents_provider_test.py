@@ -1,8 +1,7 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from faker import Faker
 from shapely import Point
-from sqlalchemy.orm import Session
 
 from app.config.settings import Config
 from app.models.schemas.schema import Coordinate

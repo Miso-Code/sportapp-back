@@ -27,4 +27,15 @@ class TestProcessor(unittest.TestCase):
 
         self.processor.process_incidents()
         self.logger.info.assert_called_once_with(mock_process_incidents_return)
-        self.logger.warning.assert_called_once_with(f"Waiting 60 seconds before processing next incidents")
+        self.logger.warning.assert_called_once_with("Waiting 60 seconds before processing next incidents")
+
+    @patch("app.tasks.processor.sleep")
+    @patch("app.tasks.processor.Config.NOTIFIER_SLEEP_TIME_SECONDS", 60)
+    def test_process_incidents_exception(self, mock_sleep):
+        self.adverse_incidents_service_mock.process_incidents.side_effect = Exception("Something went wrong")
+
+        mock_sleep.side_effect = lambda *args, **kwargs: self.processor.stop_processing()
+
+        self.processor.process_incidents()
+        self.logger.error.assert_called_once()
+        self.logger.warning.assert_called_once_with("Waiting 60 seconds before processing next incidents")

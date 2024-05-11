@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from botocore.exceptions import ClientError
 from faker import Faker
@@ -52,4 +52,4 @@ class TestAdverseIncidentsService(unittest.TestCase):
 
         response = self.adverse_incidents_service.process_incidents()
 
-        self.assertEqual(response["message"], f"Error processing incidents: An error occurred (TestCode) when calling the send_message operation: TestMessage")
+        self.assertEqual(response["message"], "Error processing incidents: An error occurred (TestCode) when calling the send_message operation: TestMessage")
