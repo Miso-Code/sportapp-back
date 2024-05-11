@@ -4,12 +4,15 @@ import uuid
 from pytest import fixture
 
 from main import app
-from app.models.model import SportSession
+from app.models.model import SportSession, Location
 from app.config.db import session_local
 from fastapi.testclient import TestClient
 
+SPORT_SESSIONS_BASE_URL = "/sport-session"
+
 
 class TestSportSessions:
+
     @fixture
     def seed_sport_sessions(self):
         active_session = SportSession(
@@ -52,11 +55,18 @@ class TestSportSessions:
         self.active_session_id = active_session.session_id
         self.finished_session_id = finished_session.session_id
 
+        yield
+
+        session = session_local()
+        session.query(SportSession).delete()
+        session.query(Location).delete()
+        session.commit()
+
     def test_should_create_sport_session(self):
         client = TestClient(app)
 
         res = client.post(
-            "/sport-session/",
+            f"{SPORT_SESSIONS_BASE_URL}/",
             json={
                 "user_id": str(uuid.uuid4()),
                 "sport_id": str(uuid.uuid4()),
@@ -78,7 +88,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.post(
-            "/sport-session/",
+            f"{SPORT_SESSIONS_BASE_URL}/",
             json={
                 "user_id": str(uuid.uuid4()),
                 "sport_id": str(uuid.uuid4()),
@@ -96,7 +106,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.put(
-            f"/sport-session/{self.active_session_id}/location",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}/location",
             json={"latitude": 0.0, "longitude": 0.0, "accuracy": 0.0, "altitude": 0.0, "altitude_accuracy": 0.0, "heading": 0.0, "speed": 0.0},
         )
         json_response = res.json()
@@ -115,7 +125,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.put(
-            f"/sport-session/{self.active_session_id}/location",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}/location",
             json={"latitude": 0.0, "longitude": 0.0, "accuracy": 0.0, "altitude": 0.0, "altitude_accuracy": 0.0, "heading": 0.0, "speed": 0.0},
             headers={"user-id": str(uuid.uuid4())},
         )
@@ -128,7 +138,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.put(
-            f"/sport-session/{self.finished_session_id}/location",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.finished_session_id}/location",
             json={"latitude": 0.0, "longitude": 0.0, "accuracy": 0.0, "altitude": 0.0, "altitude_accuracy": 0.0, "heading": 0.0, "speed": 0.0},
         )
         json_response = res.json()
@@ -140,7 +150,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.put(
-            f"/sport-session/{uuid.uuid4()}/location",
+            f"{SPORT_SESSIONS_BASE_URL}/{uuid.uuid4()}/location",
             json={"latitude": 0.0, "longitude": 0.0, "accuracy": 0.0, "altitude": 0.0, "altitude_accuracy": 0.0, "heading": 0.0, "speed": 0.0},
         )
         json_response = res.json()
@@ -152,7 +162,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.patch(
-            f"/sport-session/{self.active_session_id}",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}",
             json={"duration": 100, "steps": 100, "distance": 100, "calories": 100, "average_speed": 100, "min_heartrate": 100, "max_heartrate": 100, "avg_heartrate": 100},
         )
         json_response = res.json()
@@ -175,7 +185,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.patch(
-            f"/sport-session/{self.active_session_id}",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}",
             json={"duration": 100, "steps": 100, "distance": 100, "calories": 100, "average_speed": 100, "min_heartrate": 100, "max_heartrate": 100, "avg_heartrate": 100},
             headers={"user-id": str(uuid.uuid4())},
         )
@@ -188,7 +198,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.patch(
-            f"/sport-session/{self.finished_session_id}",
+            f"{SPORT_SESSIONS_BASE_URL}/{self.finished_session_id}",
             json={"duration": 100, "steps": 100, "distance": 100, "calories": 100, "average_speed": 100, "min_heartrate": 100, "max_heartrate": 100, "avg_heartrate": 100},
         )
         json_response = res.json()
@@ -200,7 +210,7 @@ class TestSportSessions:
         client = TestClient(app)
 
         res = client.patch(
-            f"/sport-session/{uuid.uuid4()}",
+            f"{SPORT_SESSIONS_BASE_URL}/{uuid.uuid4()}",
             json={"duration": 100, "steps": 100, "distance": 100, "calories": 100, "average_speed": 100, "min_heartrate": 100, "max_heartrate": 100, "avg_heartrate": 100},
         )
         json_response = res.json()
@@ -211,7 +221,7 @@ class TestSportSessions:
     def test_should_get_sport_session(self, seed_sport_sessions):
         client = TestClient(app)
 
-        res = client.get(f"/sport-session/{self.active_session_id}")
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}")
         json_response = res.json()
 
         assert res.status_code == 200
@@ -231,7 +241,7 @@ class TestSportSessions:
     def test_get_sport_session_should_fail_if_not_the_owner(self, seed_sport_sessions):
         client = TestClient(app)
 
-        res = client.get(f"/sport-session/{self.active_session_id}", headers={"user-id": str(uuid.uuid4())})
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/{self.active_session_id}", headers={"user-id": str(uuid.uuid4())})
         json_response = res.json()
 
         assert res.status_code == 403
@@ -240,7 +250,7 @@ class TestSportSessions:
     def test_get_sport_session_should_fail_if_not_found(self):
         client = TestClient(app)
 
-        res = client.get(f"/sport-session/{uuid.uuid4()}")
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/{uuid.uuid4()}")
         json_response = res.json()
 
         assert res.status_code == 404
@@ -287,7 +297,7 @@ class TestSportSessions:
         session.add(session_2)
         session.commit()
 
-        res = client.get("/sport-session/", headers={"user-id": str(user_id)})
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/", headers={"user-id": str(user_id)})
         json_response = res.json()
 
         assert res.status_code == 200
@@ -334,8 +344,135 @@ class TestSportSessions:
         session.add(session_2)
         session.commit()
 
-        res = client.get("/sport-session/", headers={"user-id": str(user_id)})
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/", headers={"user-id": str(user_id)})
         json_response = res.json()
 
         assert res.status_code == 200
         assert len(json_response) == 1
+
+    def test_get_active_sport_sessions(self, seed_sport_sessions):
+        client = TestClient(app)
+        user_id = uuid.uuid4()
+        user_2_id = uuid.uuid4()
+        user_3_id = uuid.uuid4()
+
+        current_time = datetime.datetime.now()
+
+        session_1 = SportSession(
+            session_id=uuid.uuid4(),
+            user_id=user_id,
+            sport_id=uuid.uuid4(),
+            duration=100,
+            steps=100,
+            distance=100,
+            calories=100,
+            average_speed=100,
+            min_heartrate=100,
+            max_heartrate=100,
+            avg_heartrate=100,
+            is_active=True,
+            started_at=datetime.datetime.now(),
+        )
+
+        location_1_session_1 = Location(
+            session_id=session_1.session_id,
+            latitude=0.0,
+            longitude=0.0,
+            accuracy=0.0,
+            altitude=0.0,
+            altitude_accuracy=0.0,
+            heading=0.0,
+            speed=0.0,
+            created_at=current_time,
+        )
+
+        location_2_session_1 = Location(
+            session_id=session_1.session_id,
+            latitude=0.0,
+            longitude=0.0,
+            accuracy=0.0,
+            altitude=0.0,
+            altitude_accuracy=0.0,
+            heading=0.0,
+            speed=0.0,
+            created_at=current_time + datetime.timedelta(seconds=10),
+        )
+
+        session_2 = SportSession(
+            session_id=uuid.uuid4(),
+            user_id=user_2_id,
+            sport_id=uuid.uuid4(),
+            duration=100,
+            steps=100,
+            distance=100,
+            calories=100,
+            average_speed=100,
+            min_heartrate=100,
+            max_heartrate=100,
+            avg_heartrate=100,
+            is_active=True,
+            started_at=datetime.datetime.now(),
+        )
+
+        location_1_session_2 = Location(
+            session_id=session_2.session_id,
+            latitude=0.0,
+            longitude=0.0,
+            accuracy=0.0,
+            altitude=0.0,
+            altitude_accuracy=0.0,
+            heading=0.0,
+            speed=0.0,
+            created_at=current_time,
+        )
+
+        location_2_session_2 = Location(
+            session_id=session_2.session_id,
+            latitude=0.0,
+            longitude=0.0,
+            accuracy=0.0,
+            altitude=0.0,
+            altitude_accuracy=0.0,
+            heading=0.0,
+            speed=0.0,
+            created_at=current_time - datetime.timedelta(seconds=10),
+        )
+
+        session_3 = SportSession(
+            session_id=uuid.uuid4(),
+            user_id=user_3_id,
+            sport_id=uuid.uuid4(),
+            duration=100,
+            steps=100,
+            distance=100,
+            calories=100,
+            average_speed=100,
+            min_heartrate=100,
+            max_heartrate=100,
+            avg_heartrate=100,
+            is_active=False,
+            started_at=datetime.datetime.now(),
+        )
+
+        session = session_local()
+        session.add(session_1)
+        session.add(session_2)
+        session.add(session_3)
+        session.add(location_1_session_1)
+        session.add(location_2_session_1)
+        session.add(location_1_session_2)
+        session.add(location_2_session_2)
+        session.commit()
+
+        res = client.get(f"{SPORT_SESSIONS_BASE_URL}/active-sport-sessions", headers={"x-api-key": "secret"})
+        json_response = res.json()
+
+        print(json_response)
+        assert res.status_code == 200
+        assert len(json_response) == 2
+        assert json_response[0]["user_id"] == str(session_1.user_id)
+        assert json_response[0]["latitude"] == location_2_session_1.latitude
+        assert json_response[0]["longitude"] == location_2_session_1.longitude
+        assert json_response[1]["user_id"] == str(session_2.user_id)
+        assert json_response[1]["latitude"] == location_1_session_2.latitude
+        assert json_response[1]["longitude"] == location_1_session_2.longitude
