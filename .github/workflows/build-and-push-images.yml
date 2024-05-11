@@ -7,11 +7,6 @@ on:
       - 'projects/**'
       - '.github/workflows/build-and-push-images.yml'
 
-env:
-  GCP_PROJECT_ID: "sportapp-417820"
-  GCP_PROJECT_REGION: "us-central1"
-  WORKLOAD_IDENTITY_PROVIDER: "projects/480619174578/locations/global/workloadIdentityPools/gh-actions-pool/providers/my-repo"
-
 jobs:
   resolve-tag:
     runs-on: ubuntu-latest
@@ -26,7 +21,7 @@ jobs:
     needs: resolve-tag
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "miso-stripe", "training-plans", "sport-events", "alerts", "nutritional-plans" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "miso-stripe", "training-plans", "sport-events", "alerts", "nutritional-plans", "adverse-incidents", "adverse-incidents-provider" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -52,33 +47,3 @@ jobs:
           cd projects/$REPOSITORY
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-
-
-  build-and-push-gcp:
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    needs: resolve-tag
-    strategy:
-      matrix:
-        service: [ "sports", "sport-sessions", "users", "business-partners", "miso-stripe", "training-plans", "sport-events", "alerts", "nutritional-plans" ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Login to Artifact Registry
-        uses: docker/login-action@v3
-        with:
-          registry: us-central1-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GOOGLE_CREDENTIALS }}
-
-      - name: Build, tag, and push docker image to Google Artifact Registry
-        env:
-          REPOSITORY: ${{ matrix.service }}
-          IMAGE_TAG: ${{ needs.resolve-tag.outputs.image_tag }}
-        run: |
-          cd projects/$REPOSITORY
-          docker build -t $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$REPOSITORY:$IMAGE_TAG .
-          docker push $GCP_PROJECT_REGION-docker.pkg.dev/$GCP_PROJECT_ID/sportapp/$REPOSITORY:$IMAGE_TAG
