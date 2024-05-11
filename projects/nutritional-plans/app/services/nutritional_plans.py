@@ -16,7 +16,6 @@ from app.models.model import (
     FoodType,
 )
 from app.models.schemas.schema import (
-    CaloricIntakeSQSMessage,
     SessionCalories,
     NutritionalPlanCreate,
 )
@@ -43,6 +42,8 @@ class NutritionalPlansService:
         user_auth_token: str,
         nutritional_plan_create: NutritionalPlanCreate,
     ):
+        self._clear_previous_plan(user_id)
+
         basal_metabolism = self._calculate_basal_metabolism(nutritional_plan_create)
         training_plan = self.external_services.get_training_plan(user_id, user_auth_token)
         dishes = self._get_filtered_dishes(nutritional_plan_create)
@@ -59,6 +60,10 @@ class NutritionalPlansService:
             )
 
         return {"user_id": str(user_id), "message": "Nutritional plan created successfully"}
+
+    def _clear_previous_plan(self, user_id):
+        self.db.query(FoodIntake).filter(FoodIntake.user_id == user_id).delete()
+        self.db.commit()
 
     def get_nutritional_plan(self, user_id: UUID, language: str) -> list[dict]:
         if language == "es":

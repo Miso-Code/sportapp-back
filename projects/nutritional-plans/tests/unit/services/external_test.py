@@ -66,4 +66,4 @@ class TestExternalService(unittest.TestCase):
 
         with self.assertRaises(ExternalServiceError) as context:
             external_service.get_training_plan(user_id, user_token)
-        self.assertEqual(str(context.exception), f"Error calling training_plan for user {user_id}: {fake_return_code} - {fake_return_message}")
+        self.assertEqual(str(context.exception), f"Error calling get_training_plan for user {user_id}: {fake_return_code} - {fake_return_message}")
