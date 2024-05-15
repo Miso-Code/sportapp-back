@@ -4,31 +4,31 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/adverse-incidents"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/adverse-incidents-provider"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/alerts"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/authorizer"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/business-partners"
     schedule:
       interval: "daily"
@@ -40,37 +40,37 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/nutritional-plans"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/sport-events"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/sport-sessions"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/sports"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/training-plans"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-  - package-ecosystem: "poetry"
+  - package-ecosystem: "pip"
     directory: "/projects/users"
     schedule:
       interval: "daily"
