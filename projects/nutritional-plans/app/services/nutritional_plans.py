@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from uuid import UUID
 from typing import List, Optional
 
@@ -136,6 +137,7 @@ class NutritionalPlansService:
         sqs_message = {
             "user_id": str(user_id),
             "message": message,
+            "date": datetime.now().isoformat(),
         }
         self.sqs.send_message(self.notification_queue, json.dumps(sqs_message))
 

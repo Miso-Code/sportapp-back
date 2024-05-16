@@ -1,4 +1,3 @@
-from app.config.db import get_db
 from app.firebase.firebase import FirebaseClient
 from app.services.alerts import AlertsService
 
@@ -6,8 +5,7 @@ from app.services.alerts import AlertsService
 class Publisher:
 
     @staticmethod
-    def send_alert(user_id: str, priority: str, title: str, message: str):
-        db = get_db()
+    def send_alert(db, user_id: str, priority: str, title: str, message: str):
         alerts_service = AlertsService(db)
         try:
             user_device = alerts_service.get_user_device(user_id)

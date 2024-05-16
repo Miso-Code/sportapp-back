@@ -12,17 +12,17 @@ fake = Faker()
 
 class TestExternalService(unittest.TestCase):
 
-    @patch("requests.get")
-    def test_get_incidents(self, mock_get):
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = [{"id": fake.uuid4()}]
+    @patch("requests.post")
+    def test_get_incidents(self, mock_post):
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = [{"id": fake.uuid4()}]
         external_service = ExternalServices()
         incidents = external_service.get_incidents()
         self.assertEqual(len(incidents), 1)
 
-    @patch("requests.get")
-    def test_get_incidents_error(self, mock_get):
-        mock_get.return_value.status_code = 500
+    @patch("requests.post")
+    def test_get_incidents_error(self, mock_post):
+        mock_post.return_value.status_code = 500
         external_service = ExternalServices()
         with self.assertRaises(ExternalServiceError) as context:
             external_service.get_incidents()

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class AdverseIncidentMessage(BaseModel):
     message: str
     user_id: str
+    date: str
 
 
 class AdverseIncidentBoundingBox(BaseModel):
