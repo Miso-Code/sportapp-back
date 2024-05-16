@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from typing import List
 
 from botocore.exceptions import ClientError
@@ -30,7 +31,7 @@ class AdverseIncidentsService:
     def _process_adverse_incident(self, incident: AdverseIncident, users_training: List[UserTraining]):
         users_affected = _get_users_affected_by_incident(incident, users_training)
         for user_id in users_affected:
-            self._notify_adverse_incident(AdverseIncidentMessage(user_id=user_id, message=incident.description))
+            self._notify_adverse_incident(AdverseIncidentMessage(user_id=user_id, message=incident.description, date=datetime.now().isoformat()))
         return len(users_affected)
 
     def process_incidents(self):

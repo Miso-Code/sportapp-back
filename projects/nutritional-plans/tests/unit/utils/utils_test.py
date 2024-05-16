@@ -28,6 +28,14 @@ class TestUtils(unittest.TestCase):
         expected_bmr = 1384
         self.assertEqual(utils.calculate_basal_metabolism(age, gender, weight, height), expected_bmr)
 
+    def test_calculate_basal_metabolism_other(self):
+        age = 30
+        gender = "O"
+        weight = 60
+        height = 1.65
+        expected_bmr = 1449
+        self.assertEqual(utils.calculate_basal_metabolism(age, gender, weight, height), expected_bmr)
+
     def test_calculate_session_calories(self):
         weight = 70
         training_session = {"warm_up": 1, "cardio": 2, "strength": 1, "cool_down": 1}
