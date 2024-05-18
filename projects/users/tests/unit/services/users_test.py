@@ -39,9 +39,8 @@ class TestUsersService(unittest.TestCase):
         self.users_service.jwt_manager = self.mock_jwt
         self.users_service.external_services = self.external_services
 
-    @patch("bcrypt.hashpw")
-    @patch("bcrypt.gensalt")
-    def test_create_users(self, mock_gensalt, mock_hashpw):
+    @patch("hashlib.sha256")
+    def test_create_users(self, mock_sha256):
         user_1 = generate_random_user_create_data(fake)
         user_2 = generate_random_user_create_data(fake)
         user_3 = generate_random_user_create_data(fake)
@@ -59,11 +58,13 @@ class TestUsersService(unittest.TestCase):
         execute_mock.fetchall.return_value = users_created_fetch_all
         self.mock_db.commit.return_value = None
         self.users_service.create_users(users_data)
-        mock_gensalt.return_value = b"somesalt"
-        mock_hashpw.side_effect = lambda password, salt: b"hashed" + password
 
-        self.assertEqual(mock_gensalt.call_count, 3)
-        self.assertEqual(mock_hashpw.call_count, 3)
+        sha256_mock = MagicMock()
+        mock_sha256.return_value = sha256_mock
+        sha256_mock.update.return_value = None
+        sha256_mock.hexdigest.side_effect = lambda password, salt: b"hashed" + password
+
+        self.assertEqual(mock_sha256.call_count, 3)
         self.assertEqual(self.mock_db.execute.call_count, 1)
         self.assertEqual(execute_mock.fetchall.call_count, 1)
         self.assertEqual(self.mock_db.commit.call_count, 1)

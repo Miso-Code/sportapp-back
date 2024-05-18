@@ -1,6 +1,6 @@
 import asyncio
 import math
-from datetime import date, datetime
+from datetime import datetime
 
 
 async def async_sleep(seconds):
