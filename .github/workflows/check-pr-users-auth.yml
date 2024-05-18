@@ -1,0 +1,52 @@
+name: Check PRs on Users Auth service
+
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+    paths:
+      - "projects/users-auth/**"
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  lint-tests-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Yarn
+        run: |
+          npm i -g yarn
+
+      - name: Run Yarn Install
+        run: |
+          cd projects/users-auth
+          yarn install --frozen-lockfile
+
+      - name: Run Lint
+        run: |
+          cd projects/users-auth
+          yarn lint
+
+      - name: Run Unit Tests
+        run: |
+          cd projects/users-auth
+          yarn test:unit
+
+      - name: Run integration tests
+        run: |
+          cd projects/users-auth
+          yarn test:integration
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: projects/users-auth
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -21,7 +21,7 @@ jobs:
     needs: resolve-tag
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "miso-stripe", "training-plans", "sport-events", "alerts", "nutritional-plans", "adverse-incidents", "adverse-incidents-provider" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users", "users-auth", "business-partners", "miso-stripe", "training-plans", "sport-events", "alerts", "nutritional-plans", "adverse-incidents", "adverse-incidents-provider" ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
