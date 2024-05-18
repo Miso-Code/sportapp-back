@@ -1,0 +1,8 @@
+const Config = {
+  ACCESS_TOKEN_EXPIRE_MINUTES: process.env.ACCESS_TOKEN_EXPIRE_MINUTES || 60,
+  REFRESH_TOKEN_EXPIRE_MINUTES: process.env.REFRESH_TOKEN_EXPIRE_MINUTES || 10080,
+  JWT_ALGORITHM: process.env.JWT_ALGORITHM || 'HS256',
+  JWT_SECRET_KEY: process.env.JWT_SECRET_KEY || 'secret'
+};
+
+module.exports = Config;
