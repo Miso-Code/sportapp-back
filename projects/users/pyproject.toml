@@ -23,7 +23,7 @@ pyhumps = "^3.8.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.1.1"
-faker = "^24.4.0"
+faker = ">=24.4,<26.0"
 coverage = "^7.4.4"
 httpx = "^0.27.0"
 async-asgi-testclient = "^1.4.11"
