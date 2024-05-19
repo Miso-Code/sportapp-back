@@ -75,6 +75,10 @@ jobs:
                   "labels": ["refactor"]
                 },
                 {
+                  "title": "## 🔒 Security",
+                  "labels": ["security"]
+                },
+                {
                   "title": "## 💬 Other",
                   "labels": ["other"]
                 }

@@ -46,7 +46,7 @@ module "miso-stripe-listener-rule" {
 module "miso-stripe-task-def" {
   source                = "../../../modules/ecs/task_definition"
   service_name          = "miso-stripe"
-  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/miso-stripe:develop"
+  container_image       = "887664210442.dkr.ecr.us-east-1.amazonaws.com/miso-stripe:latest"
   container_port        = 8000
   cpu                   = 256
   memory                = 512

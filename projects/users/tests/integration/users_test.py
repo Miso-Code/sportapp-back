@@ -167,7 +167,7 @@ async def test_complete_user_registration(test_db):
             "country_of_residence": additional_info.country_of_residence,
             "city_of_residence": additional_info.city_of_residence,
             "residence_age": additional_info.residence_age,
-            "birth_date": additional_info.birth_date,
+            "birth_date": additional_info.birth_date.isoformat(),
         }
 
         client.headers["user-id"] = str(user_id)
@@ -184,7 +184,7 @@ async def test_complete_user_registration(test_db):
         assert response_json["country_of_residence"] == additional_info.country_of_residence
         assert response_json["city_of_residence"] == additional_info.city_of_residence
         assert response_json["residence_age"] == additional_info.residence_age
-        assert response_json["birth_date"] == additional_info.birth_date
+        assert response_json["birth_date"] == additional_info.birth_date.isoformat()
 
 
 @pytest.mark.asyncio
@@ -344,7 +344,7 @@ async def test_get_user_personal_profile(test_db):
         assert response_json["country_of_residence"] == user_created.country_of_residence
         assert response_json["city_of_residence"] == user_created.city_of_residence
         assert response_json["residence_age"] == user_created.residence_age
-        assert response_json["birth_date"] == user_created.birth_date
+        assert response_json["birth_date"] == user_created.birth_date.isoformat()
 
         assert getattr(response_json, "hashed_password", None) is None
         assert getattr(response_json, "weight", None) is None
@@ -471,7 +471,7 @@ async def test_get_users_nutritional_limitations(test_db):
 
 
 @pytest.mark.asyncio
-async def test_update_user_personal_profile(test_db):
+async def test_update_user_personal_profile(test_db, mocker):
     async with TestClient(app) as client:
         helper_db = TestingSessionLocal()
         user_created = generate_random_user(fake)
@@ -490,8 +490,12 @@ async def test_update_user_personal_profile(test_db):
             "country_of_residence": new_user_data.country_of_residence,
             "city_of_residence": new_user_data.city_of_residence,
             "residence_age": new_user_data.residence_age,
-            "birth_date": new_user_data.birth_date,
+            "birth_date": new_user_data.birth_date.isoformat(),
         }
+
+        external_service_create_nutritional_plan = mocker.patch("app.services.external.ExternalServices.create_nutritional_plan")
+
+        external_service_create_nutritional_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/personal", json=new_user_data_json)
@@ -511,7 +515,7 @@ async def test_update_user_personal_profile(test_db):
         assert response_json["country_of_residence"] == new_user_data.country_of_residence
         assert response_json["city_of_residence"] == new_user_data.city_of_residence
         assert response_json["residence_age"] == new_user_data.residence_age
-        assert response_json["birth_date"] == new_user_data.birth_date
+        assert response_json["birth_date"] == new_user_data.birth_date.isoformat()
 
 
 @pytest.mark.asyncio
@@ -539,6 +543,10 @@ async def test_update_user_sports_profile(test_db, mocker):
 
         external_service_create_training_plan = mocker.patch("app.services.external.ExternalServices.create_training_plan")
         external_service_create_training_plan.return_value = None
+
+        external_service_create_nutritional_plan = mocker.patch("app.services.external.ExternalServices.create_nutritional_plan")
+
+        external_service_create_nutritional_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/sports", json=new_user_data_json)
@@ -592,7 +600,7 @@ async def test_update_user_sports_profile_not_found_sport_id(test_db, mocker):
 
 
 @pytest.mark.asyncio
-async def test_update_user_nutritional_profile(test_db):
+async def test_update_user_nutritional_profile(test_db, mocker):
     async with TestClient(app) as client:
         helper_db = TestingSessionLocal()
         user_created = generate_random_user(fake)
@@ -604,6 +612,10 @@ async def test_update_user_nutritional_profile(test_db):
             "food_preference": new_user_data.food_preference.value,
             "nutritional_limitations": [str(limitation.limitation_id) for limitation in new_user_data.nutritional_limitations],
         }
+
+        external_service_create_nutritional_plan = mocker.patch("app.services.external.ExternalServices.create_nutritional_plan")
+
+        external_service_create_nutritional_plan.return_value = None
 
         client.headers["user-id"] = str(user_created.user_id)
         response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/nutritional", json=new_user_data_json)
@@ -751,3 +763,34 @@ async def test_get_premium_trainers(test_db):
         assert response_json[1]["trainer_id"] == str(trainer_2.trainer_id)
         assert response_json[1]["first_name"] == trainer_2.first_name
         assert response_json[1]["last_name"] == trainer_2.last_name
+
+
+@pytest.mark.asyncio
+async def test_generate_nutritional_plan(test_db, mocker):
+    async with TestClient(app) as client:
+        helper_db = TestingSessionLocal()
+        user_created = generate_random_user(fake)
+        helper_db.add(user_created)
+        helper_db.commit()
+
+        new_user_data_json = {
+            "nutritional_limitations": [],
+        }
+
+        external_service_create_nutritional_plan = mocker.patch("app.services.external.ExternalServices.create_nutritional_plan")
+
+        external_service_create_nutritional_plan.return_value = None
+
+        client.headers["user-id"] = str(user_created.user_id)
+        response = await client.patch(f"{Constants.USERS_BASE_PATH}/profiles/nutritional", json=new_user_data_json)
+
+        assert response.status_code == HTTPStatus.OK
+        assert external_service_create_nutritional_plan.called is True
+        assert external_service_create_nutritional_plan.call_count == 1
+        assert external_service_create_nutritional_plan.call_args.args[0] == user_created.user_id
+        assert external_service_create_nutritional_plan.call_args.args[1]["gender"] == user_created.gender.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["training_objective"] == user_created.training_objective.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["weight"] == user_created.weight
+        assert external_service_create_nutritional_plan.call_args.args[1]["height"] == user_created.height
+        assert external_service_create_nutritional_plan.call_args.args[1]["food_preference"] == user_created.food_preference.value
+        assert external_service_create_nutritional_plan.call_args.args[1]["nutritional_limitations"] == []

@@ -9,6 +9,7 @@ from app.models.schemas.schema import SportSessionFinish, SportSessionStart, Spo
 from app.services.sport_sessions import SportSessionService
 from app.config.db import get_db
 from app.config.settings import Config
+from app.utils import utils
 
 router = APIRouter(
     prefix="/sport-session",
@@ -29,6 +30,13 @@ async def start_sport_session(sport_session: SportSessionStart, user_id: Annotat
 @router.get("/")
 async def get_all_sport_sessions(user_id: Annotated[UUID4 | None, Header()] = None, db: Session = Depends(get_db)):
     sport_sessions = SportSessionService(db).get_sport_sessions(user_id)
+    return JSONResponse(content=sport_sessions, status_code=200)
+
+
+@router.get("/active-sport-sessions")
+async def get_active_sport_sessions(db: Session = Depends(get_db), x_api_key: Annotated[str | None, Header()] = None):
+    utils.validate_api_key(x_api_key)
+    sport_sessions = SportSessionService(db).get_active_sport_sessions()
     return JSONResponse(content=sport_sessions, status_code=200)
 
 

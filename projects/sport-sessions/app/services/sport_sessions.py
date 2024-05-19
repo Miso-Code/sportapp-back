@@ -1,6 +1,6 @@
 import datetime
-
 from pydantic import UUID4
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.model import SportSession, Location
@@ -81,6 +81,7 @@ class SportSessionService:
             "altitude_accuracy": location.altitude_accuracy,
             "heading": location.heading,
             "speed": location.speed,
+            "created_at": datetime.datetime.now(),
         }
 
         new_location = Location(**location_payload)
@@ -97,6 +98,7 @@ class SportSessionService:
             "altitude_accuracy": float(location.altitude_accuracy),
             "heading": float(location.heading),
             "speed": float(location.speed),
+            "created_at": new_location.created_at.isoformat(),
         }
 
     def finish_sport_session(self, sport_session_id: UUID4, sport_session_input: SportSessionFinish):
@@ -164,4 +166,30 @@ class SportSessionService:
                 "avg_heartrate": float(sport_session.avg_heartrate) if sport_session.avg_heartrate else None,
             }
             for sport_session in sport_sessions
+        ]
+
+    def get_active_sport_sessions(self):
+        latest_sessions_subquery = (
+            self.db.query(SportSession.user_id, func.max(Location.created_at).label("latest_created_at"))
+            .join(Location, SportSession.session_id == Location.session_id)
+            .filter(SportSession.is_active == True)
+            .group_by(SportSession.user_id)
+            .subquery()
+        )
+
+        locations = (
+            self.db.query(SportSession.user_id, Location.latitude, Location.longitude)
+            .join(Location, SportSession.session_id == Location.session_id)
+            .join(latest_sessions_subquery, SportSession.user_id == latest_sessions_subquery.c.user_id)
+            .filter(Location.created_at == latest_sessions_subquery.c.latest_created_at)
+            .all()
+        )
+
+        return [
+            {
+                "user_id": str(location.user_id),
+                "latitude": float(location.latitude),
+                "longitude": float(location.longitude),
+            }
+            for location in locations
         ]

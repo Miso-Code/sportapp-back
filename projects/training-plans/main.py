@@ -51,4 +51,4 @@ async def invalid_credentials_error_handler(request, exc):
 
 @app.get("/ping")
 async def root():
-    return {"message": "Users Service"}
+    return {"message": "Training Plans Service"}

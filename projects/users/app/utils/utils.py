@@ -1,5 +1,6 @@
 import asyncio
 import math
+from datetime import datetime
 
 
 async def async_sleep(seconds):
@@ -22,3 +23,9 @@ def get_user_scopes(subscription_type):
         scopes.append("intermediate")
         scopes.append("premium")
     return scopes
+
+
+def calculate_age(birth_date: datetime):
+    current_date = datetime.now()
+    age = current_date.year - birth_date.year - ((current_date.month, current_date.day) < (birth_date.month, birth_date.day))
+    return age

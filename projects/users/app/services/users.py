@@ -11,6 +11,7 @@ from app.models.mappers.user_mapper import DataClassMapper
 from app.exceptions.exceptions import NotFoundError, InvalidCredentialsError, PlanPaymentError
 from app.security.passwords import PasswordManager
 from app.services.external import ExternalServices
+from app.utils.utils import calculate_age
 
 
 class UsersServiceHelpers:
@@ -110,6 +111,10 @@ class UsersService:
             setattr(user, field, getattr(personal_profile, field))
 
         self.db.commit()
+
+        if self._should_create_nutritional_plan(user):
+            self.generate_nutritional_plan(user)
+
         return DataClassMapper.to_user_personal_profile(user)
 
     def update_user_nutritional_information(self, user_id, nutritional_profile):
@@ -126,6 +131,10 @@ class UsersService:
                 raise NotFoundError(f"Nutritional limitation with id {limitation_id} not found")
 
         self.db.commit()
+
+        if self._should_create_nutritional_plan(user):
+            self.generate_nutritional_plan(user)
+
         return DataClassMapper.to_user_nutritional_profile(user)
 
     def update_user_sports_information(self, user_id, sports_profile):
@@ -144,10 +153,14 @@ class UsersService:
 
         should_update_training_plan = user.training_objective and user.available_training_hours and user.available_weekdays and user.preferred_training_start_time
 
-        if should_update_training_plan:
-            self.external_services.create_training_plan(DataClassMapper.to_training_plan_create(user), self.user_token)
-
         self.db.commit()
+
+        if should_update_training_plan:
+            self.external_services.create_training_plan(user.user_id, DataClassMapper.to_training_plan_create(user), self.user_token)
+
+        if self._should_create_nutritional_plan(user):
+            self.generate_nutritional_plan(user)
+
         return DataClassMapper.to_user_sports_profile(user)
 
     def get_user_by_id(self, user_id):
@@ -155,23 +168,6 @@ class UsersService:
         if not user:
             raise NotFoundError(f"User with id {user_id} not found")
         return user
-
-    def _process_email_password_login(self, user_credentials_email, user_credentials_password):
-        user = self.db.query(User).filter(User.email == user_credentials_email).first()
-        if not user:
-            raise InvalidCredentialsError("Invalid email or password")
-
-        if not PasswordManager.verify_password(user_credentials_password, user.hashed_password):
-            raise InvalidCredentialsError("Invalid email or password")
-
-        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
-
-    def _process_refresh_token_login(self, refresh_token):
-        user_id = self.jwt_manager.decode_refresh_token(refresh_token)
-
-        user = self.db.query(User).filter(User.user_id == UUID(user_id)).first()
-
-        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
 
     def update_user_plan(self, user_id, update_subscription_type: UpdateSubscriptionType):
         user = self.get_user_by_id(user_id)
@@ -236,3 +232,46 @@ class UsersService:
         trainers = self.db.query(Trainer).all()
 
         return [DataClassMapper.to_dict(trainer) for trainer in trainers]
+
+    def _should_create_nutritional_plan(self, user: User):
+        return all(
+            [
+                user.birth_date,
+                user.training_objective,
+                user.weight,
+                user.height,
+                user.food_preference,
+            ],
+        )
+
+    def _process_email_password_login(self, user_credentials_email, user_credentials_password):
+        user = self.db.query(User).filter(User.email == user_credentials_email).first()
+        if not user:
+            raise InvalidCredentialsError("Invalid email or password")
+
+        if not PasswordManager.verify_password(user_credentials_password, user.hashed_password):
+            raise InvalidCredentialsError("Invalid email or password")
+
+        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
+
+    def _process_refresh_token_login(self, refresh_token):
+        user_id = self.jwt_manager.decode_refresh_token(refresh_token)
+
+        user = self.db.query(User).filter(User.user_id == UUID(user_id)).first()
+
+        return self.jwt_manager.generate_tokens(user.user_id, user.subscription_type)
+
+    def generate_nutritional_plan(self, user):
+        age = calculate_age(user.birth_date)
+
+        data = {
+            "age": age,
+            "gender": user.gender.value,
+            "training_objective": user.training_objective.value,
+            "weight": user.weight,
+            "height": user.height,
+            "food_preference": user.food_preference.value,
+            "nutritional_limitations": [limitation.name for limitation in user.nutritional_limitations],
+        }
+
+        self.external_services.create_nutritional_plan(user.user_id, data, self.user_token)

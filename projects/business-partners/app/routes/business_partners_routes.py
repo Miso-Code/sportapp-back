@@ -1,12 +1,19 @@
 from uuid import UUID
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends, APIRouter, Header, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.config.db import get_db
-from app.models.schemas.schema import BusinessPartnerCredentials, BusinessPartnerCreate, CreateBusinessPartnerProduct, ProductPurchase, UpdateBusinessPartnerProduct
+from app.models.schemas.schema import (
+    BusinessPartnerCredentials,
+    BusinessPartnerCreate,
+    CreateBusinessPartnerProduct,
+    ProductPurchase,
+    UpdateBusinessPartnerProduct,
+    SuggestBusinessPartnerProduct,
+)
 from app.services.business_partners import BusinessPartnersService
 
 router = APIRouter(
@@ -54,6 +61,19 @@ async def get_all_offered_products(
 ):
     get_offered_products_response = BusinessPartnersService(db).get_all_offered_products(search, offset, limit)
     return JSONResponse(content=get_offered_products_response, status_code=200)
+
+
+@router.get("/products/suggested")
+async def get_suggested_product(
+    db: Session = Depends(get_db),
+    category: Annotated[str | None, Query(max_length=50)] = None,
+    sport_id: Annotated[UUID | None, Query()] = None,
+):
+    suggested_product_filter = None
+    if category is not None or sport_id is not None:
+        suggested_product_filter = SuggestBusinessPartnerProduct(category=category, sport_id=sport_id)
+    get_suggested_product_response = BusinessPartnersService(db).get_suggested_product(suggested_product_filter)
+    return JSONResponse(content=get_suggested_product_response, status_code=200)
 
 
 @router.get("/products/purchase")

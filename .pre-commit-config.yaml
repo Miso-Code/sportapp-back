@@ -35,4 +35,4 @@ repos:
     hooks:
       - id: add-trailing-comma
         args: [ --py36-plus ]
-        exclude: ^projects/miso-stripe/
+        exclude: ^projects/miso-stripe/,^projects/users-auth/

@@ -75,7 +75,7 @@ class TestDataClassMapper(unittest.TestCase):
         self.assertEqual(user_profile_dict["country_of_residence"], user_instance.country_of_residence)
         self.assertEqual(user_profile_dict["city_of_residence"], user_instance.city_of_residence)
         self.assertEqual(user_profile_dict["residence_age"], user_instance.residence_age)
-        self.assertEqual(user_profile_dict["birth_date"], user_instance.birth_date)
+        self.assertEqual(user_profile_dict["birth_date"], user_instance.birth_date.isoformat())
 
     def test_to_user_nutritional_profile(self):
         user_instance = generate_random_user(fake)

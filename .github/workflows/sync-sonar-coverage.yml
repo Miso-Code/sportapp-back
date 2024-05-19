@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "training-plans" ]
+        service: [ "authorizer", "sports", "sport-sessions", "users", "business-partners", "training-plans", "sport-events", "alerts", "nutritional-plans", "adverse-incidents", "adverse-incidents-provider" ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "miso-stripe" ]
+        service: [ "miso-stripe", "users-auth" ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

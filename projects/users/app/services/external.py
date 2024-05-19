@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import requests
 import humps
 
@@ -11,6 +13,7 @@ class ExternalServices:
         self.sports_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/sports"
         self.training_plans_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/training-plans"
         self.miso_stripe_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/miso-stripe"
+        self.nutritional_plan_url = f"{Config.SPORTAPP_SERVICES_BASE_URL}/nutritional-plans"
 
     def get_sport(self, sport_id: str, user_token: str):
         if not user_token:
@@ -20,11 +23,11 @@ class ExternalServices:
             return response.json()
         raise NotFoundError(f"Sport with id {sport_id} not found")
 
-    def create_training_plan(self, training_plan_data: dict, user_token: str):
+    def create_training_plan(self, user_id: UUID, training_plan_data: dict, user_token: str):
         response = requests.post(self.training_plans_url, json=training_plan_data, headers={"Authorization": user_token})
         if response.status_code == 200:
             return response.json()
-        raise NotFoundError("Failed to create training plan")
+        raise ExternalServiceError(f"Error calling create_training_plan for user {str(user_id)}: {response.status_code} - {response.json()}")
 
     def process_payment(self, payment_data: PaymentData) -> tuple[bool, dict]:
         response = requests.post(
@@ -37,3 +40,9 @@ class ExternalServices:
         elif response.status_code == 401:
             raise ExternalServiceError("Miso Stripe API key is invalid")
         return False, response.json()
+
+    def create_nutritional_plan(self, user_id: UUID, user_data: dict, user_token):
+        response = requests.post(self.nutritional_plan_url, headers={"Authorization": user_token}, json=user_data)
+        if response.status_code == 201:
+            return response.json()
+        raise ExternalServiceError(f"Error calling create_nutritional_plan for user {str(user_id)}: {response.status_code} - {response.json()}")

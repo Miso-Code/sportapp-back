@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from faker import Faker
 from app.security.passwords import PasswordManager
@@ -18,23 +18,26 @@ def fake_decode_function(token, _, _2):
 
 
 class TestPasswordManager(unittest.TestCase):
-    @patch("bcrypt.hashpw")
-    @patch("bcrypt.gensalt")
-    def test_hash_password(self, mock_gensalt, mock_hashpw):
+    @patch("hashlib.sha256")
+    def test_hash_password(self, mock_sha256):
         fake_password = fake.word()
-        fake_gen_salt = fake.word()
-        fake_hashed_password = f"{fake_gen_salt} {fake_password}"
-        mock_gensalt.return_value = fake_gen_salt
-        mock_hashpw.return_value = fake_hashed_password.encode("utf-8")
+        fake_hashed_password = f"hashed-{fake_password}"
+        sha256_mock = MagicMock()
+        mock_sha256.return_value = sha256_mock
+        sha256_mock.update.return_value = None
+        sha256_mock.hexdigest.return_value = fake_hashed_password
 
         hashed_password = PasswordManager.get_password_hash(fake_password)
         self.assertEqual(hashed_password, fake_hashed_password)
 
-    @patch("bcrypt.checkpw")
-    def test_verify_password(self, mock_checkpw):
+    @patch("hashlib.sha256")
+    def test_verify_password(self, mock_sha256):
         fake_password = fake.word()
-        fake_hashed_password = fake.word()
-        mock_checkpw.return_value = True
+        fake_hashed_password = f"hashed-{fake_password}"
+        sha256_mock = MagicMock()
+        mock_sha256.return_value = sha256_mock
+        sha256_mock.update.return_value = None
+        sha256_mock.hexdigest.return_value = fake_hashed_password
 
         is_valid = PasswordManager.verify_password(fake_password, fake_hashed_password)
         self.assertTrue(is_valid)

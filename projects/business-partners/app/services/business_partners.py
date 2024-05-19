@@ -2,9 +2,11 @@ import base64
 import time
 from datetime import datetime
 from tempfile import NamedTemporaryFile
+from typing import Optional
 
-from sqlalchemy import and_, or_, cast, String, Uuid
+from sqlalchemy import and_, or_, cast, String
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.expression import func
 
 from app.aws.aws_service import AWSClient
 from app.config.settings import Config
@@ -16,6 +18,7 @@ from app.models.schemas.schema import (
     ProductPurchase,
     TransactionResponse,
     UpdateBusinessPartnerProduct,
+    SuggestBusinessPartnerProduct,
 )
 from app.security.jwt import JWTManager
 from app.models.mappers.user_mapper import DataClassMapper
@@ -226,6 +229,21 @@ class BusinessPartnersService:
             products = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.active).order_by(BusinessPartnerProduct.name.asc()).limit(limit).offset(offset).all()
 
         return [DataClassMapper.to_dict(product) for product in products]
+
+    def get_suggested_product(self, suggest_product_filters: Optional[SuggestBusinessPartnerProduct]):
+        filters = []
+        if suggest_product_filters:
+            if suggest_product_filters.category:
+                filters.append(BusinessPartnerProduct.category == suggest_product_filters.category)
+            if suggest_product_filters.sport_id:
+                filters.append(BusinessPartnerProduct.sport_id == suggest_product_filters.sport_id)
+
+        product = self.db.query(BusinessPartnerProduct).filter(*filters).order_by(func.random()).first()
+
+        if not product:
+            raise NotFoundError("No suggested product found")
+
+        return DataClassMapper.to_dict(product)
 
     def purchase_product(self, product_id, user_id, product_purchase: ProductPurchase):
         product = self.db.query(BusinessPartnerProduct).filter(BusinessPartnerProduct.product_id == product_id).first()

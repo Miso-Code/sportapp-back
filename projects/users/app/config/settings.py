@@ -12,6 +12,5 @@ class Config:
     TOTAL_USERS_BY_RUN = int(os.getenv("TOTAL_USERS_BY_RUN", 50))
     SYNC_EVERY = int(os.getenv("SYNC_EVERY_MINUTES", 2))
     PASSWORD_REGEX = os.getenv("PASSWORD_REGEX", r"((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,64})")
-    BIRTH_DATE_REGEX = os.getenv("BIRTH_DATE_REGEX", r"\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])")
     EMAIL_REGEX = os.getenv("EMAIL_REGEX", r"[^@]+@[^@]+\.[^@]+")
     HOUR_REGEX = os.getenv("HOUR_REGEX", r"^(1[0-2]|0?[1-9]):([0-5][0-9])\s?(AM|PM)$")

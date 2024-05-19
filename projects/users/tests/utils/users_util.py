@@ -54,7 +54,7 @@ def generate_random_user_additional_information(faker):
         country_of_residence=faker.country(),
         city_of_residence=faker.city(),
         residence_age=faker.random_number(),
-        birth_date=faker.date_of_birth(minimum_age=18).strftime("%Y-%m-%d"),
+        birth_date=faker.date_time_this_decade(),
     )
 
 
@@ -109,7 +109,7 @@ def generate_random_user_sport_profile_update(faker):
 def generate_random_user_nutritional_profile(faker):
     return UserNutritionalProfile(
         food_preference=faker.enum(FoodPreference),
-        nutritional_limitations=[faker.uuid4() for _ in range(faker.random_number(1, 5))],
+        nutritional_limitations=[faker.uuid4() for _ in range(2)],
     )
 
 
@@ -130,7 +130,7 @@ def generate_random_user(faker):
         country_of_residence=faker.country(),
         city_of_residence=faker.city(),
         residence_age=faker.random_number(),
-        birth_date=faker.date_of_birth(minimum_age=15).isoformat(),
+        birth_date=faker.date_time_this_decade(),
         favourite_sport_id=faker.uuid4(),
         training_objective=faker.enum(TrainingObjective),
         available_weekdays=",".join(list(set(faker.random_choices(week_days, length=faker.random_number(1, 7))))),

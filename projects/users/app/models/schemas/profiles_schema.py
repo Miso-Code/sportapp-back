@@ -21,7 +21,7 @@ class UserPersonalProfile(BaseModel):
     country_of_residence: Optional[str] = None
     city_of_residence: Optional[str] = None
     residence_age: Optional[conint(ge=0)] = None
-    birth_date: Optional[str] = None
+    birth_date: Optional[datetime] = None
 
 
 class UserPersonalProfileGet(UserPersonalProfile):

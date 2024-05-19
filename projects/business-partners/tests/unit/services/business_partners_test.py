@@ -17,6 +17,7 @@ from tests.utils.business_partners_util import (
     generate_random_business_partner_product,
     generate_random_product_purchase,
     generate_random_product_transaction,
+    generate_random_business_partner_suggested_filter,
 )
 
 fake = Faker()
@@ -663,3 +664,52 @@ class TestBusinessPartnersService(unittest.TestCase):
         with self.assertRaises(NotFoundError) as context:
             self.business_partners_service.get_products_transactions(business_partner_id, 0, 3)
         self.assertEqual(str(context.exception), f"Business partner with id {business_partner_id} not found")
+
+    def test_get_suggested_product_no_filters(self):
+        business_partner = generate_random_business_partner(fake)
+        existing_product = generate_random_business_partner_product(fake)
+        existing_product.business_partner_id = business_partner.business_partner_id
+
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing_product
+
+        response = self.business_partners_service.get_suggested_product(None)
+
+        self.assertEqual(response["category"], existing_product.category.value)
+        self.assertEqual(response["name"], existing_product.name)
+        self.assertEqual(response["summary"], existing_product.summary)
+        self.assertEqual(response["url"], existing_product.url)
+        self.assertEqual(response["price"], existing_product.price)
+        self.assertEqual(response["payment_type"], existing_product.payment_type.value)
+        self.assertEqual(response["payment_frequency"], existing_product.payment_frequency.value)
+        self.assertEqual(response["image_url"], existing_product.image_url)
+        self.assertEqual(response["description"], existing_product.description)
+        self.assertEqual(response["active"], existing_product.active)
+
+    def test_get_suggested_product_with_filters(self):
+        business_partner = generate_random_business_partner(fake)
+        existing_product = generate_random_business_partner_product(fake)
+        existing_product.business_partner_id = business_partner.business_partner_id
+
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = existing_product
+
+        suggested_filter = generate_random_business_partner_suggested_filter(fake)
+
+        response = self.business_partners_service.get_suggested_product(suggested_filter)
+
+        self.assertEqual(response["category"], existing_product.category.value)
+        self.assertEqual(response["name"], existing_product.name)
+        self.assertEqual(response["summary"], existing_product.summary)
+        self.assertEqual(response["url"], existing_product.url)
+        self.assertEqual(response["price"], existing_product.price)
+        self.assertEqual(response["payment_type"], existing_product.payment_type.value)
+        self.assertEqual(response["payment_frequency"], existing_product.payment_frequency.value)
+        self.assertEqual(response["image_url"], existing_product.image_url)
+        self.assertEqual(response["description"], existing_product.description)
+        self.assertEqual(response["active"], existing_product.active)
+
+    def test_get_suggested_product_not_found(self):
+        self.mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = None
+
+        with self.assertRaises(NotFoundError) as context:
+            self.business_partners_service.get_suggested_product(None)
+        self.assertEqual(str(context.exception), "No suggested product found")
