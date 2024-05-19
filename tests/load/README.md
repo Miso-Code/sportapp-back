@@ -85,3 +85,13 @@ En un tiempo de 3 minutos y 26 segundos, se enviaron 31590 solicitudes HTTP. De 
 - El throughput fue de 204 solicitudes por segundo, alcanzando un máximo de 342 solicitudes por segundo.
 
 ![Node.js](resources/node.png)
+
+## Análisis de resultados
+
+- El microservicio Node.js es más eficiente en términos de uso de memoria y rendimiento en un contexto de servidor web.
+- El microservicio Node.js manejó la carga de 1000 usuarios con solo 2 instancias en ECS, mientras que el microservicio
+  Python necesitaba 5 instancias (60% menos recursos computacionales).
+- El rendimiento de ambos microservicios fue similar, manejando una carga de 1000 usuarios con un 99.99% de éxito y un
+  tiempo promedio de respuesta de 2.75 segundos.
+- El microservicio Node.js es más eficiente en términos de costos, ya que requiere menos instancias en ECS para manejar
+  la misma carga de trabajo.
