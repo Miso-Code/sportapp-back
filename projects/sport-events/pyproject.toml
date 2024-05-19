@@ -7,15 +7,15 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = "^0.110.0"
+fastapi = "^0.111.0"
 uvicorn = "^0.29.0"
-sqlalchemy = "^2.0.29"
+sqlalchemy = "^2.0.30"
 psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.1.1"
-faker = "^24.4.0"
-coverage = "^7.4.4"
+pytest = "^8.2.0"
+faker = "^25.2.0"
+coverage = "^7.5.1"
 httpx = "^0.27.0"
 pytest-asyncio = "^0.23.6"
 pytest-dotenv = "^0.5.2"
