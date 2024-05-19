@@ -1,62 +1,62 @@
-# Security Tests
+# Pruebas de Seguridad
 
-This document describes the security tests that are performed on the project. The tests involve the use of various
-techniques and tools to ensure that the project is secure.
+Este documento describe las pruebas de seguridad que se realizan en el proyecto. Las pruebas involucran el uso de
+varias técnicas y herramientas para garantizar que el proyecto sea seguro.
 
-## Table of Contents
+## Índice
 
-- [Static Code Analysis](#static-code-analysis)
-  - [SonarCloud](#sonarcloud)
-    - [Adverse Incidents](#adverse-incidents)
-    - [Adverse Incidents Provider](#adverse-incidents-provider)
-    - [Alerts](#alerts)
-    - [Authorizer](#authorizer)
-    - [Business Partners](#business-partners)
-    - [Miso Stripe](#miso-stripe)
-    - [Nutritional Plans](#nutritional-plans)
-    - [Sport Events](#sport-events)
-    - [Sport Sessions](#sport-sessions)
-    - [Sports](#sports)
-    - [Training Plans](#training-plans)
-    - [Users](#users)
-  - [Snyk](#snyk)
-  - [Clair (AWS ECR)](#clair-aws-ecr)
-  - [Dependabot](#dependabot)
-  - [Configuration](#dependabot-configuration)
-  - [GitGuardian](#gitguardian)
-  - [AWS Secrets Manager](#aws-secrets-manager)
-  - [OWASP ZAP](#owasp-zap)
-- [Dependency Scanning](#dependency-scanning)
-    - [Snyk](#snyk)
-    - [Clair (AWS ECR)](#clair-aws-ecr)
-- [Dependency Updates](#dependency-updates)
-    - [Dependabot](#dependabot)
-    - [Configuration](#dependabot-configuration)
-- [Secrets Scanning](#secrets-scanning)
-    - [GitGuardian](#gitguardian)
-- [Secrets Management](#secrets-management)
-    - [AWS Secrets Manager](#aws-secrets-manager)
-- [Penetration Testing](#penetration-testing)
-    - [OWASP ZAP](#owasp-zap)
+- [Pruebas de Seguridad](#pruebas-de-seguridad)
+    * [Análisis de Código Estático](#análisis-de-código-estático)
+        + [SonarCloud](#sonarcloud)
+            - [Adverse Incidents](#adverse-incidents)
+            - [Adverse Incidents Provider](#adverse-incidents-provider)
+            - [Alerts](#alerts)
+            - [Authorizer](#authorizer)
+            - [Business Partners](#business-partners)
+            - [Miso Stripe](#miso-stripe)
+            - [Nutritional Plans](#nutritional-plans)
+            - [Sport Events](#sport-events)
+            - [Sport Sessions](#sport-sessions)
+            - [Sports](#sports)
+            - [Training Plans](#training-plans)
+            - [Users](#users)
+    * [Escaneo de Dependencias](#escaneo-de-dependencias)
+        + [Snyk](#snyk)
+        + [Clair (AWS ECR)](#clair-aws-ecr)
+    * [Actualizaciones de Dependencias](#actualizaciones-de-dependencias)
+        + [Dependabot](#dependabot)
+        + [Configuración de Dependabot](#configuración-de-dependabot)
+    * [Escaneo de Secretos](#escaneo-de-secretos)
+        + [GitGuardian](#gitguardian)
+    * [Gestión de Secretos](#gestión-de-secretos)
+        + [AWS Secrets Manager](#aws-secrets-manager)
+    * [Penetration Testing](#penetration-testing)
+        + [OWASP ZAP](#owasp-zap)
+    * [Protección de acceso a los recursos](#protección-de-acceso-a-los-recursos)
+        + [JWT Lambda Authorizer](#jwt-lambda-authorizer)
+        + [API Key](#api-key)
+    * [Conclusion](#conclusion)
 
-## Static Code Analysis
+## Análisis de Código Estático
 
-Static code analysis is the process of analyzing the source code of a program without executing it. It checks for
-potential security vulnerabilities, code smells, and bugs in the code. Static code analysis tools can help identify
-security vulnerabilities in the code early in the development process, making it easier to fix them before they become
-problems.
+El análisis de código estático es el proceso de analizar el código fuente de un programa sin ejecutarlo. Comprueba
+posibles vulnerabilidades de seguridad, malos olores de código y errores en el código. Las herramientas de análisis de
+código estático pueden ayudar a identificar vulnerabilidades de seguridad en el código temprano en el proceso de
+desarrollo, lo que facilita su corrección antes de que se conviertan en problemas.
 
 ### SonarCloud
 
-The static code analysis is performed using SonarCloud. SonarCloud is a cloud-based code analysis tool that provides
-detailed reports on the quality of the code. It checks for code smells, bugs, and security vulnerabilities in the code.
+El análisis de código estático se realiza utilizando SonarCloud. SonarCloud es una herramienta de análisis de código en
+la nube que proporciona informes detallados sobre la calidad del código. Comprueba malos olores de código, errores y
+vulnerabilidades de seguridad en el código.
 
-We created a SonarCloud organization and connected it to the GitHub repository. The SonarCloud GitHub app is installed
-on the repository, and it automatically analyzes the code on every push to the repository.
+Creamos una organización de SonarCloud y la conectamos al repositorio de GitHub. La aplicación de GitHub de SonarCloud
+está instalada en el repositorio y analiza automáticamente el código en cada push al repositorio.
 
-You can see next the SonarCloud badges for each project. It will show the security rating of the project (A, B, C, D, or
-F). A security rating of A is the best, while a security rating of F is the worst. The security rating is calculated
-based on the number of security vulnerabilities found in the code.
+A continuación, puedes ver las insignias de SonarCloud para cada proyecto. Mostrará la calificación de seguridad del
+proyecto (A, B, C, D o F). Una calificación de seguridad de A es la mejor, mientras que una calificación de seguridad
+de F es la peor. La calificación de seguridad se calcula en función del número de vulnerabilidades de seguridad
+encontradas en el código.
 
 #### Adverse Incidents
 
@@ -106,52 +106,50 @@ based on the number of security vulnerabilities found in the code.
 
 [![Users](https://sonarcloud.io/api/project_badges/measure?project=misocode_sportapp-back-users&metric=security_rating)](https://sonarcloud.io/dashboard?id=misocode_sportapp-back-users)
 
-## Dependency Scanning
+## Escaneo de Dependencias
 
-Dependency scanning is the process of analyzing the dependencies of a project to identify security vulnerabilities in
-the dependencies. It checks for known security vulnerabilities in the dependencies and provides information on how to
-fix them. Dependency scanning tools can help identify and fix security vulnerabilities in the dependencies early in the
-development process.
+El escaneo de dependencias es el proceso de analizar las dependencias de un proyecto para identificar vulnerabilidades
+de seguridad en las dependencias. Comprueba las vulnerabilidades de seguridad conocidas en las dependencias y
+proporciona información sobre cómo corregirlas. Las herramientas de escaneo de dependencias pueden ayudar a identificar
+y corregir vulnerabilidades de seguridad en las dependencias temprano en el proceso de desarrollo.
 
-It is usually used to scan Docker images, npm packages, Maven dependencies, and other types of dependencies.
+Se suele utilizar para escanear imágenes de Docker, paquetes npm, dependencias de Maven y otros tipos de dependencias.
 
 ### Snyk
 
-Snyk is a dependency scanning tool that checks for known security vulnerabilities in the dependencies of a project. It
-scans the dependencies of a project and provides information on the vulnerabilities found in the dependencies.
+Snky es una herramienta de escaneo de dependencias que comprueba las vulnerabilidades de seguridad conocidas en las
+dependencias de un proyecto. Escanea las dependencias de un proyecto y proporciona información sobre las
+vulnerabilidades encontradas en las dependencias.
 
 ![Snyk Report](resources/snyk.png)
-![AWS ECR Scan](resources/aws_ecr.png)
-![Dependabot Report](resources/dependabot_report.png)
-![GitGuardian Scan](resources/git_guardian.png)
-![AWS Secrets Manager](resources/secrets_manager.png)
-![OWASP ZAP](resources/zap.png)
-![API Gateway Authorizer](resources/api_gateway_authorizer.png)
 
 ### Clair (AWS ECR)
 
-Clair is an open-source vulnerability scanner that scans Docker images for known security vulnerabilities. It checks the
-Docker images stored in the Amazon Elastic Container Registry (ECR) for known security vulnerabilities and provides
-information on the vulnerabilities found in the images.
+Clair es un escáner de vulnerabilidades de código abierto que escanea las imágenes de Docker en busca de
+vulnerabilidades de seguridad conocidas. Comprueba las imágenes de Docker almacenadas en ECR de Amazon (ECR) en busca de
+vulnerabilidades de seguridad conocidas y proporciona información sobre las vulnerabilidades encontradas en las
+imágenes.
 
-This scan is enabled by default in AWS ECR and runs automatically when a new image is pushed to the ECR.
+Este escaneo está habilitado de forma predeterminada en AWS ECR y se ejecuta automáticamente cuando se empuja una nueva
+imagen al ECR.
 
-![img.png](resources/aws_ecr.png)
+![AWS ECR Scan](resources/aws_ecr.png)
 
-## Dependency Updates
+## Actualizaciones de Dependencias
 
 ### Dependabot
 
-![img.png](resources/dependabot_report.png)
+Dependabot es una aplicación de GitHub que crea solicitudes de extracción para mantener seguras y actualizadas las
+dependencias de un proyecto. Comprueba las actualizaciones de las dependencias todos los días y abre solicitudes de
+extracción individuales para cada actualización. Puedes configurar Dependabot para crear solicitudes de extracción para
+actualizaciones de un ecosistema de paquetes específico, un directorio o un tipo de paquete.
 
-Dependabot is a GitHub app that creates pull requests to keep your dependencies secure and up-to-date. It checks for
-updates to your dependencies every day and opens individual pull requests for each update. You can configure Dependabot
-to create pull requests for updates to a specific package ecosystem, directory, or package type.
+![Dependabot Report](resources/dependabot_report.png)
 
-### Dependabot configuration
+### Configuración de Dependabot
 
-The Dependabot configuration is stored in the `.github/dependabot.yml` file in the repository. The configuration file
-specifies the package ecosystems, directories, and schedules for the dependency updates.
+La configuración de Dependabot se almacena en el archivo `.github/dependabot.yml` en el repositorio. El archivo de
+configuración especifica los ecosistemas de paquetes, directorios y horarios para las actualizaciones de dependencias.
 
 ```yml
 version: 2
@@ -235,57 +233,64 @@ updates:
 
 ```
 
-## Secrets Scanning
+## Escaneo de Secretos
 
-Secrets scanning is the process of scanning the codebase for secrets such as API keys, passwords, and other sensitive
-information. It checks for secrets in the codebase and provides information on the secrets found in the code.
+El escaneo de secretos es el proceso de escanear el código fuente en busca de secretos como claves de API, contraseñas
+y otra información sensible. Comprueba los secretos en el código fuente y proporciona información sobre los secretos
+encontrados en el código.
 
 ### GitGuardian
 
-GitGuardian is a secrets scanning tool that scans the codebase for secrets such as API keys, passwords, and other
-sensitive information. It checks for secrets in the codebase and provides information on the secrets found in the code.
+GitGuardian es una herramienta de escaneo de secretos que escanea el código fuente en busca de secretos como claves de
+API, contraseñas y otra información sensible. Comprueba los secretos en el código fuente y proporciona información sobre
+los secretos encontrados en el código.
 
-![img_2.png](resources/git_guardian.png)
+![GitGuardian Scan](resources/git_guardian.png)
 
-## Secrets Management
+## Gestión de Secretos
 
-Secrets management is the process of securely storing and managing secrets such as API keys, passwords, and other
-sensitive information. It ensures that the secrets are stored securely and are only accessible to authorized users.
+La gestión de secretos es el proceso de almacenar y gestionar secretos como claves de API, contraseñas y otra
+información sensible. Los secretos se almacenan de forma segura y se acceden de forma segura mediante la autenticación y
+la autorización.
 
 ### AWS Secrets Manager
 
-AWS Secrets Manager is a secrets management service that securely stores and manages secrets such as API keys,
-passwords, and other sensitive information. It encrypts the secrets and stores them securely in the AWS cloud. The
-secrets can be accessed programmatically using the AWS SDK or the AWS CLI.
+AWS Secrets Manager es un servicio de gestión de secretos que almacena y gestiona de forma segura secretos como claves
+de API, contraseñas y otra información sensible. Encripta los secretos y los almacena de forma segura en la nube de AWS.
+Los secretos se pueden acceder programáticamente utilizando el SDK de AWS o la CLI de AWS.
 
-![img.png](resources/secrets_manager.png)
+![AWS Secrets Manager](resources/secrets_manager.png)
 
 ## Penetration Testing
 
-Penetration testing is the process of testing the security of a system by simulating an attack on the system. It checks
-for security vulnerabilities in the system and provides information on how to fix them. Penetration testing tools can
-help identify and fix security vulnerabilities in the system before they become problems.
+La prueba de penetración es el proceso de probar la seguridad de un sistema simulando un ataque al sistema. Comprueba
+las vulnerabilidades de seguridad en el sistema y proporciona información sobre cómo corregirlas. Las herramientas de
+prueba de penetración pueden ayudar a identificar y corregir las vulnerabilidades de seguridad en el sistema antes de
+que se conviertan en problemas.
 
 ### OWASP ZAP
 
-OWASP ZAP is a penetration testing tool that checks for security vulnerabilities in web applications. It simulates an
-attack on the web application and checks for security vulnerabilities such as cross-site scripting (XSS), SQL injection,
-and other vulnerabilities. It provides detailed reports on the security vulnerabilities found in the web application.
+OWASP ZAP es una herramienta de prueba de penetración que comprueba las vulnerabilidades de seguridad en las
+aplicaciones web. Simula un ataque a la aplicación web y comprueba las vulnerabilidades de seguridad como cross-site
+scripting (XSS), inyección SQL y otras vulnerabilidades. Proporciona informes detallados sobre las vulnerabilidades de
+seguridad encontradas en la aplicación web.
 
-![img.png](resources/zap.png)
+![OWASP ZAP](resources/zap.png)
 
-## Permissions
+## Protección de acceso a los recursos
 
-All the applications have the necessary permissions to access the resources they need. The permissions are managed using
-lambda Authorizers and JWT tokens. The Authorizers check the JWT tokens and verify the permissions of the applications
-before allowing access to the resources.
+### JWT Lambda Authorizer
 
-All of this is done through the AWS API Gateway, which acts as a facade for the applications and manages the permissions
-and access control.
+Todas las peticiónes a los recursos de la aplicación deben ser autorizadas. Esto se logra mediante el uso de
+Authorizers de Lambda y tokens JWT. Los Authorizers verifican los tokens JWT y verifican los permisos de las
+aplicaciones antes de permitir el acceso a los recursos.
 
-![img.png](resources/api_gateway_authorizer.png)
+Todo esto se hace a través de la AWS API Gateway, que actúa como una fachada para las aplicaciones y gestiona los
+permisos y el control de acceso.
 
-Every request that does not pass the Authorizer will be rejected with a `401 Unauthorized` response with the following body:
+![API Gateway Authorizer](resources/api_gateway_authorizer.png)
+
+Cada solicitud que no pase el Authorizer será rechazada con una respuesta `401 Unauthorized` con el siguiente cuerpo:
 
 ```json
 {
@@ -293,8 +298,19 @@ Every request that does not pass the Authorizer will be rejected with a `401 Una
 }
 ```
 
+### API Key
+
+Además de los Authorizers de Lambda, algunos de los servicios que construimios en este proyecto también implementan
+API Keys para proteger el acceso a los recursos. Las API Keys son cadenas de texto que se envían en la cabecera de
+autorización de las solicitudes HTTP y se utilizan para autenticar y autorizar las solicitudes.
+
+Las API Keys se generan automáticamente para cada recurso y se almacenan de forma segura en AWS Secrets Manager. Las
+API Keys se utilizan para proteger el acceso a los recursos y garantizar que solo los usuarios autorizados puedan
+acceder a ellos.
+
 ## Conclusion
 
-The security tests described in this document help ensure that the project is secure. The tests involve the use of
-various techniques and tools to identify and fix security vulnerabilities in the project. By performing these tests
-regularly, we can ensure that the project is secure and that the data is protected from unauthorized access.
+Las pruebas de seguridad descritas en este documento ayudan a garantizar que el proyecto sea seguro. Las pruebas
+involucran el uso de varias técnicas y herramientas para identificar y corregir vulnerabilidades de seguridad en el
+proyecto. Al realizar estas pruebas regularmente, podemos garantizar que el proyecto sea seguro y que los datos estén
+protegidos contra accesos no autorizados.

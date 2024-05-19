@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "test": "yarn test:unit && yarn test:integration",
     "test:unit": "jest --ci --no-cache --coverage src\\**",
-    "test:integration": "jest --ci --no-cache --detectOpenHandles --forceExit test\\**"
+    "test:integration": "jest --ci --no-cache test\\**"
   },
   "author": "Miso Team",
   "license": "ISC",
