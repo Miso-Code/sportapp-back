@@ -1390,13 +1390,13 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sse-starlette"
-version = "2.0.0"
+version = "2.1.0"
 description = "SSE plugin for Starlette"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "sse_starlette-2.0.0-py3-none-any.whl", hash = "sha256:c4dd134302cb9708d47cae23c365fe0a089aa2a875d2f887ac80f235a9ee5744"},
-    {file = "sse_starlette-2.0.0.tar.gz", hash = "sha256:0c43cc43aca4884c88c8416b65777c4de874cc4773e6458d3579c0a353dc2fb7"},
+    {file = "sse_starlette-2.1.0-py3-none-any.whl", hash = "sha256:ea92bcb366c12482c1e23cab6b5afed19eb1320efe9ddfba8a0cf1f7f73ffba9"},
+    {file = "sse_starlette-2.1.0.tar.gz", hash = "sha256:ffff6e7d948f925f347e662be77af5783a6b93efce15d42c03004dcd7d6d91d3"},
 ]
 
 [package.dependencies]
