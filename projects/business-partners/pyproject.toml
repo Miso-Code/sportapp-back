@@ -21,7 +21,7 @@ pyhumps = "^3.8.0"
 requests = "^2.31.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.2.0"
+pytest = "^8.2.1"
 faker = "^25.2.0"
 coverage = "^7.5.1"
 psycopg2-binary = "^2.9.9"
